@@ -1,0 +1,185 @@
+import { useState } from 'react';
+
+export type Region = 'NA' | 'EU' | 'FE'; // North America, Europe, Far East
+
+export interface AmazonCredentials {
+    clientId: string;
+    clientSecret: string;
+    refreshToken: string;
+    grantType?: string;
+    apiUrl?: string;
+    region?: Region; // Added region tag
+}
+
+// Mapping of Marketplace IDs to Regions
+const MARKETPLACE_REGION_MAP: Record<string, Region> = {
+    // North America (NA)
+    'A2EUQ1WTGCTBG2': 'NA', // Canada
+    'ATVPDKIKX0DER': 'NA', // US
+    'A1AM78C64UM0Y8': 'NA', // Mexico
+    'A2Q3Y263D00KWC': 'NA', // Brazil
+
+    // Europe (EU)
+    'A28R8C7NBKEWEA': 'EU', // Ireland
+    'A1RKKUPIHCS9HS': 'EU', // Spain
+    'A1F83G8C2ARO7P': 'EU', // UK
+    'A13V1IB3VIYZZH': 'EU', // France
+    'AMEN7PMS3EDWL': 'EU',  // Belgium
+    'A1805IZSGTT6HS': 'EU', // Netherlands
+    'A1PA6795UKMFR9': 'EU', // Germany
+    'APJ6JRA9NG5V4': 'EU',  // Italy
+    'A2NODRKZP88ZB9': 'EU', // Sweden
+    'AE08WJ6YKNBMC': 'EU',  // South Africa
+    'A1C3SOZRARQ6R3': 'EU', // Poland
+    'ARBP9OOSHTCHU': 'EU',  // Egypt
+    'A33AVAJ2PDY3EV': 'EU', // Turkey
+    'A17E79C6D8DWNP': 'EU', // Saudi Arabia
+    'A2VIGQ35RCS4UG': 'EU', // UAE
+    'A21TJRUUN4KGV': 'EU',  // India (Often grouped with EU in some contexts or standalone, mapping to EU for now per user grouping "Europe for other countries")
+
+    // Far East (FE)
+    'A19VAU5U5O7RUS': 'FE', // Singapore
+    'A39IBJ37TRP1C6': 'FE', // Australia
+    'A1VC38T7YXB528': 'FE', // Japan
+};
+
+const getRegionFromMarketplaceId = (marketplaceId: string): Region => {
+    return MARKETPLACE_REGION_MAP[marketplaceId] || 'EU'; // Default to EU if unknown
+};
+
+export const connectToAmazon = async (credentials: AmazonCredentials) => {
+    try {
+        const response = await fetch('/.netlify/functions/amazon-auth', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                grant_type: credentials.grantType || 'refresh_token',
+                refresh_token: credentials.refreshToken,
+                client_id: credentials.clientId,
+                client_secret: credentials.clientSecret,
+                api_url: credentials.apiUrl,
+                region: credentials.region // Pass region to allow env var lookup
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error_description || data.error || 'Failed to connect to Amazon');
+        }
+
+        // Store token in session storage for the Product Finder to use (Region specific)
+        if (data.access_token && credentials.region) {
+            sessionStorage.setItem(`amazon_access_token_${credentials.region}`, data.access_token);
+            // Calculate expiration (subtract 60s for safety buffer)
+            const expiresAt = new Date().getTime() + ((data.expires_in - 60) * 1000);
+            sessionStorage.setItem(`amazon_token_expires_at_${credentials.region}`, expiresAt.toString());
+        }
+
+        return data;
+    } catch (error) {
+        console.error("Amazon Auth Error:", error);
+        throw error;
+    }
+};
+
+// Updated Storage Keys to support Regions
+export const saveCredentials = (credentials: AmazonCredentials, region: Region) => {
+    // Add region property before saving
+    const credsToSave = { ...credentials, region };
+    localStorage.setItem(`amazon_creds_${region}`, JSON.stringify(credsToSave));
+};
+
+export const loadCredentials = (region: Region): AmazonCredentials | null => {
+    const data = localStorage.getItem(`amazon_creds_${region}`);
+    return data ? JSON.parse(data) : null;
+};
+
+export const getValidAccessToken = async (region: Region): Promise<string | null> => {
+    // 1. Check existing session token for Region
+    const token = sessionStorage.getItem(`amazon_access_token_${region}`);
+    const expiresAt = sessionStorage.getItem(`amazon_token_expires_at_${region}`);
+
+    if (token && expiresAt) {
+        if (new Date().getTime() < parseInt(expiresAt)) {
+            return token; // Token is still valid
+        }
+    }
+
+    // 2. Token expired or missing, try to auto-refresh
+    // Attempt to load local credentials, OR create a fallback object to try server-side auth
+    const creds = loadCredentials(region) || {
+        clientId: '',
+        clientSecret: '',
+        refreshToken: '',
+        region: region
+    };
+
+    try {
+        console.log(`Refreshing Amazon Token for region ${region}...`);
+        const result = await connectToAmazon({ ...creds, region }); // Ensure region is set
+        return result.access_token;
+    } catch (e) {
+        console.error(`Failed to auto-refresh token for ${region}:`, e);
+        return null;
+    }
+};
+
+export interface AmazonProductResult {
+    numberOfResults?: number;
+    items?: Array<{
+        asin: string;
+        summaries?: Array<{
+            itemName?: string;
+            websiteDisplayGroupName?: string;
+        }>;
+    }>;
+}
+
+// Helper to check if string looks like an ASIN (10 chars, alphanumeric)
+const isLikelyAsin = (text: string) => /^[A-Z0-9]{10}$/.test(text.toUpperCase());
+
+export const searchProducts = async (query: string, marketplaceId?: string): Promise<AmazonProductResult | null> => {
+    const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
+    const region = getRegionFromMarketplaceId(targetMarketplace);
+
+    console.log(`Searching in Marketplace: ${targetMarketplace} -> Region: ${region}`);
+
+    const token = await getValidAccessToken(region);
+
+    if (!token) {
+        const regionNames = { 'NA': 'América do Norte', 'EU': 'Europa', 'FE': 'Extremo Oriente/Outros' };
+        throw new Error(`⚠️ Configuração para ${regionNames[region]} não encontrada ou inválida. Por favor, acesse a aba 'Configurações', selecione '${regionNames[region]}' e insira suas credenciais.`);
+    }
+
+    const payload: any = {
+        access_token: token,
+        marketplaceId: targetMarketplace,
+        region: region // Pass detected region to proxy
+    };
+
+    // Smart detection: ASIN or Keyword?
+    if (isLikelyAsin(query)) {
+        console.log(`Detectado ASIN: ${query}`);
+        payload.asin = query;
+    } else {
+        console.log(`Detectada Palavra-chave: ${query}`);
+        payload.keywords = query;
+    }
+
+    const response = await fetch('/.netlify/functions/amazon-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || data.message || "Erro ao buscar produto na Amazon.");
+    }
+
+    return data;
+};

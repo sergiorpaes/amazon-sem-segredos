@@ -1,0 +1,6 @@
+@echo off
+echo Starting Amazon Sem Segredos...
+cd /d "%~dp0"
+echo launching npx serve...
+call npx serve -s dist
+pause
