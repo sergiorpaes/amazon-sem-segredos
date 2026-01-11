@@ -46,8 +46,8 @@ $commitMessage = "Automated deployment: $timestamp"
 Write-Host "Committing: $commitMessage"
 & $GIT_CMD commit -m "$commitMessage"
 
-# Push
+# Push (Force to ensure local version overwrites any remote conflicts/history)
 Write-Host "Pushing to GitHub..."
-& $GIT_CMD push -u origin main
+& $GIT_CMD push -u origin main --force
 
 Write-Host "✅ Deployment Complete!"
