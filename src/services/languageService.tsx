@@ -8,7 +8,7 @@ interface LanguageContextType {
     t: (key: string) => string;
 }
 
-const translations = {
+export const translations = {
     pt: {
         // General
         'app.title': 'Amazon Sem Segredos',
@@ -123,7 +123,6 @@ const translations = {
         'module.ads_manager': 'Gestor de Anuncios',
         'module.settings': 'Configuración',
         'module.logout': 'Cerrar Sesión',
-        'category.Electronics': 'Electrónica', // Fixed Typo
 
         // Modal
         'modal.est_sales': 'Ventas Est.',
