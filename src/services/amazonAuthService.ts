@@ -131,17 +131,38 @@ export interface AmazonProductResult {
     numberOfResults?: number;
     items?: Array<{
         asin: string;
+        images?: Array<{
+            marketplaceId: string;
+            images: Array<{
+                variant: string;
+                link: string;
+                height: number;
+                width: number;
+            }>;
+        }>;
         summaries?: Array<{
             itemName?: string;
+            brandName?: string;
+            brand?: string; // Added based on user feedback
+            manufacturer?: string;
             websiteDisplayGroupName?: string;
+            price?: {
+                amount: number;
+                currencyCode: string;
+            };
         }>;
+        attributes?: any; // Added to capture full attributes payload including price
     }>;
+    pagination?: {
+        nextToken?: string;
+        previousToken?: string;
+    };
 }
 
 // Helper to check if string looks like an ASIN (10 chars, alphanumeric)
 const isLikelyAsin = (text: string) => /^[A-Z0-9]{10}$/.test(text.toUpperCase());
 
-export const searchProducts = async (query: string, marketplaceId?: string): Promise<AmazonProductResult | null> => {
+export const searchProducts = async (query: string, marketplaceId?: string, pageToken?: string): Promise<AmazonProductResult | null> => {
     const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
     const region = getRegionFromMarketplaceId(targetMarketplace);
 
@@ -157,7 +178,8 @@ export const searchProducts = async (query: string, marketplaceId?: string): Pro
     const payload: any = {
         access_token: token,
         marketplaceId: targetMarketplace,
-        region: region // Pass detected region to proxy
+        region: region, // Pass detected region to proxy
+        pageToken: pageToken // Pass pagination token if exists
     };
 
     // Smart detection: ASIN or Keyword?

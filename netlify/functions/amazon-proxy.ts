@@ -31,7 +31,7 @@ export const handler: Handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body || "{}");
-        const { access_token, asin, keywords, marketplaceId, region } = body;
+        const { access_token, asin, keywords, marketplaceId, region, pageToken } = body;
 
         // Validation: Must have token AND (asin OR keywords)
         if (!access_token || (!asin && !keywords)) {
@@ -51,9 +51,12 @@ export const handler: Handler = async (event, context) => {
         // Construct the SP-API URL
         let url = "";
         if (asin) {
-            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${asin}&identifiersType=ASIN&includedData=salesRanks,summaries`;
+            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${asin}&identifiersType=ASIN&includedData=salesRanks,summaries,images,attributes`;
         } else if (keywords) {
-            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(keywords)}&includedData=salesRanks,summaries&pageSize=10`;
+            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(keywords)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
+            if (pageToken) {
+                url += `&pageToken=${encodeURIComponent(pageToken)}`;
+            }
         }
 
         console.log(`Proxying request to Amazon SP-API (${region || 'Default'}): ${url}`);

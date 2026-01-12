@@ -94,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         </header>
 
         {/* Module Content */}
-        <div className="flex-1 overflow-hidden p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
           {renderModule()}
         </div>
       </main>

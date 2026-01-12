@@ -1,241 +1,545 @@
-import React, { useState } from 'react';
-import { Search, TrendingUp, AlertCircle, Globe } from 'lucide-react';
-import { analyzeProductOpportunity } from '../../services/geminiService';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, Check } from 'lucide-react';
+import { useLanguage } from '../../services/languageService';
 import { searchProducts } from '../../services/amazonAuthService';
 
-const mockProducts = [
-  { id: '1', title: 'Kit Organizador Cozinha 4 Peças', category: 'Casa', sales: 450, revenue: 12500, score: 8.9 },
-  { id: '2', title: 'Suporte Ergonômico Laptop', category: 'Eletrônicos', sales: 320, revenue: 9800, score: 9.2 },
-  { id: '3', title: 'Garrafa Térmica Inteligente', category: 'Esportes', sales: 890, revenue: 22000, score: 9.5 },
+interface ProductDisplay {
+  id: string; // ASIN
+  title: string;
+  image?: string;
+  brand?: string;
+  price?: number;
+  currency?: string; // Added currency field
+  sales: number | null;
+  salesGraph?: string;
+  revenue: number | null;
+  bsr?: number;
+  fbaFees?: number;
+  activeSellers?: number;
+  reviews?: number;
+  score: number | null;
+  category: string;
+}
+
+
+
+
+
+const mockProducts: ProductDisplay[] = [
+  {
+    id: 'B07QKWS61P',
+    title: 'Hoson 3/4 Inch Curling Iron Professional',
+    image: 'https://m.media-amazon.com/images/I/61+R5-K8gQL._AC_UL320_.jpg',
+    brand: 'Hoson',
+    price: 24.64,
+    sales: 3548,
+    revenue: 87422.72,
+    score: 8.9,
+    category: 'Beauty',
+    bsr: 2929,
+    fbaFees: 8.84,
+    activeSellers: 1,
+    reviews: 450
+  },
+  {
+    id: 'B093C2B8ZP',
+    title: 'Ceramic Mini Curling Iron for Short Hair',
+    image: 'https://m.media-amazon.com/images/I/61j6+1q-1EL._AC_UL320_.jpg',
+    brand: 'Hoson',
+    price: 25.99,
+    sales: 803,
+    revenue: 20869.97,
+    score: 9.2,
+    category: 'Beauty',
+    bsr: 21217,
+    fbaFees: 8.36,
+    activeSellers: 1,
+    reviews: 120
+  },
+  {
+    id: 'B09JB8XP4M',
+    title: 'Curling Iron for Short Hair 3/8 Inch',
+    image: 'https://m.media-amazon.com/images/I/61-d-x+s+lL._AC_UL320_.jpg',
+    brand: 'YEEGOR',
+    price: 29.98,
+    sales: 362,
+    revenue: 10852.76,
+    score: 9.5,
+    category: 'Beauty',
+    bsr: 57318,
+    fbaFees: 9.02,
+    activeSellers: 1,
+    reviews: 85
+  },
+  {
+    id: 'B001MA0QY2',
+    title: 'HSI Professional Glider | Ceramic Tourmaline',
+    image: 'https://m.media-amazon.com/images/I/61Logic-g+L._AC_UL320_.jpg',
+    brand: 'HSI PROFESSIONAL',
+    price: 39.95,
+    sales: 13555,
+    revenue: 541522.25,
+    score: 9.8,
+    category: 'Beauty',
+    bsr: 618,
+    fbaFees: 11.13,
+    activeSellers: 2,
+    reviews: 54201
+  },
 ];
 
 const marketplaces = [
-  { name: 'Spain', id: 'A1RKKUPIHCS9HS', code: 'ES', flag: '🇪🇸' },
+  // North America
   { name: 'United States', id: 'ATVPDKIKX0DER', code: 'US', flag: '🇺🇸' },
+  { name: 'Canada', id: 'A2EUQ1WTGCTBG2', code: 'CA', flag: '🇨🇦' },
+  { name: 'Mexico', id: 'A1AM78C64UM0Y8', code: 'MX', flag: '🇲🇽' },
   { name: 'Brazil', id: 'A2Q3Y263D00KWC', code: 'BR', flag: '🇧🇷' },
+  // Europe
+  { name: 'Spain', id: 'A1RKKUPIHCS9HS', code: 'ES', flag: '🇪🇸' },
   { name: 'United Kingdom', id: 'A1F83G8C2ARO7P', code: 'UK', flag: '🇬🇧' },
   { name: 'Germany', id: 'A1PA6795UKMFR9', code: 'DE', flag: '🇩🇪' },
   { name: 'France', id: 'A13V1IB3VIYZZH', code: 'FR', flag: '🇫🇷' },
   { name: 'Italy', id: 'APJ6JRA9NG5V4', code: 'IT', flag: '🇮🇹' },
-  { name: 'Canada', id: 'A2EUQ1WTGCTBG2', code: 'CA', flag: '🇨🇦' },
-  { name: 'Mexico', id: 'A1AM78C64UM0Y8', code: 'MX', flag: '🇲🇽' },
-  { name: 'Australia', id: 'A39IBJ37TRP1C6', code: 'AU', flag: '🇦🇺' },
-  { name: 'Japan', id: 'A1VC38T7YXB528', code: 'JP', flag: '🇯🇵' },
-  { name: 'India', id: 'A21TJRUUN4KGV', code: 'IN', flag: '🇮🇳' },
   { name: 'Netherlands', id: 'A1805IZSGTT6HS', code: 'NL', flag: '🇳🇱' },
   { name: 'Sweden', id: 'A2NODRKZP88ZB9', code: 'SE', flag: '🇸🇪' },
   { name: 'Poland', id: 'A1C3SOZRARQ6R3', code: 'PL', flag: '🇵🇱' },
   { name: 'Turkey', id: 'A33AVAJ2PDY3EV', code: 'TR', flag: '🇹🇷' },
-  { name: 'Saudi Arabia', id: 'A17E79C6D8DWNP', code: 'SA', flag: '🇸🇦' },
+  // Middle East
   { name: 'UAE', id: 'A2VIGQ35RCS4UG', code: 'AE', flag: '🇦🇪' },
-  { name: 'Egypt', id: 'ARBP9OOSHTCHU', code: 'EG', flag: '🇪🇬' },
+  { name: 'Saudi Arabia', id: 'A17E79C6D8DWNP', code: 'SA', flag: '🇸🇦' },
+  // Asia Pacific
+  { name: 'India', id: 'A21TJRUUN4KGV', code: 'IN', flag: '🇮🇳' },
+  { name: 'Japan', id: 'A1VC38T7YXB528', code: 'JP', flag: '🇯🇵' },
+  { name: 'Australia', id: 'A39IBJ37TRP1C6', code: 'AU', flag: '🇦🇺' },
   { name: 'Singapore', id: 'A19VAU5U5O7RUS', code: 'SG', flag: '🇸🇬' },
 ];
 
-interface ProductDisplay {
-  id: string;
-  title: string;
-  category: string;
-  sales: number | null;
-  revenue: number | null;
-  score: number | null;
-}
-
 export const ProductFinder: React.FC = () => {
+  const { t, language, setLanguage } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Casa');
-  const [selectedMarketplace, setSelectedMarketplace] = useState<string>('A1RKKUPIHCS9HS'); // Default: Spain
-  const [aiAnalysis, setAiAnalysis] = useState<string>('');
-  const [analyzing, setAnalyzing] = useState(false);
-
-  // Search State
+  const [selectedMarketplace, setSelectedMarketplace] = useState<string>('A2Q3Y263D00KWC');
   const [isSearching, setIsSearching] = useState(false);
   const [products, setProducts] = useState<ProductDisplay[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [nextToken, setNextToken] = useState<string | undefined>(undefined);
+  const [showLoadMore, setShowLoadMore] = useState(false);
 
-  const handleSearch = async () => {
+  // Custom Dropdown States
+  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const marketplaceRef = useRef<HTMLDivElement>(null);
+  const languageRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (marketplaceRef.current && !marketplaceRef.current.contains(event.target as Node)) {
+        setIsMarketplaceOpen(false);
+      }
+      if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
+        setIsLanguageOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
+  const [showFilter, setShowFilter] = useState(false);
+
+  // Selection Handlers
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedProductIds(new Set(products.map(p => p.id)));
+    } else {
+      setSelectedProductIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    const newSelected = new Set(selectedProductIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProductIds(newSelected);
+  };
+
+  // Summary Metrics Calculation (based on current products)
+  const totalRevenue = products.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
+  const avgRevenue = products.length > 0 ? totalRevenue / products.length : 0;
+  const avgPrice = products.length > 0 ? products.reduce((acc, curr) => acc + (curr.price || 0), 0) / products.length : 0;
+  const avgBSR = products.length > 0 ? products.reduce((acc, curr) => acc + (curr.bsr || 0), 0) / products.length : 0;
+  const avgReviews = products.length > 0 ? products.reduce((acc, curr) => acc + (curr.reviews || 0), 0) / products.length : 0;
+
+
+  /* Helper to map API items to display items */
+  const mapItemsToDisplay = (items: any[]): ProductDisplay[] => {
+    return items.map(item => {
+      const summary = item.summaries && item.summaries.length > 0 ? item.summaries[0] : null;
+      // Determine generic category key for translation if possible, or use raw value
+      let categoryKey = 'category.Unknown';
+      const rawCategory = summary?.websiteDisplayGroupName || '';
+
+      if (rawCategory.includes('Beauty')) categoryKey = 'category.Beauty';
+      else if (rawCategory.includes('Electronics')) categoryKey = 'category.Electronics';
+      else if (rawCategory.includes('Home')) categoryKey = 'category.Home';
+      else if (rawCategory.includes('Kitchen')) categoryKey = 'category.Kitchen';
+      else if (rawCategory.includes('Toy')) categoryKey = 'category.Toys';
+      else if (rawCategory.includes('Sport')) categoryKey = 'category.Sports';
+
+      // Extract MAIN Image
+      let mainImage = null;
+      if (item.images && item.images.length > 0) {
+        // Flatten images from all marketplaces or pick the first marketplace's images
+        const allImages = item.images.flatMap((m: any) => m.images || []);
+        const mainImgObj = allImages.find((img: any) => img.variant === 'MAIN');
+        mainImage = mainImgObj ? mainImgObj.link : null;
+      }
+
+      return {
+        id: item.asin,
+        title: summary?.itemName ? (summary.itemName.length > 60 ? summary.itemName.substring(0, 60) + '...' : summary.itemName) : 'Título Indisponível',
+        image: mainImage,
+        category: categoryKey !== 'category.Unknown' ? categoryKey : (rawCategory || 'category.Unknown'), // Store key or raw if no match
+        brand: summary?.brand || summary?.brandName || '-',
+        price: item.attributes?.list_price?.[0]?.value_with_tax || summary?.price?.amount || 0,
+        currency: item.attributes?.list_price?.[0]?.currency || summary?.price?.currencyCode || 'USD',
+
+        sales: null,
+        revenue: null,
+        score: null,
+        bsr: null,
+        fbaFees: null,
+        activeSellers: null,
+        reviews: null
+      };
+    });
+  }
+
+  const handleSearch = async (isLoadMore: boolean = false) => {
     if (!searchTerm) return;
     setIsSearching(true);
     setError(null);
-    setProducts([]);
 
     try {
-      // Pass the selected marketplace ID to the service
-      const result = await searchProducts(searchTerm, selectedMarketplace);
+      // Use nextToken if loading more, otherwise undefined for new search
+      const tokenToUse = isLoadMore ? nextToken : undefined;
+
+      const result = await searchProducts(searchTerm, selectedMarketplace, tokenToUse);
       console.log("Amazon Search Result:", result);
 
       if (result && result.items && result.items.length > 0) {
-        // Map all items found
-        const mappedProducts: ProductDisplay[] = result.items.map(item => {
-          const summary = item.summaries && item.summaries.length > 0 ? item.summaries[0] : null;
-          return {
-            id: item.asin,
-            title: summary?.itemName ? (summary.itemName.length > 60 ? summary.itemName.substring(0, 60) + '...' : summary.itemName) : 'Título Indisponível',
-            category: summary?.websiteDisplayGroupName || 'Desconhecida',
-            sales: null,
-            revenue: null,
-            score: null
-          };
-        });
+        const mappedProducts = mapItemsToDisplay(result.items);
 
-        setProducts(mappedProducts);
+        if (isLoadMore) {
+          setProducts(prev => [...prev, ...mappedProducts]);
+        } else {
+          setProducts(mappedProducts);
+        }
+
+        // Handle Pagination
+        if (result.pagination && result.pagination.nextToken) {
+          setNextToken(result.pagination.nextToken);
+          setShowLoadMore(true);
+        } else {
+          setNextToken(undefined);
+          setShowLoadMore(false);
+        }
+
       } else {
-        setError('Nenhum produto encontrado.');
+        if (!isLoadMore) {
+          setProducts([]); // Clear if new search has no results
+          setError(t('error.no_products'));
+        }
+        setShowLoadMore(false);
       }
 
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Erro ao buscar produto.');
+      setError(err.message || 'Error');
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleAnalyzeCategory = async () => {
-    setAnalyzing(true);
-    const result = await analyzeProductOpportunity(selectedCategory);
-    setAiAnalysis(result || "Sem análise disponível.");
-    setAnalyzing(false);
-  };
+  const onSearchClick = () => {
+    setNextToken(undefined); // Reset token for new search
+    handleSearch(false);
+  }
+
+  const selectedFlag = marketplaces.find(m => m.id === selectedMarketplace)?.flag;
+  const selectedCode = marketplaces.find(m => m.id === selectedMarketplace)?.code;
 
   return (
-    <div className="space-y-6 h-full overflow-y-auto pb-8">
-      {/* Search Header */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-4">
 
-        {/* Marketplace & Search Row */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+    <div className="space-y-4 h-full bg-gray-50"> {/* Compact spacing */}
 
-          {/* Marketplace Selector */}
-          <div className="flex items-center gap-2 w-full md:w-auto min-w-[200px]">
-            <Globe className="text-gray-400 w-5 h-5 hidden md:block" />
-            <select
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
-              value={selectedMarketplace}
-              onChange={(e) => setSelectedMarketplace(e.target.value)}
-            >
-              {marketplaces.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.flag} {m.name} ({m.code})
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Removed Top Header with Local Language Selector */}
 
-          {/* Keyword/ASIN Input */}
-          <div className="relative w-full md:flex-1">
+      {/* Search Header - Compacted */}
+      <div className="flex flex-col md:flex-row gap-3 justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-3 w-full">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Digite palavras-chave ou ASIN..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+              placeholder={t('search.placeholder')}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm shadow-sm transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && onSearchClick()}
             />
           </div>
 
+          {/* Custom Marketplace Dropdown */}
+          <div className="relative" ref={marketplaceRef}>
+            <button
+              onClick={() => setIsMarketplaceOpen(!isMarketplaceOpen)}
+              className="flex items-center gap-2 h-[46px] px-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-brand-300 hover:ring-2 hover:ring-brand-100 transition-all shadow-sm min-w-[120px]"
+            >
+              <span className="text-xl">{selectedFlag}</span>
+              <span className="flex-1 text-left">{selectedCode}</span>
+              <ChevronDown size={16} className={`text-gray-400 transition-transform ${isMarketplaceOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isMarketplaceOpen && (
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-40 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar">
+                <div className="p-2 grid gap-1">
+                  {marketplaces.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setSelectedMarketplace(m.id);
+                        setIsMarketplaceOpen(false);
+                      }}
+                      className={`
+                                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
+                                        ${selectedMarketplace === m.id ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-50 text-gray-700'}
+                                    `}
+                    >
+                      <span className="text-xl">{m.flag}</span>
+                      <span className="flex-1 text-left truncate">{m.name}</span>
+                      {selectedMarketplace === m.id && <Check size={14} className="text-brand-600" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
-            onClick={handleSearch}
-            disabled={isSearching || !searchTerm}
-            className="w-full md:w-auto bg-brand-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            onClick={onSearchClick}
+            disabled={isSearching}
+            className="bg-gray-900 text-white px-8 py-3 rounded-xl font-medium hover:bg-gray-800 transition-all text-sm shadow-lg shadow-gray-200 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isSearching ? 'Buscando...' : 'Buscar'}
+            {isSearching ? t('searching') : t('search.button')}
           </button>
         </div>
 
-        {/* Filters & AI Row (Optional) */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-end border-t border-gray-50 pt-4">
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <select
-              className="flex-1 md:w-auto px-4 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-700"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="Casa">Casa & Cozinha</option>
-              <option value="Eletrônicos">Eletrônicos</option>
-              <option value="Esportes">Esportes</option>
-            </select>
-            <button
-              onClick={handleAnalyzeCategory}
-              disabled={analyzing}
-              className="flex items-center gap-2 bg-dark-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-dark-900 transition-colors whitespace-nowrap"
-            >
-              <TrendingUp className="w-4 h-4" />
-              {analyzing ? '...' : 'IA'}
-            </button>
-          </div>
+        <div className="flex items-center gap-2">
+          <button className="text-brand-600 font-medium text-sm flex items-center gap-1 hover:text-brand-700 hover:underline transition-colors">
+            {t('suppliers.link')}
+          </button>
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          {error}
-        </div>
-      )}
-
-      {/* AI Insight Box */}
-      {aiAnalysis && (
-        <div className="bg-brand-50 border border-brand-200 p-6 rounded-xl relative">
-          <div className="absolute top-4 left-4 bg-white p-1 rounded-full shadow-sm">
-            <TrendingUp className="w-5 h-5 text-brand-600" />
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Search Volume */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.search_volume')}</div>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-bold text-gray-900">283</span>
+            <BarChart2 className="w-5 h-5 text-gray-300 mb-1.5" />
           </div>
-          <div className="ml-10">
-            <h3 className="font-bold text-brand-800 mb-2">Insight de Mercado IA</h3>
-            <div className="text-brand-900 text-sm leading-relaxed whitespace-pre-wrap">
-              {aiAnalysis}
+        </div>
+
+        {/* Total Revenue */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.total_revenue')}</div>
+          <div className="text-2xl font-bold text-gray-900 tracking-tight">US${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+          <div className="h-1 w-full bg-brand-100 mt-2 rounded-full overflow-hidden">
+            <div className="h-full bg-brand-500 w-[70%]"></div>
+          </div>
+        </div>
+
+        {/* Average Revenue */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.avg_revenue')}</div>
+          <div className="text-2xl font-bold text-gray-900 tracking-tight">US${avgRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+          <Activity className="w-4 h-4 text-green-500 mt-2" />
+        </div>
+
+        {/* Average Price */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.avg_price')}</div>
+          <div className="text-2xl font-bold text-gray-900 tracking-tight">US${avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+        </div>
+
+        {/* Success Score */}
+        <div className="bg-gradient-to-br from-brand-500 to-brand-600 p-5 rounded-2xl shadow-lg shadow-brand-200 text-white flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-brand-100 uppercase tracking-widest mb-2">{t('summary.success_score')}</div>
+            <div className="flex gap-1.5">
+              <div className="w-6 h-1.5 rounded-full bg-white/40"></div>
+              <div className="w-6 h-1.5 rounded-full bg-white/40"></div>
+              <div className="w-6 h-1.5 rounded-full bg-white"></div>
             </div>
           </div>
+          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl font-bold border border-white/30">
+            10
+          </div>
+        </div>
+
+      </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-3 border border-red-100">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span className="font-medium">{error}</span>
         </div>
       )}
 
       {/* Product Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Produto</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Categoria</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendas (Mês)</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Receita Est.</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Score IA</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ação</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {products.length === 0 && !isSearching ? (
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="text-sm text-gray-600 font-medium">
+            {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              className={`text-brand-600 text-sm font-semibold hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors ${showFilter ? 'bg-brand-50' : ''}`}
+            >
+              {t('filter.results')}
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 text-gray-500 font-semibold text-xs uppercase tracking-wider">
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                  Selecione o Marketplace e digite um termo/ASIN para buscar.
-                </td>
+                <th className="px-5 py-4 border-b border-gray-100 w-12 text-center">#</th>
+                <th className="px-5 py-4 border-b border-gray-100 min-w-[320px]">{t('col.product_details')}</th>
+                <th className="px-5 py-4 border-b border-gray-100">{t('col.asin')}</th>
+                <th className="px-5 py-4 border-b border-gray-100">{t('col.brand')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.price')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.sales')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-center">{t('col.sales_graph')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.revenue')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.bsr')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.fba_fees')}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-center">{t('col.active_sellers')}</th>
               </tr>
-            ) : (
-              products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900" title={product.title}>{product.title}</div>
-                    <div className="text-xs text-gray-400">ASIN: {product.id}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-400">-</td>
-                  <td className="px-6 py-4 text-gray-400">-</td>
-                  <td className="px-6 py-4 text-gray-400">-</td>
-                  <td className="px-6 py-4">
-                    <button className="text-brand-600 hover:text-brand-800 font-medium text-xs opacity-50 cursor-not-allowed">
-                      Rastrear
-                    </button>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="w-8 h-8 text-gray-300" />
+                      <p>{t('error.no_products')}</p>
+                    </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                products.map((product, index) => (
+                  <tr key={product.id} className="hover:bg-blue-50/50 transition-colors group">
+                    <td className="px-5 py-4 text-center text-gray-400 bg-gray-50/30 border-r border-gray-100 font-mono text-xs">
+                      <div className="mb-2">{index + 1}</div>
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                        checked={selectedProductIds.has(product.id)}
+                        onChange={() => handleSelectRow(product.id)}
+                      />
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex gap-4">
+                        <div className="w-14 h-14 flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                          {product.image ? (
+                            <img src={product.image} alt="" className="w-full h-full object-contain" />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
+                              <Box size={20} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 py-0.5">
+                          <div className="font-medium text-brand-700 truncate mb-1.5 hover:underline cursor-pointer text-base" title={product.title}>
+                            {product.title}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {product.category && (
+                              <span className="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 uppercase tracking-wide">
+                                {t(product.category.startsWith('category.') ? product.category : product.category)}
+                              </span>
+                            )}
+                            {/* Add rating stars later */}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="text-gray-900 font-mono text-xs bg-gray-100 px-2 py-1 rounded w-fit select-all">
+                        {product.id}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-gray-700 font-medium truncate max-w-[150px]" title={product.brand || ''}>
+                      {product.brand || '-'}
+                    </td>
+                    <td className="px-5 py-4 text-right font-bold text-gray-900">
+                      {product.price ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.price) : '-'}
+                    </td>
+                    <td className="px-5 py-4 text-right text-gray-600 font-medium">
+                      {product.sales ? product.sales.toLocaleString() : '-'}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <div className="h-8 w-20 bg-gray-50 rounded mx-auto overflow-hidden relative">
+                        <svg className="w-full h-full text-green-500" viewBox="0 0 100 40" preserveAspectRatio="none">
+                          <path d="M0,35 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-right font-bold text-gray-900">
+                      {product.revenue ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.revenue) : '-'}
+                    </td>
+                    <td className="px-5 py-4 text-right text-gray-600 font-medium">
+                      {product.bsr ? product.bsr.toLocaleString() : '-'}
+                    </td>
+                    <td className="px-5 py-4 text-right text-gray-500">
+                      {product.fbaFees ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees) : '-'}
+                    </td>
+                    <td className="px-5 py-4 text-center text-gray-600">
+                      {product.activeSellers || '-'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+
+          {/* Load More Button */}
+          {products.length > 0 && (
+            <div className="p-4 border-t border-gray-100 flex flex-col items-center gap-2 bg-gray-50">
+              <button
+                onClick={() => handleSearch(true)}
+                disabled={isSearching || !nextToken}
+                className="px-6 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSearching ? 'Loading...' : (nextToken ? 'Load More Results' : 'No More Results')}
+              </button>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
 };
+

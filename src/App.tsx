@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LandingPage } from './views/LandingPage';
 import { Dashboard } from './views/Dashboard';
 import { AppView } from './types';
+import { LanguageProvider } from './services/languageService';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>(AppView.LANDING);
@@ -16,13 +17,13 @@ function App() {
   };
 
   return (
-    <>
+    <LanguageProvider>
       {currentView === AppView.LANDING ? (
         <LandingPage onLogin={handleLogin} />
       ) : (
         <Dashboard onLogout={handleLogout} />
       )}
-    </>
+    </LanguageProvider>
   );
 }
 
