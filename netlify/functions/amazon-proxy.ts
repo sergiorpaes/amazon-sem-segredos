@@ -50,9 +50,15 @@ export const handler: Handler = async (event, context) => {
 
         // Construct the SP-API URL
         let url = "";
-        if (asin) {
+        if (body.intent === 'get_offers' && asin) {
+            // Pricing API: Get Offers
+            url = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+
+        } else if (asin) {
+            // Catalog API: Get Item
             url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${asin}&identifiersType=ASIN&includedData=salesRanks,summaries,images,attributes`;
         } else if (keywords) {
+            // Catalog API: Search
             url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(keywords)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
             if (pageToken) {
                 url += `&pageToken=${encodeURIComponent(pageToken)}`;

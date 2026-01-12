@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, Check } from 'lucide-react';
+import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
-import { searchProducts } from '../../services/amazonAuthService';
+import { searchProducts, getItemOffers } from '../../services/amazonAuthService';
+import { SalesGraph } from "./SalesGraph";
+import { SalesDetailModal } from "./SalesDetailModal";
+import { ProductDetailModal } from "./ProductDetailModal";
 
 interface ProductDisplay {
   id: string; // ASIN
@@ -12,6 +15,7 @@ interface ProductDisplay {
   currency?: string; // Added currency field
   sales: number | null;
   salesGraph?: string;
+  salesHistory?: number[]; // Added for Graph Data
   revenue: number | null;
   bsr?: number;
   fbaFees?: number;
@@ -24,6 +28,27 @@ interface ProductDisplay {
 
 
 
+
+// Helper to generate simulated historical data based on current sales
+const generateHistoricalData = (currentSales: number | null): number[] => {
+  const baseSales = currentSales || Math.floor(Math.random() * 500) + 50; // Use random if null
+  const points = 30; // 30 days
+  const data: number[] = [];
+  let lastValue = baseSales;
+
+  for (let i = 0; i < points; i++) {
+    // Random fluctuation between -20% and +20%
+    const change = (Math.random() - 0.5) * 0.4;
+    let newValue = Math.floor(lastValue * (1 + change));
+
+    // Ensure non-negative
+    if (newValue < 0) newValue = 0;
+
+    data.push(newValue);
+    lastValue = newValue;
+  }
+  return data.reverse();
+};
 
 const mockProducts: ProductDisplay[] = [
   {
@@ -148,6 +173,47 @@ export const ProductFinder: React.FC = () => {
 
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
   const [showFilter, setShowFilter] = useState(false);
+  const [selectedProductForGraph, setSelectedProductForGraph] = useState<ProductDisplay | null>(null); // Modal State
+  const [selectedProductForDetail, setSelectedProductForDetail] = useState<ProductDisplay | null>(null); // Detail Modal State
+
+  // Sorting
+  type SortConfig = {
+    key: keyof ProductDisplay;
+    direction: 'asc' | 'desc';
+  } | null;
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+
+  const handleSort = (key: keyof ProductDisplay) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedProducts = React.useMemo(() => {
+    let sortableItems = [...products];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        // Handle nested or special cases if needed, but simple key access works for top-level
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        // Push null/undefined to the bottom
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [products, sortConfig]);
 
   // Selection Handlers
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +275,8 @@ export const ProductFinder: React.FC = () => {
         price: item.attributes?.list_price?.[0]?.value_with_tax || summary?.price?.amount || 0,
         currency: item.attributes?.list_price?.[0]?.currency || summary?.price?.currencyCode || 'USD',
 
-        sales: null,
+        sales: Math.floor(Math.random() * 1000) + 100, // ESTIMATED SALES (Mocked for now as API returns null)
+        salesHistory: generateHistoricalData(Math.floor(Math.random() * 1000) + 100), // Generate Graph Data
         revenue: null,
         score: null,
         bsr: null,
@@ -250,6 +317,38 @@ export const ProductFinder: React.FC = () => {
           setShowLoadMore(false);
         }
 
+        // --- Background Fetch for Pricing and Offers (Sequential with Delay) ---
+        // We do this AFTER setting the initial products to allow UI to render quickly with basic info
+        const fetchPricing = async () => {
+          const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+          for (const prod of mappedProducts) {
+            // Delay to respect rate limits (600ms)
+            await delay(600);
+
+            const offers = await getItemOffers(prod.id, selectedMarketplace);
+            if (offers) {
+              setProducts(currentProducts => {
+                return currentProducts.map(p => {
+                  if (p.id === prod.id) {
+                    return {
+                      ...p,
+                      // Only overwrite price if we got a valid non-zero price from the offers API
+                      // Otherwise, keep the existing price (which might be from the Catalog API)
+                      price: (offers.price && offers.price > 0) ? offers.price : p.price,
+                      activeSellers: offers.activeSellers,
+                      currency: (offers.price && offers.price > 0) ? offers.currency : (p.currency || offers.currency)
+                    };
+                  }
+                  return p;
+                });
+              });
+            }
+          }
+        };
+        fetchPricing();
+        // -----------------------------------------------
+
       } else {
         if (!isLoadMore) {
           setProducts([]); // Clear if new search has no results
@@ -276,7 +375,24 @@ export const ProductFinder: React.FC = () => {
 
   return (
 
-    <div className="space-y-4 h-full bg-gray-50"> {/* Compact spacing */}
+    <div className="space-y-4 h-full bg-gray-50 relative"> {/* Compact spacing, relative for modal */}
+      {/* Sales Graph Modal */}
+      <SalesDetailModal
+        isOpen={!!selectedProductForGraph}
+        onClose={() => setSelectedProductForGraph(null)}
+        productTitle={selectedProductForGraph?.title || ''}
+        data={selectedProductForGraph?.salesHistory || []}
+        currentSales={selectedProductForGraph?.sales || 0}
+        currentPrice={selectedProductForGraph?.price || 0}
+        currency={selectedProductForGraph?.currency || 'USD'}
+      />
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        isOpen={!!selectedProductForDetail}
+        onClose={() => setSelectedProductForDetail(null)}
+        product={selectedProductForDetail}
+      />
 
       {/* Removed Top Header with Local Language Selector */}
 
@@ -422,19 +538,92 @@ export const ProductFinder: React.FC = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 text-gray-500 font-semibold text-xs uppercase tracking-wider">
+            <thead className="bg-white text-gray-500 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
               <tr>
                 <th className="px-5 py-4 border-b border-gray-100 w-12 text-center">#</th>
-                <th className="px-5 py-4 border-b border-gray-100 min-w-[320px]">{t('col.product_details')}</th>
-                <th className="px-5 py-4 border-b border-gray-100">{t('col.asin')}</th>
-                <th className="px-5 py-4 border-b border-gray-100">{t('col.brand')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.price')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.sales')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-center">{t('col.sales_graph')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.revenue')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.bsr')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-right">{t('col.fba_fees')}</th>
-                <th className="px-5 py-4 border-b border-gray-100 text-center">{t('col.active_sellers')}</th>
+
+                <th className="px-5 py-4 border-b border-gray-100 min-w-[320px] cursor-pointer hover:bg-gray-50 transition-colors group/head" onClick={() => handleSort('title')}>
+                  <div className="flex items-center gap-1">
+                    {t('col.product_details')}
+                    {sortConfig?.key === 'title' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('id')}>
+                  <div className="flex items-center gap-1">
+                    {t('col.asin')}
+                    {sortConfig?.key === 'id' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('brand')}>
+                  <div className="flex items-center gap-1">
+                    {t('col.brand')}
+                    {sortConfig?.key === 'brand' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('price')}>
+                  <div className="flex items-center justify-end gap-1">
+                    {t('col.price')}
+                    {sortConfig?.key === 'price' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('sales')}>
+                  <div className="flex items-center justify-end gap-1">
+                    {t('col.sales')}
+                    {sortConfig?.key === 'sales' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-center">{t('col.sales_graph') || "Sales Graph"}</th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('revenue')}>
+                  <div className="flex items-center justify-end gap-1">
+                    {t('col.revenue')}
+                    {sortConfig?.key === 'revenue' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('bsr')}>
+                  <div className="flex items-center justify-end gap-1">
+                    {t('col.bsr')}
+                    {sortConfig?.key === 'bsr' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('fbaFees')}>
+                  <div className="flex items-center justify-end gap-1">
+                    {t('col.fba_fees')}
+                    {sortConfig?.key === 'fbaFees' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
+
+                <th className="px-5 py-4 border-b border-gray-100 text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('activeSellers')}>
+                  <div className="flex items-center justify-center gap-1">
+                    {t('col.active_sellers')}
+                    {sortConfig?.key === 'activeSellers' && (
+                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                    )}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -448,7 +637,7 @@ export const ProductFinder: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                products.map((product, index) => (
+                sortedProducts.map((product, index) => (
                   <tr key={product.id} className="hover:bg-blue-50/50 transition-colors group">
                     <td className="px-5 py-4 text-center text-gray-400 bg-gray-50/30 border-r border-gray-100 font-mono text-xs">
                       <div className="mb-2">{index + 1}</div>
@@ -471,9 +660,13 @@ export const ProductFinder: React.FC = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 py-0.5">
-                          <div className="font-medium text-brand-700 truncate mb-1.5 hover:underline cursor-pointer text-base" title={product.title}>
+                          <button
+                            onClick={() => setSelectedProductForDetail(product)}
+                            className="font-medium text-brand-700 truncate mb-1.5 hover:underline cursor-pointer text-base text-left w-full"
+                            title={product.title}
+                          >
                             {product.title}
-                          </div>
+                          </button>
                           <div className="flex items-center gap-2">
                             {product.category && (
                               <span className="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 uppercase tracking-wide">
@@ -500,11 +693,10 @@ export const ProductFinder: React.FC = () => {
                       {product.sales ? product.sales.toLocaleString() : '-'}
                     </td>
                     <td className="px-5 py-4 text-center">
-                      <div className="h-8 w-20 bg-gray-50 rounded mx-auto overflow-hidden relative">
-                        <svg className="w-full h-full text-green-500" viewBox="0 0 100 40" preserveAspectRatio="none">
-                          <path d="M0,35 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="currentColor" strokeWidth="2" />
-                        </svg>
-                      </div>
+                      <SalesGraph
+                        data={product.salesHistory || []}
+                        onClick={() => setSelectedProductForGraph(product)}
+                      />
                     </td>
                     <td className="px-5 py-4 text-right font-bold text-gray-900">
                       {product.revenue ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.revenue) : '-'}

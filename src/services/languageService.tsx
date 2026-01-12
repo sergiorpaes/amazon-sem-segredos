@@ -59,7 +59,18 @@ const translations = {
         'module.listing_optimizer': 'Otimizador de Listings',
         'module.ads_manager': 'Gerenciador de Ads',
         'module.settings': 'Configurações',
-        'module.logout': 'Sair',
+        // Modal
+        'modal.est_sales': 'Vendas Est.',
+        'modal.est_revenue': 'Receita Est.',
+        'modal.price': 'Preço',
+        'modal.sellers': 'Vendedores',
+        'modal.reviews': 'Avaliações',
+        'modal.score': 'Score',
+        'modal.fba_fees': 'Taxas FBA',
+        'modal.view_amazon': 'Ver na Amazon',
+        'modal.units_month': 'Unid. / Mês',
+        'modal.footer_disclaimer': 'Dados fornecidos pela Amazon SP-API • Estimativas baseadas na categoria',
+        'modal.unknown_brand': 'Marca Desconhecida',
     },
     es: {
         // General
@@ -112,6 +123,20 @@ const translations = {
         'module.ads_manager': 'Gestor de Anuncios',
         'module.settings': 'Configuración',
         'module.logout': 'Cerrar Sesión',
+        'category.Electronics': 'Electrónica', // Fixed Typo
+
+        // Modal
+        'modal.est_sales': 'Ventas Est.',
+        'modal.est_revenue': 'Ingresos Est.',
+        'modal.price': 'Precio',
+        'modal.sellers': 'Vendedores',
+        'modal.reviews': 'Reseñas',
+        'modal.score': 'Puntuación',
+        'modal.fba_fees': 'Tarifas FBA',
+        'modal.view_amazon': 'Ver en Amazon',
+        'modal.units_month': 'Unid. / Mes',
+        'modal.footer_disclaimer': 'Datos proporcionados por Amazon SP-API • Estimaciones basadas en la categoría',
+        'modal.unknown_brand': 'Marca Desconocida',
     }
 };
 
