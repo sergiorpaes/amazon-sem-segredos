@@ -119,11 +119,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-4'} py-2 text-gray-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors text-sm`}
             >
               {isCollapsed ? (
-                <span className="text-xl">{language === 'pt' ? '🇧🇷' : '🇪🇸'}</span>
+                <span className="text-xl">
+                  {language === 'pt' ? '🇧🇷' : language === 'es' ? '🇪🇸' : '🇺🇸'}
+                </span>
               ) : (
                 <>
                   <div className="flex items-center gap-3">
-                    <span>{language === 'pt' ? '🇧🇷 Português' : '🇪🇸 Español'}</span>
+                    <span>
+                      {language === 'pt' ? '🇧🇷 Português' : language === 'es' ? '🇪🇸 Español' : '🇺🇸 English'}
+                    </span>
                   </div>
                   <ChevronDown size={14} className={`transition-transform ${isLanguageOpen ? 'rotate-180' : ''}`} />
                 </>
@@ -145,6 +149,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <span className="flex items-center gap-2">🇪🇸 Español</span>
                   {language === 'es' && <Check size={14} className="text-brand-500" />}
+                </button>
+                <button
+                  onClick={() => { setLanguage('en'); setIsLanguageOpen(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">🇺🇸 English</span>
+                  {language === 'en' && <Check size={14} className="text-brand-500" />}
                 </button>
               </div>
             )}

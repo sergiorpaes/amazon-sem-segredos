@@ -14,7 +14,11 @@ import {
 export interface Agent {
     id: string;
     name: string;
-    description: string;
+    description: {
+        pt: string;
+        en: string;
+        es: string;
+    };
     icon: any;
     color: string;
     systemPrompt: string;
@@ -25,7 +29,11 @@ export const AGENTS: Agent[] = [
     {
         id: 'pathfinder',
         name: 'Pathfinder',
-        description: 'Identify high-potential products by analyzing demand, trends, and competitor signals.',
+        description: {
+            en: 'Identify high-potential products by analyzing demand, trends, and competitor signals.',
+            pt: 'Identifique produtos com alto potencial analisando demanda, tendências e sinais da concorrência.',
+            es: 'Identifique productos de alto potencial analizando la demanda, las tendencias y las señales de la competencia.'
+        },
         icon: Search,
         color: 'text-yellow-400',
         systemPrompt: `You are Pathfinder, an expert Amazon Product Researcher. 
@@ -36,7 +44,11 @@ Always be objective, analytical, and focus on metrics like BSR, reviews, and key
     {
         id: 'catalyst',
         name: 'Catalyst',
-        description: 'Boost catalog performance through strategic analysis and data-driven optimizations.',
+        description: {
+            en: 'Boost catalog performance through strategic analysis and data-driven optimizations.',
+            pt: 'Aumente a performance do catálogo através de análises estratégicas e otimizações baseadas em dados.',
+            es: 'Aumente el rendimiento del catálogo mediante análisis estratégicos y optimizaciones basadas en datos.'
+        },
         icon: TrendingUp,
         color: 'text-yellow-400',
         systemPrompt: `You are Catalyst, an expert in Amazon Listing and Catalog Optimization.
@@ -46,7 +58,11 @@ Provide actionable advice on improving images, titles, bullets, and descriptions
     {
         id: 'profitlens',
         name: 'ProfitLens',
-        description: 'Gain full visibility into costs, margins, and smarter pricing decisions.',
+        description: {
+            en: 'Gain full visibility into costs, margins, and smarter pricing decisions.',
+            pt: 'Tenha visibilidade total de custos, margens e decisões de preços mais inteligentes.',
+            es: 'Obtenga visibilidad total de costos, márgenes y decisiones de precios más inteligentes.'
+        },
         icon: DollarSign,
         color: 'text-yellow-400',
         systemPrompt: `You are ProfitLens, a financial expert for Amazon FBA sellers.
@@ -57,7 +73,11 @@ Always prioritize net profit over gross revenue.`
     {
         id: 'ignition',
         name: 'Ignition',
-        description: 'Execute proven strategies to successfully launch and scale new products.',
+        description: {
+            en: 'Execute proven strategies to successfully launch and scale new products.',
+            pt: 'Execute estratégias comprovadas para lançar e escalar novos produtos com sucesso.',
+            es: 'Ejecute estrategias probadas para lanzar y escalar nuevos productos con éxito.'
+        },
         icon: Rocket,
         color: 'text-yellow-400',
         systemPrompt: `You are Ignition, a specialist in Amazon Product Launches.
@@ -67,7 +87,11 @@ Advise on PPC launch campaigns, Vine program, pricing strategies for launch (hon
     {
         id: 'sentinel',
         name: 'Sentinel',
-        description: 'Protect your account and resolve Amazon compliance and policy issues.',
+        description: {
+            en: 'Protect your account and resolve Amazon compliance and policy issues.',
+            pt: 'Proteja sua conta e resolva problemas de conformidade e políticas da Amazon.',
+            es: 'Proteja su cuenta y resuelva problemas de cumplimiento y políticas de Amazon.'
+        },
         icon: ShieldCheck,
         color: 'text-yellow-400',
         systemPrompt: `You are Sentinel, an expert in Amazon Seller Account Health and Compliance.
@@ -77,7 +101,11 @@ Be conservative and protective in your advice to ensure long-term account safety
     {
         id: 'pulse',
         name: 'Pulse',
-        description: 'Anticipate market moves by monitoring changes, opportunities, and competitor actions.',
+        description: {
+            en: 'Anticipate market moves by monitoring changes, opportunities, and competitor actions.',
+            pt: 'Antecipe movimentos de mercado monitorando mudanças, oportunidades e ações da concorrência.',
+            es: 'Anticipe los movimientos del mercado monitoreando cambios, oportunidades y acciones de la competencia.'
+        },
         icon: LineChart,
         color: 'text-yellow-400',
         systemPrompt: `You are Pulse, a Market Analyst for E-commerce.
@@ -87,7 +115,11 @@ Analyze consumer behavior, seasonality, and broader market shifts to give the us
     {
         id: 'listing-forge',
         name: 'Listing Forge',
-        description: 'Create and optimize high-converting listings, fully aligned with 2025 requirements.',
+        description: {
+            en: 'Create and optimize high-converting listings, fully aligned with 2025 requirements.',
+            pt: 'Crie e otimize listings de alta conversão, totalmente alinhados com os requisitos de 2025.',
+            es: 'Cree y optimice listados de alta conversión, totalmente alineados con los requisitos de 2025.'
+        },
         icon: LayoutTemplate,
         color: 'text-yellow-400',
         systemPrompt: `You are Listing Forge, a specialist in building high-converting Amazon Listings that adhere to 2025 standards.
@@ -97,7 +129,11 @@ Ensure all advice complies with the latest Amazon style guides and algorithms.`
     {
         id: 'horizon',
         name: 'Horizon',
-        description: 'New capabilities currently in development.',
+        description: {
+            en: 'New capabilities currently in development.',
+            pt: 'Novas capacidades atualmente em desenvolvimento.',
+            es: 'Nuevas capacidades actualmente en desarrollo.'
+        },
         icon: Layers,
         color: 'text-gray-500',
         systemPrompt: '',
@@ -106,7 +142,11 @@ Ensure all advice complies with the latest Amazon style guides and algorithms.`
     {
         id: 'nexus',
         name: 'Nexus',
-        description: 'New intelligent agents coming soon.',
+        description: {
+            en: 'New intelligent agents coming soon.',
+            pt: 'Novos agentes inteligentes em breve.',
+            es: 'Nuevos agentes inteligentes próximamente.'
+        },
         icon: Sparkles,
         color: 'text-gray-500',
         systemPrompt: '',

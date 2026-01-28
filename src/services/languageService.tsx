@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type Language = 'pt' | 'es';
+export type Language = 'pt' | 'es' | 'en';
 
 interface LanguageContextType {
     language: Language;
@@ -71,6 +71,8 @@ export const translations = {
         'modal.units_month': 'Unid. / Mês',
         'modal.footer_disclaimer': 'Dados fornecidos pela Amazon SP-API • Estimativas baseadas na categoria',
         'modal.unknown_brand': 'Marca Desconhecida',
+        'mentor.title': 'Conheça nossos 9 Agentes Especializados',
+        'mentor.subtitle': 'Cada um é preparado para lidar com desafios específicos.',
     },
     es: {
         // General
@@ -136,6 +138,75 @@ export const translations = {
         'modal.units_month': 'Unid. / Mes',
         'modal.footer_disclaimer': 'Datos proporcionados por Amazon SP-API • Estimaciones basadas en la categoría',
         'modal.unknown_brand': 'Marca Desconocida',
+        'mentor.title': 'Conozca nuestros 9 Agentes Especializados',
+        'mentor.subtitle': 'Cada uno está preparado para enfrentar desafíos específicos.',
+    },
+    en: {
+        // General
+        'app.title': 'Amazon Secrets Revealed',
+        'search.placeholder': 'Enter keyword or ASIN',
+        'search.button': 'Search',
+        'searching': 'Searching...',
+        'suppliers.link': 'Find Suppliers on Alibaba',
+        'rows.selected': 'Rows Selected',
+        'filter.results': 'Filter Results',
+
+        // Product Finder Headers
+        'col.product_details': 'Product Details',
+        'col.asin': 'ASIN',
+        'col.brand': 'Brand',
+        'col.price': 'Price',
+        'col.sales': 'Sales',
+        'col.sales_graph': 'Sales Graph',
+        'col.revenue': 'Revenue',
+        'col.bsr': 'BSR',
+        'col.fba_fees': 'FBA Fees',
+        'col.active_sellers': 'Active Sellers',
+
+        // Summary Cards
+        'summary.search_volume': 'Search Volume',
+        'summary.total_revenue': 'Total Revenue',
+        'summary.avg_revenue': 'Avg Revenue',
+        'summary.avg_price': 'Avg Price',
+        'summary.avg_bsr': 'Avg BSR',
+        'summary.avg_reviews': 'Avg Reviews',
+        'summary.success_score': 'Success Score',
+
+        // Empty States / Errors
+        'error.no_products': 'No products found. Start a search.',
+
+        // Product Categories
+        'category.Beauty': 'Beauty',
+        'category.Electronics': 'Electronics',
+        'category.Home': 'Home',
+        'category.Kitchen': 'Kitchen',
+        'category.Toys': 'Toys',
+        'category.Sports': 'Sports',
+        'category.Unknown': 'General',
+
+        // Modules
+        'module.dashboard': 'Overview',
+        'module.mentor': 'Virtual Mentor',
+        'module.product_finder': 'Product Finder',
+        'module.listing_optimizer': 'Listing Optimizer',
+        'module.ads_manager': 'Ads Manager',
+        'module.settings': 'Settings',
+        'module.logout': 'Logout',
+
+        // Modal
+        'modal.est_sales': 'Est. Sales',
+        'modal.est_revenue': 'Est. Revenue',
+        'modal.price': 'Price',
+        'modal.sellers': 'Sellers',
+        'modal.reviews': 'Reviews',
+        'modal.score': 'Score',
+        'modal.fba_fees': 'FBA Fees',
+        'modal.view_amazon': 'View on Amazon',
+        'modal.units_month': 'Units / Month',
+        'modal.footer_disclaimer': 'Data provided by Amazon SP-API • Estimates based on category',
+        'modal.unknown_brand': 'Unknown Brand',
+        'mentor.title': 'Our 9 Specialized Agents',
+        'mentor.subtitle': 'Each agent is trained to solve specific business challenges.',
     }
 };
 

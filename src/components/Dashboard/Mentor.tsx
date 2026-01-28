@@ -3,8 +3,10 @@ import { Send, Bot, User, Loader2, ArrowLeft, MoreHorizontal } from 'lucide-reac
 import { chatWithMentor } from '../../services/geminiService';
 import { ChatMessage } from '../../types';
 import { AGENTS, Agent } from '../../data/agents';
+import { useLanguage } from '../../services/languageService';
 
 export const Mentor: React.FC = () => {
+  const { language, t } = useLanguage();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -14,16 +16,27 @@ export const Mentor: React.FC = () => {
   // Initialize chat when agent is selected
   useEffect(() => {
     if (selectedAgent) {
+      let greeting = '';
+      const description = selectedAgent.description[language] || selectedAgent.description['en'];
+
+      if (language === 'pt') {
+        greeting = `Olá! Eu sou o ${selectedAgent.name}. \n\n${description}. Como posso ajudar você hoje?`;
+      } else if (language === 'es') {
+        greeting = `¡Hola! Soy ${selectedAgent.name}. \n\n${description}. ¿Cómo puedo ayudarte hoy?`;
+      } else {
+        greeting = `Hello! I am ${selectedAgent.name}. \n\n${description}. How can I assist you today?`;
+      }
+
       setMessages([
         {
           id: 'system-welcome',
           role: 'model',
-          text: `Hello! I am ${selectedAgent.name}. \n\n${selectedAgent.description}. How can I assist you today?`,
+          text: greeting,
           timestamp: new Date(),
         },
       ]);
     }
-  }, [selectedAgent]);
+  }, [selectedAgent, language]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,7 +62,11 @@ export const Mentor: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const responseText = await chatWithMentor(textToSend, messages, selectedAgent.systemPrompt);
+      // Append language instruction to system prompt
+      const langInstruction = `\n\nIMPORTANT: ALWAYS Answer in ${language === 'pt' ? 'Portuguese' : language === 'es' ? 'Spanish' : 'English'}.`;
+      const fullInstructions = selectedAgent.systemPrompt + langInstruction;
+
+      const responseText = await chatWithMentor(textToSend, messages, fullInstructions);
 
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -78,8 +95,8 @@ export const Mentor: React.FC = () => {
     return (
       <div className="flex flex-col h-full overflow-y-auto custom-scrollbar p-6">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Conheça nossos 9 Agentes Especializados</h2>
-          <p className="text-gray-500">Cada um é preparado para lidar com desafios específicos.</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('mentor.title')}</h2>
+          <p className="text-gray-500">{t('mentor.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
@@ -112,7 +129,7 @@ export const Mentor: React.FC = () => {
                 </h3>
 
                 <p className={`text-sm leading-relaxed ${agent.isComingSoon ? 'text-gray-500' : 'text-gray-400'}`}>
-                  {agent.description}
+                  {agent.description[language] || agent.description['en']}
                 </p>
 
                 {!agent.isComingSoon && (
