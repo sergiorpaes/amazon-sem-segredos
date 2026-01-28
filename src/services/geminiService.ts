@@ -58,7 +58,9 @@ export const chatWithMentor = async (message: string, history: any[], instructio
     }
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      // Prefer the detailed message if exists, otherwise the error code, otherwise status text
+      const errorMessage = data.message || data.error || `HTTP error! status: ${response.status} - ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     return data.response;
