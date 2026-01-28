@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, ArrowLeft, MoreHorizontal } from 'lucide-react';
-import { chatWithMentor } from '../../services/openaiService';
+import { chatWithMentor } from '../../services/geminiService';
 import { ChatMessage } from '../../types';
 import { AGENTS, Agent } from '../../data/agents';
 

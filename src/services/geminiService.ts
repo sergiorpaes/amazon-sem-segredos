@@ -25,36 +25,45 @@ EXPERTISE:
 - Validation: BigBuy, Qogita, Helium 10.
 `;
 
-export const chatWithMentor = async (message: string, history: { role: string; parts: { text: string }[] }[]) => {
+// Maps ChatMessage type to Gemini content part
+const mapToGeminiHistory = (history: any[]) => {
+  return history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.text }]
+  }));
+};
+
+export const chatWithMentor = async (message: string, history: any[], instructions?: string) => {
   try {
-    // 1. Try env variable (Vite often uses import.meta.env, but define replacement handles process.env)
-    // 2. Fallback to a hardcoded placeholder if you must, but for now we rely on the build process injection.
-    const apiKey = process.env.API_KEY || '';
+    const geminiHistory = mapToGeminiHistory(history);
 
-    if (!apiKey || apiKey.includes('PLACEHOLDER')) {
-      // If we really don't have a key, we can't do much. 
-      // But the user insisted on "no modal", so we just try.
-      // It will likely fail if strictly empty. 
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-    const chat = ai.chats.create({
-      model: 'models/gemini-1.5-flash',
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION_MENTOR,
+    const response = await fetch('/.netlify/functions/gemini-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      history: history,
+      body: JSON.stringify({
+        message,
+        history: geminiHistory,
+        instructions
+      })
     });
 
-    const result = await chat.sendMessage({ message });
-    return result.text;
-  } catch (error) {
-    console.error("CR7 AI Connection Error:", error);
-    // @ts-ignore
-    if (error.message?.includes('404')) {
-      return "Erro de conexão: Modelo de IA não encontrado. Verifique a configuração.";
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return "Desculpe, meu sistema tático está offline (Erro de API). Verifique a chave API no código.";
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return data.response;
+
+  } catch (error) {
+    console.error("Gemini AI Connection Error:", error);
+    return "Desculpe, meu sistema tático está offline (Erro de Conexão). Tente novamente.";
   }
 };
 
