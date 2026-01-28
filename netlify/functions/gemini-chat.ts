@@ -56,9 +56,7 @@ export const handler = async (event: any) => {
             history: history || [],
         });
 
-        const result = await chat.sendMessage({
-            parts: [{ text: message }]
-        });
+        const result = await chat.sendMessage(message);
 
         const responseText = result.text;
 
