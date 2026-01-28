@@ -18,7 +18,7 @@ export const Mentor: React.FC = () => {
         {
           id: 'system-welcome',
           role: 'model',
-          text: `Olá! Eu sou o ${selectedAgent.name}. \n\n${selectedAgent.description}. Como posso ajudar?`,
+          text: `Hello! I am ${selectedAgent.name}. \n\n${selectedAgent.description}. How can I assist you today?`,
           timestamp: new Date(),
         },
       ]);
@@ -79,7 +79,7 @@ export const Mentor: React.FC = () => {
       <div className="flex flex-col h-full overflow-y-auto custom-scrollbar p-6">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Our 9 Specialized Agents</h2>
-          <p className="text-gray-500">Each agent is trained to solve specific problems</p>
+          <p className="text-gray-500">Each agent is trained to solve specific business challenges</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">

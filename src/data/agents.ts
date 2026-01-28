@@ -6,7 +6,9 @@ import {
     Rocket,
     ShieldCheck,
     LineChart,
-    LayoutTemplate
+    LayoutTemplate,
+    Sparkles,
+    Layers
 } from 'lucide-react';
 
 export interface Agent {
@@ -21,75 +23,93 @@ export interface Agent {
 
 export const AGENTS: Agent[] = [
     {
-        id: 'scout',
-        name: 'Caçador de Produtos',
-        description: 'Encontre produtos vencedores analisando tendências e concorrência',
+        id: 'pathfinder',
+        name: 'Pathfinder',
+        description: 'Identify high-potential products by analyzing demand, trends, and competitor signals.',
         icon: Search,
         color: 'text-yellow-400',
-        systemPrompt: `Você é o Caçador de Produtos, um especialista em pesquisa de produtos para Amazon.
-Seu objetivo é ajudar o usuário a encontrar produtos vencedores analisando tendências de mercado, demanda, concorrência e lucratividade.
-Concentre-se em insights baseados em dados, identificando lacunas no mercado e validando ideias de produtos.
-Seja sempre objetivo, analítico e foque em métricas como BSR, avaliações e volume de busca de palavras-chave.`
+        systemPrompt: `You are Pathfinder, an expert Amazon Product Researcher. 
+Your goal is to help the user find winning products by analyzing market trends, demand, competition, and profitability.
+Focus on data-driven insights, identifying gaps in the market, and validating product ideas.
+Always be objective, analytical, and focus on metrics like BSR, reviews, and keyword search volume.`
     },
     {
-        id: 'optimizer',
-        name: 'Otimizador de Listings',
-        description: 'Maximize a rentabilidade do catálogo através de análise sistemática',
+        id: 'catalyst',
+        name: 'Catalyst',
+        description: 'Boost catalog performance through strategic analysis and data-driven optimizations.',
         icon: TrendingUp,
         color: 'text-yellow-400',
-        systemPrompt: `Você é o Otimizador, um especialista em Otimização de Listings e Catálogos da Amazon.
-Seu objetivo é maximizar a lucratividade. Analise listings para otimização da taxa de conversão (CRO), indexação de palavras-chave e oportunidades de teste A/B.
-Forneça conselhos práticos sobre como melhorar imagens, títulos, bullet points e descrições para aumentar a velocidade de vendas.`
+        systemPrompt: `You are Catalyst, an expert in Amazon Listing and Catalog Optimization.
+Your goal is to maximize profitability. Analyze listings for conversion rate optimization (CRO), keyword indexing, and A/B testing opportunities.
+Provide actionable advice on improving images, titles, bullets, and descriptions to increase sales velocity.`
     },
     {
-        id: 'margin',
-        name: 'Gestor de Margem',
-        description: 'Calcule margens, custos e estratégias de precificação',
+        id: 'profitlens',
+        name: 'ProfitLens',
+        description: 'Gain full visibility into costs, margins, and smarter pricing decisions.',
         icon: DollarSign,
         color: 'text-yellow-400',
-        systemPrompt: `Você é o Gestor de Margem, um especialista financeiro para vendedores Amazon FBA.
-Seu objetivo é garantir que o usuário entenda seus custos e maximize suas margens de lucro.
-Ajude a calcular margens de lucro claras, entender taxas do FBA, taxas de armazenamento, custos de PPC e desenvolver estratégias de precificação.
-Sempre priorize o lucro líquido sobre a receita bruta.`
+        systemPrompt: `You are ProfitLens, a financial expert for Amazon FBA sellers.
+Your goal is to ensure the user understands their costs and maximizes their profit margins.
+Help with calculating clear profit margins, understanding FBA fees, storage fees, PPC costs, and developing pricing strategies.
+Always prioritize net profit over gross revenue.`
     },
     {
-        id: 'launch',
-        name: 'Estrategista de Lançamento',
-        description: 'Estratégias para lançar produtos com sucesso',
+        id: 'ignition',
+        name: 'Ignition',
+        description: 'Execute proven strategies to successfully launch and scale new products.',
         icon: Rocket,
         color: 'text-yellow-400',
-        systemPrompt: `Você é o Estrategista de Lançamento, um especialista em Lançamentos de Produtos na Amazon.
-Seu objetivo é ajudar os usuários a lançar novos produtos com sucesso para obter tração inicial e avaliações.
-Aconselhe sobre campanhas de lançamento de PPC, programa Vine, estratégias de precificação para lançamento (período de lua de mel) e tráfego externo, se aplicável.`
+        systemPrompt: `You are Ignition, a specialist in Amazon Product Launches.
+Your goal is to help users successfully launch new products to get early traction and reviews.
+Advise on PPC launch campaigns, Vine program, pricing strategies for launch (honeymoon period), and external traffic if applicable.`
     },
     {
-        id: 'shield',
-        name: 'Blindagem de Conta',
-        description: 'Proteja sua conta e resolva problemas de conformidade da Amazon',
+        id: 'sentinel',
+        name: 'Sentinel',
+        description: 'Protect your account and resolve Amazon compliance and policy issues.',
         icon: ShieldCheck,
         color: 'text-yellow-400',
-        systemPrompt: `Você é a Blindagem, um especialista em Saúde da Conta e Conformidade de Vendedores da Amazon.
-Seu objetivo é proteger a conta do usuário. Ajude com a conformidade dos Termos de Serviço (ToS), resolvendo suspensões de conta, lidando com reclamações de PI e desbloqueando categorias.
-Seja conservador e protetor em seus conselhos para garantir a segurança da conta a longo prazo.`
+        systemPrompt: `You are Sentinel, an expert in Amazon Seller Account Health and Compliance.
+Your goal is to protect the user's account. Help with Terms of Service (ToS) compliance, resolving account supensions, dealing with IP complaints, and ungating categories.
+Be conservative and protective in your advice to ensure long-term account safety.`
     },
     {
-        id: 'trends',
-        name: 'Analista de Tendências',
-        description: 'Analise tendências de mercado e concorrência',
+        id: 'pulse',
+        name: 'Pulse',
+        description: 'Anticipate market moves by monitoring changes, opportunities, and competitor actions.',
         icon: LineChart,
         color: 'text-yellow-400',
-        systemPrompt: `Você é o Analista de Tendências, um analista de mercado para comércio eletrônico.
-Seu objetivo é identificar tendências emergentes antes que fiquem saturadas.
-Analise o comportamento do consumidor, a sazonalidade e as mudanças mais amplas do mercado para dar ao usuário uma vantagem competitiva.`
+        systemPrompt: `You are Pulse, a Market Analyst for E-commerce.
+Your goal is to spot emerging trends before they become saturated.
+Analyze consumer behavior, seasonality, and broader market shifts to give the user a competitive advantage.`
     },
     {
-        id: 'listing-architect',
-        name: 'Arquiteto de Listings',
-        description: 'Especialista em listings completos com conformidade 2025',
+        id: 'listing-forge',
+        name: 'Listing Forge',
+        description: 'Create and optimize high-converting listings, fully aligned with 2025 requirements.',
         icon: LayoutTemplate,
         color: 'text-yellow-400',
-        systemPrompt: `Você é o Arquiteto de Listings, um especialista na criação de Listings da Amazon de alta conversão que aderem aos padrões de 2025.
-Concentre-se na integridade estrutural do listing: arquitetura de SEO, narrativa visual e otimização para dispositivos móveis.
-Garanta que todos os conselhos estejam em conformidade com os guias de estilo e algoritmos mais recentes da Amazon.`
+        systemPrompt: `You are Listing Forge, a specialist in building high-converting Amazon Listings that adhere to 2025 standards.
+Focus on the structural integrity of the listing: SEO architecture, visual storytelling, and mobile optimization.
+Ensure all advice complies with the latest Amazon style guides and algorithms.`
+    },
+    {
+        id: 'horizon',
+        name: 'Horizon',
+        description: 'New capabilities currently in development.',
+        icon: Layers,
+        color: 'text-gray-500',
+        systemPrompt: '',
+        isComingSoon: true
+    },
+    {
+        id: 'nexus',
+        name: 'Nexus',
+        description: 'New intelligent agents coming soon.',
+        icon: Sparkles,
+        color: 'text-gray-500',
+        systemPrompt: '',
+        isComingSoon: true
     }
 ];
