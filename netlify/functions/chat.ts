@@ -34,10 +34,11 @@ export const handler = async (event: any) => {
         }
 
         const body = JSON.parse(event.body || '{}');
-        const { message, threadId } = body;
+        const { message, threadId, instructions } = body;
 
         console.log('Received Message:', message);
         console.log('Received ThreadID:', threadId);
+        if (instructions) console.log('Received Instructions Override');
 
         if (!message) {
             return {
@@ -67,9 +68,14 @@ export const handler = async (event: any) => {
 
         // 3. Run Assistant
         console.log('Starting Run with Assistant ID:', process.env.OPENAI_ASSISTANT_ID);
+        const runOptions: any = { assistant_id: process.env.OPENAI_ASSISTANT_ID };
+        if (instructions) {
+            runOptions.instructions = instructions;
+        }
+
         const run = await openai.beta.threads.runs.create(
             currentThreadId,
-            { assistant_id: process.env.OPENAI_ASSISTANT_ID }
+            runOptions
         );
 
         // 4. Poll for Completion

@@ -2,7 +2,7 @@ import { ChatMessage } from '../types';
 
 let sessionThreadId: string | null = null;
 
-export const chatWithMentor = async (message: string, history: ChatMessage[]): Promise<string> => {
+export const chatWithMentor = async (message: string, history: ChatMessage[], instructions?: string): Promise<string> => {
     try {
         console.log("Sending message with Thread ID:", sessionThreadId);
 
@@ -14,7 +14,8 @@ export const chatWithMentor = async (message: string, history: ChatMessage[]): P
             },
             body: JSON.stringify({
                 message,
-                threadId: sessionThreadId
+                threadId: sessionThreadId,
+                instructions
             })
         });
 
