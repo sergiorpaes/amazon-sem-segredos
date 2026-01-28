@@ -49,21 +49,24 @@ export const chatWithMentor = async (message: string, history: any[], instructio
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      // If JSON parse fails, throw status text
+      throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
     }
 
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error(data.error);
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
     }
 
     return data.response;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini AI Connection Error:", error);
-    return "Desculpe, meu sistema tático está offline (Erro de Conexão). Tente novamente.";
+    // Return the actual error message if possible to help debugging, or a friendly one
+    return `Erro de Conexão: ${error.message || "Tente novamente."}`;
   }
 };
 
