@@ -27,7 +27,16 @@ EXPERTISE:
 
 // Maps ChatMessage type to Gemini content part
 const mapToGeminiHistory = (history: any[]) => {
-  return history.map(msg => ({
+  // Find the index of the first user message
+  const firstUserIndex = history.findIndex(msg => msg.role === 'user');
+
+  // If no user message found (e.g. only system welcome), return empty history
+  if (firstUserIndex === -1) return [];
+
+  // Slice from the first user message
+  const validHistory = history.slice(firstUserIndex);
+
+  return validHistory.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
     parts: [{ text: msg.text }]
   }));
