@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -43,22 +43,18 @@ export const handler = async (event: any) => {
             };
         }
 
-        const ai = new GoogleGenAI({ apiKey });
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            systemInstruction: instructions
+        });
 
-        // Transform history to Gemini format if needed, but the client should send it correctly
-        // Format expected: { role: 'user' | 'model', parts: [{ text: string }] }[]
-
-        const chat = ai.chats.create({
-            model: 'models/gemini-1.5-flash',
-            config: {
-                systemInstruction: instructions, // Dynamic system prompt
-            },
+        const chat = model.startChat({
             history: history || [],
         });
 
         const result = await chat.sendMessage(message);
-
-        const responseText = result.text;
+        const responseText = result.response.text();
 
         return {
             statusCode: 200,
@@ -81,7 +77,7 @@ export const handler = async (event: any) => {
             },
             body: JSON.stringify({
                 error: 'Internal Server Error',
-                message: error.message
+                message: error.message || error.toString()
             })
         };
     }

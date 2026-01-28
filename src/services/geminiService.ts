@@ -1,9 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
 import { OptimizationResult } from "../types";
 
-// Initialize the client
-// NOTE: In a real environment, process.env.API_KEY must be set.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Client-side initialization removed in favor of serverless function
+// const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 const SYSTEM_INSTRUCTION_MENTOR = `
 You are "CR7", the Official Assistant of the "Amazon Sem Segredos" methodology, created by LEVI SILVA GUIMARAES.
@@ -99,16 +97,18 @@ export const optimizeListing = async (productDetails: string): Promise<Optimizat
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'models/gemini-1.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
-      }
-    });
+    // Re-use the chat endpoint for this one-off generation
+    const responseText = await chatWithMentor(prompt, []); // Empty history
 
-    const text = response.text || "{}";
-    return JSON.parse(text) as OptimizationResult;
+    try {
+      // Clean markdown backticks if present
+      const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleanText) as OptimizationResult;
+    } catch (e) {
+      console.error("Failed to parse optimization result", e);
+      return {} as OptimizationResult;
+    }
+
   } catch (error) {
     console.error("Error optimizing listing:", error);
     throw new Error("Falha ao otimizar o anúncio. Tente novamente.");
@@ -123,11 +123,7 @@ export const analyzeProductOpportunity = async (category: string) => {
           Keep it brief and actionable. Answer in Portuguese.
         `;
 
-    const response = await ai.models.generateContent({
-      model: 'models/gemini-1.5-flash',
-      contents: prompt,
-    });
-    return response.text;
+    return await chatWithMentor(prompt, []);
   } catch (error) {
     console.error("Error analyzing opportunity:", error);
     return "Não foi possível analisar oportunidades no momento.";
