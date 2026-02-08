@@ -36,10 +36,11 @@ export const handler = async (event: any) => {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        // Use gemini-2.0-flash for speed and efficiency
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-        // --- PROMPT 1: Creation ---
-        const prompt1 = `
+        // --- SINGLE OPTIMIZED PROMPT ---
+        const prompt = `
         Você é um especialista em SEO para Amazon, copywriting de alta conversão e marketplaces europeus.
         Seu foco é criar anúncios otimizados para a Amazon Espanha (Amazon.es), respeitando as boas práticas da plataforma e os limites de caracteres.
 
@@ -53,7 +54,7 @@ export const handler = async (event: any) => {
 
         2️⃣ BULLET POINTS / CARACTERÍSTICAS (5 bullets)
         - Em ESPANHOL
-        - Focados em benefícios + diferenciais
+        - Focados em benefícios + diferenciais (Os 2 primeiros devem ser mais agressivos em benefícios)
         - Linguagem clara, objetiva e persuasiva
         - Usar palavras-chave secundárias de forma natural
 
@@ -74,7 +75,7 @@ export const handler = async (event: any) => {
         - Sem repetição de palavras do título
         - Sem marcas concorrentes
         - Otimizada para Amazon ES
-        - Misturar espanhol + português
+        - Misturar espanhol + português (melhorar indexação para cauda longa)
 
         📌 INFORMAÇÕES DO PRODUTO:
         - Nome do produto: ${productName}
@@ -87,56 +88,37 @@ export const handler = async (event: any) => {
         - Uso principal: ${usage}
 
         📌 REGRAS IMPORTANTES:
-        - Não usar emojis
+        - Não usar emojis no Título
         - Não usar promessas médicas ou proibidas pela Amazon
         - Não mencionar preços, garantias ou envios
         - Linguagem profissional e orientada à conversão
         - SEO voltado para o mercado espanhol, mas com apoio ao público português
         
-        Retorne APENAS o JSON com a estrutura inicial (sem markdown):
+        Retorne APENAS o JSON com a estrutura estrita abaixo (sem markdown, sem code blocks):
         {
-            "es": { "title": "", "bullets": [], "description": "" },
-            "pt": { "title": "", "bullets": [], "description": "" },
-            "keywords": ""
-        }
-        `;
-
-        const result1 = await model.generateContent(prompt1);
-        const response1 = result1.response.text();
-
-        // --- PROMPT 2: Refinement ---
-        const prompt2 = `
-        Agora ajuste o anúncio gerado acima para:
-        - Aumentar relevância para anúncios patrocinados (Amazon Ads)
-        - Melhorar indexação para palavras-chave de cauda longa
-        - Tornar os 2 primeiros bullets mais agressivos em benefícios
-
-        Mantenha a estrutura JSON estrita. Retorne APENAS o JSON final atualizado:
-        {
-            "es": { "title": "...", "bullets": ["...", ...], "description": "..." , "keywords": "..." },
-            "pt": { "title": "...", "bullets": ["...", ...], "description": "..." , "keywords": "..." },
+            "es": { 
+                "title": "...", 
+                "bullets": ["...", ...], 
+                "description": "..." 
+            },
+            "pt": { 
+                "title": "...", 
+                "bullets": ["...", ...], 
+                "description": "..." 
+            },
+            "keywords": "...",
             "imagePromptContext": "Descrição visual curta do produto para gerar imagens (em inglês)"
         }
         `;
 
-        // We pass the history concept by chaining prompts in a chat session or just creating a new prompt with context.
-        // A chat session is cleaner for context retention.
-        const chat = model.startChat({
-            history: [
-                { role: "user", parts: [{ text: prompt1 }] },
-                { role: "model", parts: [{ text: response1 }] }
-            ]
-        });
-
-        const result2 = await chat.sendMessage(prompt2);
-        const response2 = result2.response.text();
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
 
         // Clean and Parse
-        const text = response2;
-        let jsonString = text.trim();
+        let jsonString = responseText.trim();
 
-        // Try to find JSON block
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        // Try to find JSON block if markdown is present
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             jsonString = jsonMatch[0];
         }
