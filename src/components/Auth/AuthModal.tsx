@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Mail, Lock, Phone, MapPin, Building, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
+import { X, Mail, Lock, Phone, MapPin, Building, ChevronRight, ChevronLeft, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface AuthModalProps {
@@ -13,6 +13,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const { login } = useAuth();
 
     const [formData, setFormData] = useState({
@@ -35,6 +36,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccessMessage('');
         setLoading(true);
 
         const endpoint = isLogin ? '/.netlify/functions/auth-login' : '/.netlify/functions/auth-signup';
@@ -49,9 +51,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Ocorreu um erro');
+                // Return detailed error if available
+                const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || 'Ocorreu um erro');
+                throw new Error(errorMessage);
             }
 
+            if (!isLogin) {
+                // Successful signup - show message instead of closing
+                setSuccessMessage(data.message || 'Cadastro realizado com sucesso! Verifique seu e-mail.');
+                setLoading(false);
+                return;
+            }
+
+            // Successful login
             login(data.user);
             onClose();
         } catch (err: any) {
@@ -84,6 +96,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     {error && (
                         <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 border border-red-100 italic">
                             {error}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm mb-6 border border-green-100 font-medium">
+                            <div className="flex items-center gap-2 mb-1">
+                                <CheckCircle className="w-5 h-5" />
+                                <span className="font-bold">Solicitação Recebida!</span>
+                            </div>
+                            {successMessage}
                         </div>
                     )}
 

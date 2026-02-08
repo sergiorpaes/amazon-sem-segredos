@@ -59,7 +59,20 @@ export const handler = async (event: any) => {
         const protocol = host.includes('localhost') ? 'http' : 'https';
         const activationUrl = `${protocol}://${host}/activate?token=${activationToken}`;
 
-        await sendWelcomeEmail(email, activationUrl);
+        try {
+            await sendWelcomeEmail(email, activationUrl);
+        } catch (mailError: any) {
+            console.error('Failed to send activation email:', mailError);
+            return {
+                statusCode: 201,
+                body: JSON.stringify({
+                    message: 'Usuário criado com sucesso, mas houve um problema ao enviar o e-mail de ativação. Por favor, verifique se o e-mail inserido está correto ou contate o suporte.',
+                    warning: 'Email delivery failed',
+                    details: mailError.message,
+                    user: { id: newUser.id, email: newUser.email, role: newUser.role, activated: false }
+                })
+            };
+        }
 
         return {
             statusCode: 201,
