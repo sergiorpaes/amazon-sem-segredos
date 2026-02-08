@@ -99,14 +99,15 @@ export const handler = async (event: any) => {
             "es": { 
                 "title": "...", 
                 "bullets": ["...", ...], 
-                "description": "..." 
+                "description": "...",
+                "keywords": "..." 
             },
             "pt": { 
                 "title": "...", 
                 "bullets": ["...", ...], 
-                "description": "..." 
+                "description": "...",
+                "keywords": "..." 
             },
-            "keywords": "...",
             "imagePromptContext": "Descrição visual curta do produto para gerar imagens (em inglês)"
         }
         `;

@@ -423,7 +423,7 @@ export const ListingOptimizer: React.FC = () => {
                   <button onClick={() => copyToClipboard(listingResult.es.keywords, 'es-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'es-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Backend Keywords (ES)</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (ES)</label>
                   <p className="text-sm text-gray-600 font-mono bg-white p-3 rounded border border-gray-200">{listingResult.es.keywords}</p>
                 </div>
               </div>
@@ -470,7 +470,7 @@ export const ListingOptimizer: React.FC = () => {
                   <button onClick={() => copyToClipboard(listingResult.pt.keywords, 'pt-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'pt-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Backend Keywords (PT)</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (PT)</label>
                   <p className="text-sm text-gray-600 font-mono bg-white p-3 rounded border border-gray-200">{listingResult.pt.keywords}</p>
                 </div>
               </div>

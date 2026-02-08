@@ -1,6 +1,8 @@
 export enum AppView {
   LANDING = 'LANDING',
-  DASHBOARD = 'DASHBOARD'
+  DASHBOARD = 'DASHBOARD',
+  ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
+  ADMIN_USERS = 'ADMIN_USERS'
 }
 
 export enum DashboardModule {
