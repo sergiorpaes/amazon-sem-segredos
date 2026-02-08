@@ -82,6 +82,6 @@ export const handler = async (event: any) => {
 
     } catch (error: any) {
         console.error('Signup Error:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: 'Internal Server Error' }) };
+        return { statusCode: 500, body: JSON.stringify({ error: error.message || 'Internal Server Error' }) };
     }
 };
