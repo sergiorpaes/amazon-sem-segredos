@@ -65,6 +65,17 @@ export const translations = {
         'auth.back_to_login': 'Voltar para Login',
         'auth.send_reset_link': 'Enviar Link de Recuperação',
         'auth.reset_email_sent': 'Link de recuperação enviado! Verifique seu e-mail.',
+
+        // Profile & Billing
+        'profile.title': 'Perfil',
+        'profile.change_password': 'Trocar Senha',
+        'profile.buy_credits': 'Comprar Créditos',
+        'profile.change_plan': 'Trocar de Plano',
+        'profile.current_plan': 'Plano Atual',
+        'profile.admin_label': 'Administrador',
+        'profile.pro_label': 'Plano Pro',
+        'profile.welcome': 'Bem-vindo',
+
         // Modal
         'modal.est_sales': 'Vendas Est.',
         'modal.est_revenue': 'Receita Est.',
@@ -291,6 +302,16 @@ export const translations = {
         'lo.ui.subtitle': 'Answer the questions so our AI can create a high-conversion listing.',
         'lo.ui.save': 'Save Listing',
         'lo.ui.generating_images': 'Generating Images...',
+
+        // Profile & Billing
+        'profile.title': 'Profile',
+        'profile.change_password': 'Change Password',
+        'profile.buy_credits': 'Buy Credits',
+        'profile.change_plan': 'Change Plan',
+        'profile.current_plan': 'Current Plan',
+        'profile.admin_label': 'Administrator',
+        'profile.pro_label': 'Pro Plan',
+        'profile.welcome': 'Welcome',
     }
 };
 

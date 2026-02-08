@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, CreditCard, Sparkles, Key } from 'lucide-react';
 import { Sidebar } from '../components/Layout/Sidebar';
 import { Mentor } from '../components/Dashboard/Mentor';
 import { ListingOptimizer } from '../components/Dashboard/ListingOptimizer';
@@ -8,8 +8,8 @@ import { ProductFinder } from '../components/Dashboard/ProductFinder';
 import { Settings } from '../components/Dashboard/Settings';
 import { DashboardModule } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { AdminDashboard } from './Admin/Dashboard';
-import { AdminUsers } from './Admin/Users';
+import { useLanguage } from '../services/languageService';
+import { ChangePasswordModal } from '../components/Auth/ChangePasswordModal';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -17,8 +17,11 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [currentModule, setCurrentModule] = useState<DashboardModule>(DashboardModule.PRODUCT_FINDER);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isChangePassOpen, setIsChangePassOpen] = useState(false);
 
   const renderModule = () => {
     switch (currentModule) {
@@ -62,15 +65,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
   const getTitle = () => {
     switch (currentModule) {
-      case DashboardModule.MENTOR: return "Mentor Virtual";
-      case DashboardModule.LISTING_OPTIMIZER: return "Criador de Listing";
-      case DashboardModule.PRODUCT_FINDER: return "Buscador de Produtos";
-      case DashboardModule.PROFIT_ANALYTICS: return "Visão Geral";
-      case DashboardModule.ADS_MANAGER: return "Gerenciador de Ads";
-      case DashboardModule.SETTINGS: return "Configurações";
+      case DashboardModule.MENTOR: return t('module.mentor');
+      case DashboardModule.LISTING_OPTIMIZER: return t('module.listing_optimizer');
+      case DashboardModule.PRODUCT_FINDER: return t('module.product_finder');
+      case DashboardModule.PROFIT_ANALYTICS: return t('module.dashboard');
+      case DashboardModule.ADS_MANAGER: return t('module.ads_manager');
+      case DashboardModule.SETTINGS: return t('module.settings');
       default: return "Dashboard";
     }
-  }
+  };
+
+  const handleBuyCredits = () => {
+    // Redirect to checkout or open modal
+    window.location.href = '/.netlify/functions/create-checkout?type=credits';
+  };
+
+  const handleChangePlan = () => {
+    // Redirect to checkout or open modal
+    window.location.href = '/.netlify/functions/create-checkout?type=plan';
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -84,7 +97,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
       <main className="flex-1 flex flex-col h-full relative overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 shrink-0">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-30 shrink-0">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -94,14 +107,75 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             </button>
             <h1 className="text-xl font-bold text-gray-800">{getTitle()}</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-sm font-semibold text-gray-700">{user?.email || 'Usuário'}</span>
-              <span className="text-xs text-brand-600">{user?.role === 'ADMIN' ? 'Administrador' : 'Plano Pro'}</span>
-            </div>
-            <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase">
-              {(user?.email || 'U').substring(0, 2)}
-            </div>
+
+          <div className="flex items-center gap-4 relative">
+            <button
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-xl transition-colors text-right group"
+            >
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-sm font-semibold text-gray-700 group-hover:text-brand-600 transition-colors">
+                  {user?.email || 'Usuário'}
+                </span>
+                <span className="text-xs text-brand-600 font-medium">
+                  {user?.role === 'ADMIN' ? t('profile.admin_label') : 'Plano Pro'}
+                </span>
+              </div>
+              <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase group-hover:bg-brand-200 transition-all">
+                {(user?.email || 'U').substring(0, 2)}
+              </div>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Profile Dropdown */}
+            {isProfileOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsProfileOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">{t('profile.welcome')}</p>
+                    <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>
+                  </div>
+
+                  <button
+                    onClick={() => { setIsChangePassOpen(true); setIsProfileOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
+                  >
+                    <Key className="w-4 h-4" />
+                    {t('profile.change_password')}
+                  </button>
+
+                  <button
+                    onClick={handleBuyCredits}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {t('profile.buy_credits')}
+                  </button>
+
+                  <button
+                    onClick={handleChangePlan}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {t('profile.change_plan')}
+                  </button>
+
+                  <div className="border-t border-gray-50 mt-1 pt-1">
+                    <button
+                      onClick={onLogout}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {t('module.logout')}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </header>
 
@@ -110,6 +184,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           {renderModule()}
         </div>
       </main>
+
+      <ChangePasswordModal
+        isOpen={isChangePassOpen}
+        onClose={() => setIsChangePassOpen(false)}
+      />
     </div>
   );
 };
