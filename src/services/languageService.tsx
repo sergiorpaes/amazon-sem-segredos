@@ -76,6 +76,19 @@ export const translations = {
         'profile.pro_label': 'Plano Pro',
         'profile.welcome': 'Bem-vindo',
 
+        // Plans
+        'plans.starter': 'Starter',
+        'plans.starter_desc': 'Ideal para começar',
+        'plans.starter_features': '5 Créditos Iniciais',
+        'plans.pro': 'Plano Pro',
+        'plans.pro_desc': 'Para vendedores em crescimento',
+        'plans.pro_price': '29€/mês',
+        'plans.premium': 'Plano Premium',
+        'plans.premium_desc': 'Poder total da IA',
+        'plans.premium_price': '49€/mês',
+        'plans.select': 'Escolher Plano',
+        'plans.free': 'Grátis',
+
         // Modal
         'modal.est_sales': 'Vendas Est.',
         'modal.est_revenue': 'Receita Est.',
@@ -312,6 +325,19 @@ export const translations = {
         'profile.admin_label': 'Administrator',
         'profile.pro_label': 'Pro Plan',
         'profile.welcome': 'Welcome',
+
+        // Plans
+        'plans.starter': 'Starter',
+        'plans.starter_desc': 'Ideal for starting',
+        'plans.starter_features': '5 Initial Credits',
+        'plans.pro': 'Pro Plan',
+        'plans.pro_desc': 'For growing sellers',
+        'plans.pro_price': '29€/month',
+        'plans.premium': 'Premium Plan',
+        'plans.premium_desc': 'Full AI Power',
+        'plans.premium_price': '49€/month',
+        'plans.select': 'Select Plan',
+        'plans.free': 'Free',
     }
 };
 
