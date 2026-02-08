@@ -12,16 +12,25 @@ export const handler = async (event: any) => {
     }
 
     try {
-        const { email, password } = JSON.parse(event.body);
+        const {
+            email,
+            password,
+            phone,
+            company_name,
+            address_street,
+            address_city,
+            address_state,
+            address_zip
+        } = JSON.parse(event.body);
 
-        if (!email || !password) {
-            return { statusCode: 400, body: JSON.stringify({ error: 'Email and password are required' }) };
+        if (!email || !password || !phone || !address_street) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'Faltam campos obrigatórios (Email, Password, Telefone, Morada)' }) };
         }
 
         // Check if user exists
         const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
         if (existingUser.length > 0) {
-            return { statusCode: 409, body: JSON.stringify({ error: 'User already exists' }) };
+            return { statusCode: 409, body: JSON.stringify({ error: 'Usuário já existe' }) };
         }
 
         // Hash password
@@ -33,7 +42,18 @@ export const handler = async (event: any) => {
             password_hash: passwordHash,
             role: 'USER',
             credits_balance: 5,
+            phone,
+            company_name,
+            address_street,
+            address_city,
+            address_state,
+            address_zip,
         }).returning();
+
+        // MOCK: Send Welcome Email
+        console.log(`[EMAIL SENDING] Enviando credenciais para ${email}...`);
+        console.log(`Mensagem: Bem-vindo à Amazon AI Suite! Suas credenciais foram configuradas com sucesso.`);
+
 
         // Generate JWT
         const token = jwt.sign(

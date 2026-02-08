@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, ArrowRight, TrendingUp, Bot, BarChart3, Globe } from 'lucide-react';
+import { AuthModal } from '../components/Auth/AuthModal';
 
 interface LandingPageProps {
   onLogin: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white">
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+
       {/* Navigation */}
       <nav className="fixed w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -19,8 +27,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
               <a href="#features" className="hover:text-brand-600 transition-colors">Funcionalidades</a>
               <a href="#pricing" className="hover:text-brand-600 transition-colors">Preços</a>
-              <button 
-                onClick={onLogin}
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
                 className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-full transition-all shadow-lg shadow-brand-200"
               >
                 Acessar Plataforma
@@ -47,8 +55,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             SellerFlow.AI + Mentor.AI: Um ecossistema completo unindo automação de dados e mentoria inteligente para dominar o mercado Europeu.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-              onClick={onLogin}
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
               className="px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl shadow-brand-200"
             >
               Começar Agora Gratuitamente <ArrowRight className="w-5 h-5" />
@@ -88,10 +96,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
                 color: "bg-emerald-600"
               },
               {
-                  icon: <Globe className="w-8 h-8 text-white" />,
-                  title: "Listing Optimizer Multi-Language",
-                  desc: "Crie listings perfeitas em Português, Espanhol, Francês e Italiano otimizadas para SEO.",
-                  color: "bg-blue-600"
+                icon: <Globe className="w-8 h-8 text-white" />,
+                title: "Listing Optimizer Multi-Language",
+                desc: "Crie listings perfeitas em Português, Espanhol, Francês e Italiano otimizadas para SEO.",
+                color: "bg-blue-600"
               }
             ].map((feature, idx) => (
               <div key={idx} className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -113,7 +121,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Planos que crescem com você</h2>
             <p className="text-gray-500">Escolha o plano ideal para o seu estágio na jornada Amazon FBA.</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Starter */}
             <div className="border border-gray-200 rounded-2xl p-8 hover:border-brand-300 transition-colors">
@@ -129,7 +137,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
                   </li>
                 ))}
               </ul>
-              <button onClick={onLogin} className="w-full py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Começar Starter</button>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Começar Starter</button>
             </div>
 
             {/* Pro */}
@@ -147,7 +155,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
                   </li>
                 ))}
               </ul>
-              <button onClick={onLogin} className="w-full py-3 bg-brand-600 text-white rounded-xl font-semibold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200">Começar Pro</button>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 bg-brand-600 text-white rounded-xl font-semibold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200">Começar Pro</button>
             </div>
 
             {/* Premium */}
@@ -164,16 +172,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
                   </li>
                 ))}
               </ul>
-              <button onClick={onLogin} className="w-full py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Começar Premium</button>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Começar Premium</button>
             </div>
           </div>
         </div>
       </div>
 
       <footer className="bg-gray-900 text-white py-12 border-t border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-              <p className="opacity-50 text-sm">© 2024 Amazon Sem Segredos AI Suite. Todos os direitos reservados.</p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="opacity-50 text-sm">© 2024 Amazon Sem Segredos AI Suite. Todos os direitos reservados.</p>
+        </div>
       </footer>
     </div>
   );
