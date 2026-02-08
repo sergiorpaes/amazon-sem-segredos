@@ -20,14 +20,18 @@ export const handler = async (event: any) => {
 
         // Find user
         const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-        if (!user) {
-            return { statusCode: 401, body: JSON.stringify({ error: 'Invalid credentials' }) };
-        }
-
         // Check password
         const isValid = await bcrypt.compare(password, user.password_hash);
         if (!isValid) {
-            return { statusCode: 401, body: JSON.stringify({ error: 'Invalid credentials' }) };
+            return { statusCode: 401, body: JSON.stringify({ error: 'Credenciais inválidas' }) };
+        }
+
+        // Check if activated
+        if (!user.activated_at && user.role !== 'ADMIN') {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ error: 'Sua conta ainda não foi ativada. Por favor, verifique seu e-mail.' })
+            };
         }
 
         // Generate JWT

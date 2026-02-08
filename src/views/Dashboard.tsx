@@ -28,10 +28,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         return <ListingOptimizer />;
       case DashboardModule.PRODUCT_FINDER:
         return <ProductFinder />;
-      case DashboardModule.ADMIN_DASHBOARD:
-        return <AdminDashboard />;
-      case DashboardModule.ADMIN_USERS:
-        return <AdminUsers />;
       case DashboardModule.PROFIT_ANALYTICS:
         return (
           <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
@@ -72,8 +68,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.PROFIT_ANALYTICS: return "Visão Geral";
       case DashboardModule.ADS_MANAGER: return "Gerenciador de Ads";
       case DashboardModule.SETTINGS: return "Configurações";
-      case DashboardModule.ADMIN_DASHBOARD: return "Painel Administrativo";
-      case DashboardModule.ADMIN_USERS: return "Gestão de Usuários";
       default: return "Dashboard";
     }
   }

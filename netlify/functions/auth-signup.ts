@@ -1,10 +1,11 @@
-
 import { db } from '../../src/db';
 import { users } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
+import crypto from 'node:crypto';
+import { sendWelcomeEmail } from './utils/email';
 
 export const handler = async (event: any) => {
     if (event.httpMethod !== 'POST') {
@@ -36,7 +37,9 @@ export const handler = async (event: any) => {
         // Hash password
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // Create user with 5 free credits
+        // Create user with 5 free credits and activation token
+        const activationToken = crypto.randomUUID();
+
         const [newUser] = await db.insert(users).values({
             email,
             password_hash: passwordHash,
@@ -48,36 +51,22 @@ export const handler = async (event: any) => {
             address_city,
             address_state,
             address_zip,
+            activation_token: activationToken,
         }).returning();
 
-        // MOCK: Send Welcome Email
-        console.log(`[EMAIL SENDING] Enviando credenciais para ${email}...`);
-        console.log(`Mensagem: Bem-vindo à Amazon AI Suite! Suas credenciais foram configuradas com sucesso.`);
+        // 📧 Send Welcome Email with activation link
+        const host = event.headers.host || 'localhost:8888';
+        const protocol = host.includes('localhost') ? 'http' : 'https';
+        const activationUrl = `${protocol}://${host}/activate?token=${activationToken}`;
 
-
-        // Generate JWT
-        const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email, role: newUser.role },
-            process.env.JWT_SECRET || 'secret-dev-key',
-            { expiresIn: '7d' }
-        );
-
-        // Set Cookie
-        const authCookie = cookie.serialize('auth_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7, // 7 days
-            path: '/',
-        });
+        await sendWelcomeEmail(email, activationUrl);
 
         return {
             statusCode: 201,
-            headers: {
-                'Set-Cookie': authCookie,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user: { id: newUser.id, email: newUser.email, role: newUser.role, credits: newUser.credits_balance } })
+            body: JSON.stringify({
+                message: 'Usuário criado com sucesso. Por favor, verifique seu e-mail para ativar sua conta.',
+                user: { id: newUser.id, email: newUser.email, role: newUser.role, activated: false }
+            })
         };
 
     } catch (error: any) {

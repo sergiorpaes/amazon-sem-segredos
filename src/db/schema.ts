@@ -19,6 +19,8 @@ export const users = pgTable('amz_users', {
 
     created_at: timestamp('created_at').defaultNow(),
     banned_at: timestamp('banned_at'),
+    activated_at: timestamp('activated_at'),
+    activation_token: text('activation_token'),
 });
 
 export const subscriptions = pgTable('amz_subscriptions', {
