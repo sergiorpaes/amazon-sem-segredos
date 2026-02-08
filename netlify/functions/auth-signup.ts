@@ -71,6 +71,13 @@ export const handler = async (event: any) => {
 
     } catch (error: any) {
         console.error('Signup Error:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: 'Erro ao processar cadastro. Por favor, tente novamente.' }) };
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: 'Erro ao processar cadastro.',
+                details: error.message || error.toString(),
+                stack: error.stack
+            })
+        };
     }
 };
