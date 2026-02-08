@@ -38,3 +38,27 @@ export interface OptimizationResult {
   description: string;
   keywords: string[];
 }
+
+export interface ListingGeneratorResult {
+  es: {
+    title: string;
+    bullets: string[];
+    description: string;
+    keywords: string;
+  };
+  pt: {
+    title: string;
+    bullets: string[];
+    description: string;
+    keywords: string;
+  };
+  keywords?: string; // Deprecated, kept for safety
+  imagePromptContext?: string;
+}
+
+export interface SavedListing extends ListingGeneratorResult {
+  id: string;
+  productName: string;
+  createdAt: string; // ISO Date string
+  generatedImages: string[]; // Base64 strings
+}

@@ -11,7 +11,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
-        "npm:@google/genai@^1.30.0",
+        "npm:@google/generative-ai@0.21",
         "npm:@netlify/functions@^5.1.2",
         "npm:@types/node@^22.14.0",
         "npm:@vitejs/plugin-react@5",

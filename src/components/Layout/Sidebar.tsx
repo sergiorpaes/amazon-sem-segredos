@@ -86,18 +86,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentModule === item.id;
+            const isDisabled = (item as any).disabled;
+
             return (
               <button
                 key={item.id}
                 onClick={() => {
-                  onModuleChange(item.id);
-                  if (window.innerWidth < 1024) onClose();
+                  if (!isDisabled) {
+                    onModuleChange(item.id);
+                    if (window.innerWidth < 1024) onClose();
+                  }
                 }}
+                disabled={isDisabled}
                 className={`
                   w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} gap-3 py-3 rounded-xl transition-all duration-200
-                  ${isActive
-                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/20'
-                    : 'hover:bg-dark-800 hover:text-white'
+                  ${isDisabled
+                    ? 'opacity-50 cursor-not-allowed hover:bg-transparent text-gray-500'
+                    : isActive
+                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/20'
+                      : 'hover:bg-dark-800 hover:text-white'
                   }
                 `}
                 title={isCollapsed ? item.label : ''}

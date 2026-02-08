@@ -13,7 +13,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
-  const [currentModule, setCurrentModule] = useState<DashboardModule>(DashboardModule.PROFIT_ANALYTICS);
+  const [currentModule, setCurrentModule] = useState<DashboardModule>(DashboardModule.PRODUCT_FINDER);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const renderModule = () => {
@@ -25,12 +25,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.PRODUCT_FINDER:
         return <ProductFinder />;
       case DashboardModule.PROFIT_ANALYTICS:
-        return <ProfitAnalytics />;
+        return (
+          <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
+            <ProfitAnalytics />
+          </div>
+        );
       case DashboardModule.SETTINGS:
         return <Settings />;
       case DashboardModule.ADS_MANAGER:
         return (
-          <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-xl border border-gray-100">
+          <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-xl border border-gray-100 opacity-40 grayscale pointer-events-none select-none">
             <div className="bg-brand-50 p-6 rounded-full mb-6">
               <span className="text-4xl">🚀</span>
             </div>
@@ -44,14 +48,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           </div>
         );
       default:
-        return <ProfitAnalytics />;
+        return (
+          <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
+            <ProfitAnalytics />
+          </div>
+        );
     }
   };
 
   const getTitle = () => {
     switch (currentModule) {
       case DashboardModule.MENTOR: return "Mentor Virtual";
-      case DashboardModule.LISTING_OPTIMIZER: return "Otimizador de Listings";
+      case DashboardModule.LISTING_OPTIMIZER: return "Criador de Listing";
       case DashboardModule.PRODUCT_FINDER: return "Buscador de Produtos";
       case DashboardModule.PROFIT_ANALYTICS: return "Visão Geral";
       case DashboardModule.ADS_MANAGER: return "Gerenciador de Ads";
