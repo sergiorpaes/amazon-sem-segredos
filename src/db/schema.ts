@@ -21,6 +21,8 @@ export const users = pgTable('amz_users', {
     banned_at: timestamp('banned_at'),
     activated_at: timestamp('activated_at'),
     activation_token: text('activation_token'),
+    reset_password_token: text('reset_password_token'),
+    reset_password_expires: timestamp('reset_password_expires'),
 });
 
 export const subscriptions = pgTable('amz_subscriptions', {

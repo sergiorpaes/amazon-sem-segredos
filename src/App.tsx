@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 import { AdminDashboard } from './views/Admin/Dashboard';
 import { AdminUsers } from './views/Admin/Users';
+import { ResetPasswordView } from './views/ResetPassword';
 
 function AppContent() {
   const [currentView, setCurrentView] = useState<AppView>(AppView.LANDING);
@@ -15,6 +16,11 @@ function AppContent() {
 
   // Basic Routing Effect
   useEffect(() => {
+    if (window.location.pathname === '/reset-password') {
+      setCurrentView(AppView.RESET_PASSWORD);
+      return;
+    }
+
     if (user) {
       setCurrentView(AppView.DASHBOARD);
     } else {
@@ -38,6 +44,10 @@ function AppContent() {
 
       {currentView === AppView.DASHBOARD && (
         <Dashboard onLogout={handleLogout} />
+      )}
+
+      {currentView === AppView.RESET_PASSWORD && (
+        <ResetPasswordView />
       )}
     </>
   );

@@ -59,6 +59,12 @@ export const translations = {
         'module.listing_optimizer': 'Criador de Listing',
         'module.ads_manager': 'Gerenciador de Ads',
         'module.settings': 'Configurações',
+        'module.logout': 'Sair',
+        'auth.forgot_password': 'Esqueci minha senha',
+        'auth.reset_password': 'Redefinir Senha',
+        'auth.back_to_login': 'Voltar para Login',
+        'auth.send_reset_link': 'Enviar Link de Recuperação',
+        'auth.reset_email_sent': 'Link de recuperação enviado! Verifique seu e-mail.',
         // Modal
         'modal.est_sales': 'Vendas Est.',
         'modal.est_revenue': 'Receita Est.',

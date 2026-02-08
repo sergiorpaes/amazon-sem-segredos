@@ -46,6 +46,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: DashboardModule.ADS_MANAGER, label: t('module.ads_manager'), icon: Megaphone },
   ];
 
+  if (user?.role === 'ADMIN') {
+    menuItems.push({ id: DashboardModule.SETTINGS, label: t('module.settings'), icon: Settings });
+  }
+
   return (
     <>
       {/* Overlay for mobile */}

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Phone, MapPin, Building, ChevronRight, ChevronLeft, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../services/languageService';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -10,11 +11,13 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [isLogin, setIsLogin] = useState(true);
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const { login } = useAuth();
+    const { t } = useLanguage();
 
     const [formData, setFormData] = useState({
         email: '',
@@ -39,31 +42,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setSuccessMessage('');
         setLoading(true);
 
-        const endpoint = isLogin ? '/.netlify/functions/auth-login' : '/.netlify/functions/auth-signup';
+        let endpoint = isLogin ? '/.netlify/functions/auth-login' : '/.netlify/functions/auth-signup';
+        if (isForgotPassword) endpoint = '/.netlify/functions/auth-forgot-password';
 
         try {
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(isForgotPassword ? { email: formData.email } : formData)
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                // Return detailed error if available
                 const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || 'Ocorreu um erro');
                 throw new Error(errorMessage);
             }
 
+            if (isForgotPassword) {
+                setSuccessMessage(data.message || t('auth.reset_email_sent'));
+                setLoading(false);
+                return;
+            }
+
             if (!isLogin) {
-                // Successful signup - show message instead of closing
                 setSuccessMessage(data.message || 'Cadastro realizado com sucesso! Verifique seu e-mail.');
                 setLoading(false);
                 return;
             }
 
-            // Successful login
             login(data.user);
             onClose();
         } catch (err: any) {
@@ -124,18 +131,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                     />
                                 </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="Senha"
-                                        required
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
-                                    />
-                                </div>
+                                {!isForgotPassword && (
+                                    <>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <input
+                                                type="password"
+                                                name="password"
+                                                placeholder="Senha"
+                                                required
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsForgotPassword(true);
+                                                    setError('');
+                                                    setSuccessMessage('');
+                                                }}
+                                                className="text-sm text-brand-600 hover:text-brand-700 font-medium"
+                                            >
+                                                {t('auth.forgot_password')}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </>
                         ) : (
                             // Signup Flow
@@ -256,24 +280,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                         disabled={loading}
                                         className="flex-1 bg-brand-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-brand-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
-                                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? 'Entrar' : 'Finalizar Cadastro'}
+                                        {loading ? (
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        ) : isForgotPassword ? (
+                                            t('auth.send_reset_link')
+                                        ) : isLogin ? (
+                                            'Entrar'
+                                        ) : (
+                                            'Finalizar Cadastro'
+                                        )}
                                     </button>
                                 </div>
                             )}
 
                             <p className="text-center text-sm text-gray-500">
-                                {isLogin ? 'Ainda não tem conta?' : 'Já possui uma conta?'}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsLogin(!isLogin);
-                                        setStep(1);
-                                        setError('');
-                                    }}
-                                    className="ml-1 text-brand-600 font-bold hover:underline"
-                                >
-                                    {isLogin ? 'Cadastre-se' : 'Faça login'}
-                                </button>
+                                {isForgotPassword ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsForgotPassword(false)}
+                                        className="text-brand-600 font-bold hover:underline"
+                                    >
+                                        {t('auth.back_to_login')}
+                                    </button>
+                                ) : (
+                                    <>
+                                        {isLogin ? 'Ainda não tem conta?' : 'Já possui uma conta?'}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsLogin(!isLogin);
+                                                setStep(1);
+                                                setError('');
+                                                setSuccessMessage('');
+                                            }}
+                                            className="ml-1 text-brand-600 font-bold hover:underline"
+                                        >
+                                            {isLogin ? 'Cadastre-se' : 'Faça login'}
+                                        </button>
+                                    </>
+                                )}
                             </p>
                         </div>
                     </form>
