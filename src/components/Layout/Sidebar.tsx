@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { DashboardModule } from '../../types';
 import { useLanguage } from '../../services/languageService';
+import { useAuth } from '../../contexts/AuthContext';
+import { ShieldCheck, Users } from 'lucide-react';
 
 interface SidebarProps {
   currentModule: DashboardModule;
@@ -32,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose
 }) => {
   const { t, language, setLanguage } = useLanguage();
+  const { user } = useAuth();
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -42,6 +45,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: DashboardModule.LISTING_OPTIMIZER, label: t('module.listing_optimizer'), icon: Sparkles },
     { id: DashboardModule.ADS_MANAGER, label: t('module.ads_manager'), icon: Megaphone },
   ];
+
+  if (user?.role === 'ADMIN') {
+    menuItems.push(
+      { id: DashboardModule.ADMIN_DASHBOARD, label: 'Painel Admin', icon: ShieldCheck },
+      { id: DashboardModule.ADMIN_USERS, label: 'Usuários', icon: Users },
+    );
+  }
 
   return (
     <>

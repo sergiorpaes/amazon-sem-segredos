@@ -7,12 +7,16 @@ import { ProfitAnalytics } from '../components/Dashboard/ProfitAnalytics';
 import { ProductFinder } from '../components/Dashboard/ProductFinder';
 import { Settings } from '../components/Dashboard/Settings';
 import { DashboardModule } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { AdminDashboard } from './Admin/Dashboard';
+import { AdminUsers } from './Admin/Users';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
+  const { user } = useAuth();
   const [currentModule, setCurrentModule] = useState<DashboardModule>(DashboardModule.PRODUCT_FINDER);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -24,6 +28,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         return <ListingOptimizer />;
       case DashboardModule.PRODUCT_FINDER:
         return <ProductFinder />;
+      case DashboardModule.ADMIN_DASHBOARD:
+        return <AdminDashboard />;
+      case DashboardModule.ADMIN_USERS:
+        return <AdminUsers />;
       case DashboardModule.PROFIT_ANALYTICS:
         return (
           <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
@@ -64,6 +72,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.PROFIT_ANALYTICS: return "Visão Geral";
       case DashboardModule.ADS_MANAGER: return "Gerenciador de Ads";
       case DashboardModule.SETTINGS: return "Configurações";
+      case DashboardModule.ADMIN_DASHBOARD: return "Painel Administrativo";
+      case DashboardModule.ADMIN_USERS: return "Gestão de Usuários";
       default: return "Dashboard";
     }
   }
@@ -92,11 +102,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden md:flex flex-col items-end">
-              <span className="text-sm font-semibold text-gray-700">Vendedor Demo</span>
-              <span className="text-xs text-brand-600">Plano Pro</span>
+              <span className="text-sm font-semibold text-gray-700">{user?.email || 'Usuário'}</span>
+              <span className="text-xs text-brand-600">{user?.role === 'ADMIN' ? 'Administrador' : 'Plano Pro'}</span>
             </div>
-            <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200">
-              VD
+            <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase">
+              {(user?.email || 'U').substring(0, 2)}
             </div>
           </div>
         </header>
