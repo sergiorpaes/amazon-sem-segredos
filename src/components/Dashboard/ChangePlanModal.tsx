@@ -5,7 +5,7 @@ import { useLanguage } from '../../services/languageService';
 interface ChangePlanModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelectPlan: (priceId: string) => void;
+    onSelectPlan: (priceId: string, planId: number) => void;
     currentPlan?: string;
     loading: boolean;
 }
@@ -18,30 +18,43 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({ isOpen, onClos
     const plans = [
         {
             id: 'free',
+            dbId: 1,
             priceId: '',
             name: 'Free',
-            price: 'R$ 0',
+            price: '€ 0',
             period: '/mês',
             features: ['5 pesquisas/dia', 'Análise básica', 'Suporte por email'],
             current: currentPlan === 'free'
         },
         {
-            id: 'pro',
-            priceId: 'price_plan_pro', // Replace with real ID
-            name: 'Pro',
-            price: 'R$ 97',
+            id: 'starter',
+            dbId: 2,
+            priceId: 'price_starter_placeholder',
+            name: 'Starter',
+            price: '€ 19',
             period: '/mês',
-            features: ['Pesquisas ilimitadas', 'Análise avançada de ROI', 'Histórico de preços', 'Suporte prioritário'],
+            features: ['50 créditos/mês', 'Acesso a Mentor', 'Suporte por e-mail'],
+            current: currentPlan === 'starter'
+        },
+        {
+            id: 'pro',
+            dbId: 3,
+            priceId: 'price_pro_placeholder', // Replaced by resolution logic in backend
+            name: 'Pro',
+            price: '€ 49',
+            period: '/mês',
+            features: ['200 créditos/mês', 'Acesso a tudo do Starter', 'Análise de ROI'],
             current: currentPlan === 'pro',
             highlight: true
         },
         {
             id: 'premium',
-            priceId: 'price_plan_premium', // Replace with real ID
+            dbId: 4,
+            priceId: 'price_premium_placeholder',
             name: 'Premium',
-            price: 'R$ 197',
+            price: '€ 99',
             period: '/mês',
-            features: ['Tudo do Pro', 'Automação de Ads', 'Mentoria por IA dedicada', 'Acesso antecipado a features'],
+            features: ['600 créditos/mês', 'Tudo ilimitado', 'Mentoria VIP'],
             current: currentPlan === 'premium'
         }
     ];
@@ -95,13 +108,13 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({ isOpen, onClos
                                 </div>
 
                                 <button
-                                    onClick={() => plan.priceId && onSelectPlan(plan.priceId)}
+                                    onClick={() => plan.priceId && onSelectPlan(plan.priceId, (plan as any).dbId)}
                                     disabled={loading || plan.current || !plan.priceId}
                                     className={`w-full py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${plan.current
-                                            ? 'bg-gray-200 text-gray-500 cursor-default'
-                                            : plan.highlight
-                                                ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-lg shadow-brand-500/30'
-                                                : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                                        ? 'bg-gray-200 text-gray-500 cursor-default'
+                                        : plan.highlight
+                                            ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-lg shadow-brand-500/30'
+                                            : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                                         }`}
                                 >
                                     {loading && !plan.current && plan.priceId ? (

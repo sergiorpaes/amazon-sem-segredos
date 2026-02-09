@@ -103,7 +103,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const handleCheckout = async (priceId: string, type: 'credits' | 'plan') => {
+  const handleCheckout = async (priceId: string, type: 'credits' | 'plan', planId?: number) => {
     setLoadingCheckout(true);
     try {
       const payload: any = { type };
@@ -111,6 +111,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         payload.pack = priceId;
       } else {
         payload.priceId = priceId;
+        if (planId) payload.planId = planId;
       }
 
       const response = await fetch('/.netlify/functions/create-checkout', {
@@ -276,7 +277,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       <ChangePlanModal
         isOpen={isChangePlanOpen}
         onClose={() => setIsChangePlanOpen(false)}
-        onSelectPlan={(priceId) => handleCheckout(priceId, 'plan')}
+        onSelectPlan={(priceId, planId) => handleCheckout(priceId, 'plan', planId)}
         // TODO: Pass current plan from user context if available
         currentPlan="free"
         loading={loadingCheckout}
