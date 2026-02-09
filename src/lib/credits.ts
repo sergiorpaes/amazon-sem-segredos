@@ -1,27 +1,19 @@
-
 import { db } from '../db';
 import { users, creditsLedger, usageHistory } from '../db/schema';
 import { eq, and, gt, asc } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
 
-/**
- * Consumes credits for a user.
- * Prioritizes 'monthly' credits (which expire), then 'purchased' credits.
- * 
- * @param userId - The ID of the user
- * @param cost - Amount of credits to consume
- * @param feature - The feature being used (e.g. 'SEARCH_PRODUCT')
- * @param metadata - Optional metadata about the usage
- * @returns { success: boolean, remainingBalance: number }
- * @throws Error if insufficient credits
- */
 export async function consumeCredits(
     userId: number,
     cost: number,
     feature: string,
     metadata?: any
 ) {
+    // Return early if cost is 0
+    if (cost <= 0) return { success: true, remainingBalance: 0 };
+
     return await db.transaction(async (tx) => {
+        // ... (rest of logic)
+
         // 1. Get user to check total balance first (optimization)
         const [user] = await tx.select().from(users).where(eq(users.id, userId)).limit(1);
         if (!user) throw new Error('User not found');
