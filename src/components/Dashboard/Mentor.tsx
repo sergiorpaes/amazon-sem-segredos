@@ -98,8 +98,8 @@ export const Mentor: React.FC = () => {
     return (
       <div className="flex flex-col h-full overflow-y-auto custom-scrollbar p-6">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('mentor.title')}</h2>
-          <p className="text-gray-500">{t('mentor.subtitle')}</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('mentor.title')}</h2>
+          <p className="text-gray-600 dark:text-gray-400">{t('mentor.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto w-full">
@@ -127,11 +127,11 @@ export const Mentor: React.FC = () => {
                   )}
                 </div>
 
-                <h3 className={`text-xl font-bold mb-2 ${agent.isComingSoon ? 'text-gray-400' : 'text-white'}`}>
+                <h3 className={`text-xl font-bold mb-2 ${agent.isComingSoon ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white'}`}>
                   {agent.name}
                 </h3>
 
-                <p className={`text-sm leading-relaxed ${agent.isComingSoon ? 'text-gray-500' : 'text-gray-400'}`}>
+                <p className={`text-sm leading-relaxed ${agent.isComingSoon ? 'text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}>
                   {agent.description[language] || agent.description['en']}
                 </p>
 
