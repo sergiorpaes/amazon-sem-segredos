@@ -61,8 +61,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setError('');
 
         try {
+            // Final validation before signup
+            if (!formData.email || !formData.password || !formData.phone || !formData.address_street) {
+                throw new Error('Por favor, preencha todos os campos obrigatórios (Email, Senha, Telefone e Morada).');
+            }
+
             // First, create the user
-            console.log('Attempting signup with data:', { ...formData, password: '[REDACTED]', selectedPlan: plan.name.toLowerCase() });
             const signupResponse = await fetch('/.netlify/functions/auth-signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -87,16 +91,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ priceId, type: 'plan' })
-                    // Note: In a real app we'd auto-login here or pass userId if secure. 
-                    // For now relying on existing flow or user to login if needed.
                 });
                 const checkoutData = await checkoutResponse.json();
                 if (checkoutData.url) {
                     window.location.href = checkoutData.url;
                 } else {
                     setSuccessMessage('Conta criada! Redirecionando para o pagamento...');
-                    // Attempt auto-login to fix the "checkout needs auth" issue if it exists?
-                    // For now keep simple.
                 }
             }
         } catch (err: any) {
@@ -105,11 +105,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         }
     };
 
+    const validateStep = (currentStep: number) => {
+        if (currentStep === 1) {
+            if (!formData.email || !formData.password || !formData.phone) {
+                setError('Por favor, preencha o Email, Senha e Telefone.');
+                return false;
+            }
+        } else if (currentStep === 2) {
+            if (!formData.address_street || !formData.address_city || !formData.address_zip) {
+                setError('Por favor, preencha a Morada, Cidade e Código Postal.');
+                return false;
+            }
+        }
+        setError('');
+        return true;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!isLogin && !isForgotPassword && step === 2) {
-            setStep(3);
+            if (validateStep(2)) {
+                setStep(3);
+            }
             return;
         }
 
@@ -376,7 +394,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 {!isLogin && step === 1 ? (
                                     <button
                                         type="button"
-                                        onClick={() => setStep(2)}
+                                        onClick={() => validateStep(1) && setStep(2)}
                                         className="w-full bg-brand-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-brand-700 transition-colors flex items-center justify-center gap-2"
                                     >
                                         Próximo <ChevronRight className="w-5 h-5" />
