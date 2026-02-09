@@ -58,3 +58,45 @@ export const systemConfig = pgTable('amz_system_config', {
     description: text('description'),
     updated_at: timestamp('updated_at').defaultNow(),
 });
+
+export const plans = pgTable('amz_plans', {
+    id: serial('id').primaryKey(),
+    name: text('name').unique().notNull(), // 'Free', 'Starter', 'Pro', 'Premium'
+    monthly_price_eur: integer('monthly_price_eur').notNull(), // In cents
+    credit_limit: integer('credit_limit').notNull(),
+    stripe_price_id: text('stripe_price_id'), // Optional for Free plan
+    stripe_product_id: text('stripe_product_id'), // Added to store Product ID (prod_...)
+    features_json: jsonb('features_json').notNull(),
+    created_at: timestamp('created_at').defaultNow(),
+});
+
+export const userSubscriptions = pgTable('amz_user_subscriptions', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id').references(() => users.id).notNull(),
+    plan_id: integer('plan_id').references(() => plans.id).notNull(),
+    stripe_subscription_id: text('stripe_subscription_id').unique(),
+    status: text('status').notNull(), // active, past_due, canceled, etc.
+    current_period_end: timestamp('current_period_end'),
+    created_at: timestamp('created_at').defaultNow(),
+    updated_at: timestamp('updated_at').defaultNow(),
+});
+
+export const creditsLedger = pgTable('amz_credits_ledger', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id').references(() => users.id).notNull(),
+    amount: integer('amount').notNull(), // Initial amount of this batch
+    remaining_amount: integer('remaining_amount').notNull(), // Current remaining amount
+    type: text('type').notNull(), // 'monthly', 'purchased'
+    description: text('description'), // e.g. "Monthly Plan Credits", "Micro Pack Purchase"
+    expires_at: timestamp('expires_at'), // Null for 'purchased' typically
+    created_at: timestamp('created_at').defaultNow(),
+});
+
+export const usageHistory = pgTable('amz_usage_history', {
+    id: serial('id').primaryKey(),
+    user_id: integer('user_id').references(() => users.id).notNull(),
+    feature_used: text('feature_used').notNull(), // 'SEARCH_PRODUCT', etc.
+    credits_spent: integer('credits_spent').notNull(),
+    metadata: jsonb('metadata'), // Optional: store details about the usage (e.g. search term)
+    created_at: timestamp('created_at').defaultNow(),
+});

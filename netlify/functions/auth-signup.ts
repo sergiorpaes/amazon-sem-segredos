@@ -1,5 +1,5 @@
 import { db } from '../../src/db';
-import { users } from '../../src/db/schema';
+import { users, plans } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -38,14 +38,29 @@ export const handler = async (event: any) => {
         // Hash password
         const passwordHash = await bcrypt.hash(password, 10);
 
+        // Fetch selected plan
+        const [plan] = await db.select().from(plans).where(eq(plans.name, selectedPlan)).limit(1);
+
+        if (!plan) {
+            // Fallback to default if not found or invalid
+            console.warn(`Plan ${selectedPlan} not found, defaulting to Free/Starter logic`);
+        }
+
         // Determine initial credits and role based on plan
-        let initialCredits = 5; // Default for Starter
+        let initialCredits = 5;
         let role = 'USER';
 
-        if (selectedPlan === 'pro' || selectedPlan === 'premium') {
-            initialCredits = 0; // Credits will be added after successful payment/webhook
-            // Note: We might want to set a 'PENDING' status or similar if the schema supported it,
-            // but for now we'll create the user and they'll be 'PRO' or 'PREMIUM' once the stripe webhook hits.
+        if (plan) {
+            if (plan.monthly_price_eur > 0) {
+                initialCredits = 0; // Credits will be added after successful payment/webhook
+            } else {
+                initialCredits = plan.credit_limit;
+            }
+        } else {
+            // Fallback legacy logic
+            if (selectedPlan === 'pro' || selectedPlan === 'premium') {
+                initialCredits = 0;
+            }
         }
 
         // Create user with activation token

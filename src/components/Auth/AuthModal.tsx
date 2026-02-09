@@ -16,7 +16,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-    const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'premium' | null>(null);
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [plans, setPlans] = useState<any[]>([]);
+    const [loadingPlans, setLoadingPlans] = useState(false);
+
+    // Fetch plans on mount
+    React.useEffect(() => {
+        if (step === 3) {
+            setLoadingPlans(true);
+            fetch('/.netlify/functions/get-plans')
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setPlans(data);
+                    }
+                })
+                .catch(err => console.error('Failed to load plans:', err))
+                .finally(() => setLoadingPlans(false));
+        }
+    }, [step]);
     const { login } = useAuth();
     const { t } = useLanguage();
 
@@ -37,8 +55,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handlePlanSelect = async (plan: 'starter' | 'pro' | 'premium') => {
-        setSelectedPlan(plan);
+    const handlePlanSelect = async (plan: any) => {
+        setSelectedPlan(plan.name.toLowerCase());
         setLoading(true);
         setError('');
 
@@ -47,7 +65,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             const signupResponse = await fetch('/.netlify/functions/auth-signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, selectedPlan: plan })
+                body: JSON.stringify({ ...formData, selectedPlan: plan.name.toLowerCase(), planId: plan.id })
             });
 
             const signupData = await signupResponse.json();
@@ -56,23 +74,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 throw new Error(signupData.error || 'Erro ao criar conta');
             }
 
-            if (plan === 'starter') {
+            if (plan.monthly_price_eur === 0) {
                 setSuccessMessage('Cadastro realizado com sucesso! Verifique seu e-mail para ativar sua conta.');
                 setLoading(false);
             } else {
                 // For Pro/Premium, redirect to checkout
-                const priceId = plan === 'pro' ? 'price_pro_placeholder' : 'price_premium_placeholder';
+                const priceId = plan.stripe_price_id;
+
                 // Trigger checkout creation
                 const checkoutResponse = await fetch('/.netlify/functions/create-checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ priceId, type: 'plan' })
+                    // Note: In a real app we'd auto-login here or pass userId if secure. 
+                    // For now relying on existing flow or user to login if needed.
                 });
                 const checkoutData = await checkoutResponse.json();
                 if (checkoutData.url) {
                     window.location.href = checkoutData.url;
                 } else {
                     setSuccessMessage('Conta criada! Redirecionando para o pagamento...');
+                    // Attempt auto-login to fix the "checkout needs auth" issue if it exists?
+                    // For now keep simple.
                 }
             }
         } catch (err: any) {
@@ -165,88 +188,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                     {!isLogin && step === 3 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom duration-500">
-                            {/* Starter Plan */}
-                            <div className="border border-gray-100 rounded-2xl p-6 hover:border-brand-500 transition-all hover:shadow-lg bg-gray-50/50 flex flex-col group">
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">{t('plans.starter')}</h3>
-                                <p className="text-sm text-gray-500 mb-4">{t('plans.starter_desc')}</p>
-                                <div className="text-3xl font-black text-brand-600 mb-6">{t('plans.free')}</div>
-                                <ul className="space-y-3 mb-8 flex-1">
-                                    <li className="text-sm text-gray-600 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                        {t('plans.starter_features')}
-                                    </li>
-                                    <li className="text-sm text-gray-600 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                        Acesso ao Dashboard
-                                    </li>
-                                </ul>
-                                <button
-                                    onClick={() => handlePlanSelect('starter')}
-                                    disabled={loading}
-                                    className="w-full py-3 rounded-xl font-bold bg-white border-2 border-brand-600 text-brand-600 hover:bg-brand-50 transition-colors group-hover:bg-brand-600 group-hover:text-white"
-                                >
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Começar Grátis'}
-                                </button>
-                            </div>
-
-                            {/* Pro Plan */}
-                            <div className="border-2 border-brand-500 rounded-2xl p-6 shadow-xl bg-brand-50/20 flex flex-col relative">
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                    Mais Popular
+                            {loadingPlans ? (
+                                <div className="col-span-3 text-center py-12">
+                                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-brand-600" />
+                                    <p className="text-gray-500 mt-2">Carregando planos...</p>
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">{t('plans.pro')}</h3>
-                                <p className="text-sm text-gray-500 mb-4">{t('plans.pro_desc')}</p>
-                                <div className="text-3xl font-black text-brand-600 mb-6">{t('plans.pro_price')}</div>
-                                <ul className="space-y-3 mb-8 flex-1">
-                                    <li className="text-sm text-gray-600 flex items-center gap-2 font-bold">
-                                        <CheckCircle className="w-4 h-4 text-brand-500" />
-                                        Créditos ilimitados*
-                                    </li>
-                                    <li className="text-sm text-gray-600 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-brand-500" />
-                                        Mentor de Vendas AI
-                                    </li>
-                                    <li className="text-sm text-gray-600 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-brand-500" />
-                                        Gerador de Listing Pro
-                                    </li>
-                                </ul>
-                                <button
-                                    onClick={() => handlePlanSelect('pro')}
-                                    disabled={loading}
-                                    className="w-full py-3 rounded-xl font-bold bg-brand-600 text-white hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200"
-                                >
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Selecionar Pro'}
-                                </button>
-                            </div>
+                            ) : plans.map((plan) => {
+                                const features = typeof plan.features_json === 'string' ? JSON.parse(plan.features_json) : plan.features_json;
+                                const isPro = plan.name === 'Pro';
+                                const isPremium = plan.name === 'Premium';
 
-                            {/* Premium Plan */}
-                            <div className="border border-gray-100 rounded-2xl p-6 hover:border-brand-500 transition-all hover:shadow-lg bg-gray-50/50 flex flex-col group">
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">{t('plans.premium')}</h3>
-                                <p className="text-sm text-gray-500 mb-4">{t('plans.premium_desc')}</p>
-                                <div className="text-3xl font-black text-brand-600 mb-6">{t('plans.premium_price')}</div>
-                                <ul className="space-y-3 mb-8 flex-1">
-                                    <li className="text-sm text-gray-600 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                        Tudo do Plano Pro
-                                    </li>
-                                    <li className="text-sm text-gray-600 flex items-center gap-2 font-bold">
-                                        <CheckCircle className="w-4 h-4 text-brand-500" />
-                                        Ads Manager Autopilot
-                                    </li>
-                                    <li className="text-sm text-gray-600 flex items-center gap-2">
-                                        <CheckCircle className="w-4 h-4 text-green-500" />
-                                        Suporte Prioritário
-                                    </li>
-                                </ul>
-                                <button
-                                    onClick={() => handlePlanSelect('premium')}
-                                    disabled={loading}
-                                    className="w-full py-3 rounded-xl font-bold bg-white border-2 border-brand-600 text-brand-600 hover:bg-brand-50 transition-colors group-hover:bg-brand-600 group-hover:text-white"
-                                >
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Selecionar Premium'}
-                                </button>
-                            </div>
+                                return (
+                                    <div key={plan.id} className={`border ${isPro ? 'border-2 border-brand-500 shadow-xl bg-brand-50/20' : 'border-gray-100 hover:border-brand-500 bg-gray-50/50'} rounded-2xl p-6 transition-all hover:shadow-lg flex flex-col relative group`}>
+                                        {isPro && (
+                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                                Mais Popular
+                                            </div>
+                                        )}
+                                        <h3 className="text-lg font-bold text-gray-900 mb-1">{t(`plans.${plan.name.toLowerCase()}`)}</h3>
+                                        <div className="text-3xl font-black text-brand-600 mb-6">
+                                            {plan.monthly_price_eur === 0 ? t('plans.free') : `€${(plan.monthly_price_eur / 100).toFixed(2)}`}<span className="text-sm font-normal text-gray-500">/mês</span>
+                                        </div>
+                                        <ul className="space-y-3 mb-8 flex-1">
+                                            {features.map((feature: string, idx: number) => (
+                                                <li key={idx} className="text-sm text-gray-600 flex items-center gap-2">
+                                                    <CheckCircle className={`w-4 h-4 ${isPro || isPremium ? 'text-brand-500' : 'text-green-500'}`} />
+                                                    {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <button
+                                            onClick={() => handlePlanSelect(plan)}
+                                            disabled={loading}
+                                            className={`w-full py-3 rounded-xl font-bold transition-colors ${isPro
+                                                ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-lg shadow-brand-200'
+                                                : 'bg-white border-2 border-brand-600 text-brand-600 hover:bg-brand-50 group-hover:bg-brand-600 group-hover:text-white'
+                                                }`}
+                                        >
+                                            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : `Selecionar ${plan.name}`}
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">

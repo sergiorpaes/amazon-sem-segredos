@@ -222,6 +222,19 @@ export const translations = {
         'lo.ui.subtitle': 'Responde las preguntas para que nuestra IA cree un anuncio de alta conversión.',
         'lo.ui.save': 'Guardar Listado',
         'lo.ui.generating_images': 'Generando Imágenes...',
+
+        // Plans
+        'plans.starter': 'Starter',
+        'plans.starter_desc': 'Ideal para comenzar',
+        'plans.starter_features': '5 Créditos Iniciales',
+        'plans.pro': 'Plan Pro',
+        'plans.pro_desc': 'Para vendedores en crecimiento',
+        'plans.pro_price': '29€/mes',
+        'plans.premium': 'Plan Premium',
+        'plans.premium_desc': 'Poder total de la IA',
+        'plans.premium_price': '49€/mes',
+        'plans.select': 'Seleccionar Plan',
+        'plans.free': 'Gratis',
     },
     en: {
         // General

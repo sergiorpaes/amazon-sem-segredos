@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, ChevronDown, User, LogOut, CreditCard, Sparkles, Key } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, CreditCard, Sparkles, Key, Coins, Plus } from 'lucide-react';
 import { Sidebar } from '../components/Layout/Sidebar';
 import { Mentor } from '../components/Dashboard/Mentor';
 import { ListingOptimizer } from '../components/Dashboard/ListingOptimizer';
@@ -10,6 +10,9 @@ import { DashboardModule } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../services/languageService';
 import { ChangePasswordModal } from '../components/Auth/ChangePasswordModal';
+import { BuyCreditsModal } from '../components/Dashboard/BuyCreditsModal';
+import { ChangePlanModal } from '../components/Dashboard/ChangePlanModal';
+import { CreditGuard } from '../components/Dashboard/CreditGuard';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -22,15 +25,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isChangePassOpen, setIsChangePassOpen] = useState(false);
+  const [isBuyCreditsOpen, setIsBuyCreditsOpen] = useState(false);
+  const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
 
   const renderModule = () => {
     switch (currentModule) {
       case DashboardModule.MENTOR:
-        return <Mentor />;
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <Mentor />
+          </CreditGuard>
+        );
       case DashboardModule.LISTING_OPTIMIZER:
-        return <ListingOptimizer />;
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <ListingOptimizer />
+          </CreditGuard>
+        );
       case DashboardModule.PRODUCT_FINDER:
-        return <ProductFinder />;
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <ProductFinder />
+          </CreditGuard>
+        );
       case DashboardModule.PROFIT_ANALYTICS:
         return (
           <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
@@ -75,14 +93,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const handleBuyCredits = () => {
-    // Redirect to checkout or open modal
-    window.location.href = '/.netlify/functions/create-checkout?type=credits';
-  };
+  const handleCheckout = async (priceId: string, type: 'credits' | 'plan') => {
+    setLoadingCheckout(true);
+    try {
+      const payload: any = { type };
+      if (type === 'credits' && ['micro', 'business', 'bulk'].includes(priceId)) {
+        payload.pack = priceId;
+      } else {
+        payload.priceId = priceId;
+      }
 
-  const handleChangePlan = () => {
-    // Redirect to checkout or open modal
-    window.location.href = '/.netlify/functions/create-checkout?type=plan';
+      const response = await fetch('/.netlify/functions/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('Erro ao criar checkout:', data.error);
+        alert('Erro ao iniciar checkout. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao processar checkout:', error);
+      alert('Erro de conexão. Verifique sua internet.');
+    } finally {
+      setLoadingCheckout(false);
+    }
   };
 
   return (
@@ -109,6 +147,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           </div>
 
           <div className="flex items-center gap-4 relative">
+            {/* Credit Badge */}
+            <div className="hidden md:flex items-center gap-2 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100 mr-2">
+              <Coins className="w-4 h-4 text-brand-600" />
+              <span className="font-bold text-brand-700">{user?.credits_balance || 0}</span>
+              <span className="text-xs text-brand-500 font-medium">Créditos</span>
+              <button
+                onClick={() => setIsBuyCreditsOpen(true)}
+                className="ml-2 w-5 h-5 flex items-center justify-center bg-brand-600 text-white rounded-full hover:bg-brand-700 transition-colors"
+                title={t('profile.buy_credits')}
+              >
+                <Plus size={12} />
+              </button>
+            </div>
+
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-xl transition-colors text-right group"
@@ -149,7 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   </button>
 
                   <button
-                    onClick={handleBuyCredits}
+                    onClick={() => { setIsBuyCreditsOpen(true); setIsProfileOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
@@ -157,7 +209,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   </button>
 
                   <button
-                    onClick={handleChangePlan}
+                    onClick={() => { setIsChangePlanOpen(true); setIsProfileOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
@@ -185,9 +237,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         </div>
       </main>
 
+      {/* Modals */}
       <ChangePasswordModal
         isOpen={isChangePassOpen}
         onClose={() => setIsChangePassOpen(false)}
+      />
+
+      <BuyCreditsModal
+        isOpen={isBuyCreditsOpen}
+        onClose={() => setIsBuyCreditsOpen(false)}
+        onBuy={(priceId) => handleCheckout(priceId, 'credits')}
+        loading={loadingCheckout}
+      />
+
+      <ChangePlanModal
+        isOpen={isChangePlanOpen}
+        onClose={() => setIsChangePlanOpen(false)}
+        onSelectPlan={(priceId) => handleCheckout(priceId, 'plan')}
+        // TODO: Pass current plan from user context if available
+        currentPlan="free"
+        loading={loadingCheckout}
       />
     </div>
   );

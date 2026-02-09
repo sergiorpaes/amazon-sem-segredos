@@ -1,0 +1,1 @@
+ALTER TABLE "amz_plans" ADD COLUMN "stripe_price_id" text;

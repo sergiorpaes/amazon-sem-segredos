@@ -1,7 +1,7 @@
 
 import Stripe from 'stripe';
 import { db } from '../../src/db';
-import { users } from '../../src/db/schema';
+import { users, plans } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
@@ -54,9 +54,25 @@ export const handler = async (event: any) => {
         const SUCCESS_URL = `${process.env.URL || 'http://localhost:8888'}/dashboard?success=true`;
         const CANCEL_URL = `${process.env.URL || 'http://localhost:8888'}/dashboard?canceled=true`;
 
+        const CREDIT_PACKS: Record<string, { priceId: string, credits: number }> = {
+            'micro': { priceId: process.env.STRIPE_PRICE_MICRO || 'price_micro_placeholder', credits: 20 },
+            'business': { priceId: process.env.STRIPE_PRICE_BUSINESS || 'price_business_placeholder', credits: 100 },
+            'bulk': { priceId: process.env.STRIPE_PRICE_BULK || 'price_bulk_placeholder', credits: 300 }
+        };
+
         if (type === 'credits') {
             // One-time payment for credits
-            const priceId = process.env.STRIPE_CREDITS_PRICE_ID || 'price_placeholder_credits';
+            let priceId = body.priceId;
+            let creditsAmount = 0;
+
+            if (body.pack && CREDIT_PACKS[body.pack]) {
+                priceId = CREDIT_PACKS[body.pack].priceId;
+                creditsAmount = CREDIT_PACKS[body.pack].credits;
+            } else {
+                // Fallback or specific priceId passed
+                priceId = priceId || process.env.STRIPE_CREDITS_PRICE_ID || 'price_placeholder_credits';
+            }
+
             session = await stripe.checkout.sessions.create({
                 customer: customerId,
                 mode: 'payment',
@@ -64,11 +80,64 @@ export const handler = async (event: any) => {
                 line_items: [{ price: priceId, quantity: 1 }],
                 success_url: SUCCESS_URL,
                 cancel_url: CANCEL_URL,
-                metadata: { userId: user.id.toString(), type: 'credits' }
+                metadata: {
+                    userId: user.id.toString(),
+                    type: 'credits',
+                    creditsAmount: creditsAmount.toString()
+                }
             });
         } else {
             // Subscription for plan
-            const priceId = body.priceId || query.priceId || process.env.STRIPE_PRO_PLAN_ID || 'price_placeholder_pro';
+            let priceId = body.priceId || query.priceId;
+            let planId = body.planId || query.planId;
+
+            // If we have a priceId but no planId, try to find the plan
+            if (priceId && !planId) {
+                const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
+                if (plan) planId = plan.id;
+            }
+
+            // If no priceId or it's a placeholder, but we have a planId, resolve it
+            if ((!priceId || priceId.includes('placeholder')) && planId) {
+                const [plan] = await db.select().from(plans).where(eq(plans.id, parseInt(planId))).limit(1);
+                if (plan) {
+                    if (plan.stripe_price_id && !plan.stripe_price_id.includes('placeholder')) {
+                        priceId = plan.stripe_price_id;
+                    } else if (plan.stripe_product_id) {
+                        // Resolve Price ID from Product ID dynamically
+                        console.log(`Resolvendo Price ID para Produto: ${plan.stripe_product_id}`);
+                        const prices = await stripe.prices.list({
+                            product: plan.stripe_product_id,
+                            active: true,
+                            limit: 1
+                        });
+                        if (prices.data.length > 0) {
+                            priceId = prices.data[0].id;
+                            // Cache it back to DB for performance
+                            await db.update(plans).set({ stripe_price_id: priceId }).where(eq(plans.id, plan.id));
+                        }
+                    }
+                }
+            }
+
+            // Fallback if still no valid priceId (Default to Pro)
+            if (!priceId || priceId.includes('placeholder')) {
+                const PRO_ENV_ID = process.env.STRIPE_PRO_PLAN_ID;
+                if (PRO_ENV_ID && !PRO_ENV_ID.includes('placeholder')) {
+                    priceId = PRO_ENV_ID;
+                } else {
+                    const [proPlan] = await db.select().from(plans).where(eq(plans.name, 'Pro')).limit(1);
+                    if (proPlan?.stripe_price_id && !proPlan.stripe_price_id.includes('placeholder')) {
+                        priceId = proPlan.stripe_price_id;
+                    }
+                }
+
+                if (!planId && priceId) {
+                    const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
+                    if (plan) planId = plan.id;
+                }
+            }
+
             session = await stripe.checkout.sessions.create({
                 customer: customerId,
                 mode: 'subscription',
@@ -76,7 +145,11 @@ export const handler = async (event: any) => {
                 line_items: [{ price: priceId, quantity: 1 }],
                 success_url: SUCCESS_URL,
                 cancel_url: CANCEL_URL,
-                metadata: { userId: user.id.toString(), type: 'plan' }
+                metadata: {
+                    userId: user.id.toString(),
+                    type: 'plan',
+                    planId: planId ? planId.toString() : ''
+                }
             });
         }
 

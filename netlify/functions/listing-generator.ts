@@ -1,5 +1,8 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import jwt from 'jsonwebtoken';
+import cookie from 'cookie';
+import { consumeCredits } from '../../src/lib/credits';
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -19,6 +22,37 @@ export const handler = async (event: any) => {
         return {
             statusCode: 405,
             body: JSON.stringify({ error: 'Method not allowed' })
+        };
+    }
+
+    // Verify Auth
+    const cookies = cookie.parse(event.headers.cookie || '');
+    const token = cookies.auth_token;
+    if (!token) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Unauthorized' })
+        };
+    }
+
+    let userId: number;
+    try {
+        const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
+        userId = decoded.userId;
+    } catch (e) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Invalid Token' })
+        };
+    }
+
+    try {
+        // Consume Credits for LISTING_CREATOR (5 credits)
+        await consumeCredits(userId, 5, 'LISTING_CREATOR');
+    } catch (error: any) {
+        return {
+            statusCode: 402,
+            body: JSON.stringify({ error: error.message || 'Insufficient credits' })
         };
     }
 
