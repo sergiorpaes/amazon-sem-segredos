@@ -48,12 +48,12 @@ export const handler: Handler = async (event) => {
 
         // Calculate monthly revenue (sum of active subscription prices)
         const revenueResult = await sql`
-            SELECT COALESCE(SUM(p.price), 0) as revenue
+            SELECT COALESCE(SUM(p.monthly_price_eur), 0) as revenue
             FROM amz_user_subscriptions us
             JOIN amz_plans p ON us.plan_id = p.id
             WHERE us.status = 'active'
         `;
-        const monthlyRevenue = parseFloat(revenueResult[0].revenue);
+        const monthlyRevenue = parseFloat(revenueResult[0].revenue) / 100; // Convert cents to euros
 
         // Get today's activity count (you can customize this query)
         // For now, let's count users created today

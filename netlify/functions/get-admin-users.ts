@@ -47,13 +47,12 @@ export const handler: Handler = async (event) => {
                     u.full_name,
                     u.role,
                     u.created_at,
+                    u.credits_balance,
                     us.status as subscription_status,
-                    p.name as plan_name,
-                    cb.balance as credit_balance
+                    p.name as plan_name
                 FROM amz_users u
                 LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id
                 LEFT JOIN amz_plans p ON us.plan_id = p.id
-                LEFT JOIN amz_credits_balance cb ON u.id = cb.user_id
                 WHERE u.email ILIKE ${`%${searchQuery}%`} 
                    OR u.full_name ILIKE ${`%${searchQuery}%`}
                 ORDER BY u.created_at DESC
@@ -68,13 +67,12 @@ export const handler: Handler = async (event) => {
                     u.full_name,
                     u.role,
                     u.created_at,
+                    u.credits_balance,
                     us.status as subscription_status,
-                    p.name as plan_name,
-                    cb.balance as credit_balance
+                    p.name as plan_name
                 FROM amz_users u
                 LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id
                 LEFT JOIN amz_plans p ON us.plan_id = p.id
-                LEFT JOIN amz_credits_balance cb ON u.id = cb.user_id
                 ORDER BY u.created_at DESC
                 LIMIT ${limit}
                 OFFSET ${offset}

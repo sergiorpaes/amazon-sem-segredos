@@ -10,7 +10,7 @@ interface User {
     created_at: string;
     subscription_status?: string;
     plan_name?: string;
-    credit_balance?: number;
+    credits_balance?: number;
 }
 
 export const AdminUsers: React.FC = () => {
@@ -126,8 +126,8 @@ export const AdminUsers: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'ADMIN'
-                                                    ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400'
-                                                    : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                                                ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400'
+                                                : 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                                                 }`}>
                                                 {user.role}
                                             </span>
@@ -136,7 +136,7 @@ export const AdminUsers: React.FC = () => {
                                             {user.plan_name || 'Free'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {user.role === 'ADMIN' ? '∞' : (user.credit_balance || 0)}
+                                            {user.role === 'ADMIN' ? '∞' : (user.credits_balance || 0)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {formatDate(user.created_at)}
