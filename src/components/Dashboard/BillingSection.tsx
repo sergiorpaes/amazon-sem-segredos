@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, History, TrendingUp, Filter, Calendar, Clock } from 'lucide-react';
+import { CreditCard, History, TrendingUp, Filter, Calendar, Clock, AlertTriangle, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface UsageEntry {
@@ -23,23 +23,59 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
     const { user } = useAuth();
     const [history, setHistory] = useState<UsageEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [isCanceling, setIsCanceling] = useState(false);
 
     useEffect(() => {
-        const fetchHistory = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch('/.netlify/functions/get-usage-history');
-                if (res.ok) {
-                    const data = await res.json();
+                const [historyRes, subRes] = await Promise.all([
+                    fetch('/.netlify/functions/get-usage-history'),
+                    fetch('/.netlify/functions/get-subscription-info')
+                ]);
+
+                if (historyRes.ok) {
+                    const data = await historyRes.json();
                     setHistory(data);
                 }
+
+                if (subRes.ok) {
+                    const subData = await subRes.json();
+                    setSubscriptionInfo(subData);
+                }
             } catch (error) {
-                console.error('Failed to fetch history:', error);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchHistory();
+        fetchData();
     }, []);
+
+    const handleCancelSubscription = async () => {
+        setIsCanceling(true);
+        try {
+            const res = await fetch('/.netlify/functions/cancel-subscription', {
+                method: 'POST'
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setSubscriptionInfo({ ...subscriptionInfo, cancel_at_period_end: true, current_period_end: data.current_period_end });
+                setShowCancelModal(false);
+                alert('Subscrição cancelada. Continuará ativa até ao fim do período atual.');
+            } else {
+                const error = await res.json();
+                alert(`Erro: ${error.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to cancel subscription:', error);
+            alert('Erro ao cancelar subscrição.');
+        } finally {
+            setIsCanceling(false);
+        }
+    };
 
     const getLabel = (entry: UsageEntry) => {
         if (entry.type === 'grant') return entry.label;
@@ -62,17 +98,30 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                         <div className="p-3 bg-brand-500/10 rounded-xl">
                             <CreditCard className="w-6 h-6 text-brand-500" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <p className="text-sm text-gray-400">Plano Atual</p>
                             <h4 className="text-xl font-bold text-white capitalize">{user?.plan_name || 'Grátis'}</h4>
+                            {subscriptionInfo?.cancel_at_period_end && (
+                                <p className="text-xs text-orange-500 mt-1">Cancela em {new Date(subscriptionInfo.current_period_end * 1000).toLocaleDateString('pt-BR')}</p>
+                            )}
                         </div>
                     </div>
-                    <button
-                        onClick={onOpenChangePlan}
-                        className="w-full py-2 text-sm font-bold text-brand-500 hover:bg-brand-500/5 rounded-lg transition-colors"
-                    >
-                        Alterar Plano
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={onOpenChangePlan}
+                            className="flex-1 py-2 text-sm font-bold text-brand-500 hover:bg-brand-500/5 rounded-lg transition-colors"
+                        >
+                            Alterar Plano
+                        </button>
+                        {user?.plan_name && user.plan_name !== 'Grátis' && !subscriptionInfo?.cancel_at_period_end && (
+                            <button
+                                onClick={() => setShowCancelModal(true)}
+                                className="flex-1 py-2 text-sm font-bold text-red-500 hover:bg-red-500/5 rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
@@ -165,8 +214,8 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${entry.type === 'grant'
-                                                    ? 'bg-green-500/10 text-green-500'
-                                                    : 'bg-orange-500/10 text-orange-500'
+                                                ? 'bg-green-500/10 text-green-500'
+                                                : 'bg-orange-500/10 text-orange-500'
                                                 }`}>
                                                 {entry.type === 'grant' ? 'Crédito' : 'Consumo'}
                                             </span>
@@ -184,6 +233,44 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                     </table>
                 </div>
             </div>
+
+            {/* Cancel Confirmation Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-dark-800 rounded-2xl border border-dark-700 max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-3 bg-red-500/10 rounded-xl">
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">Cancelar Subscrição</h3>
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="ml-auto p-2 hover:bg-dark-700 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5 text-gray-400" />
+                            </button>
+                        </div>
+                        <p className="text-gray-400 mb-6">
+                            Tem a certeza que deseja cancelar a sua subscrição? O plano continuará ativo até ao fim do período atual, mas não será renovado.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowCancelModal(false)}
+                                className="flex-1 py-2 px-4 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors"
+                            >
+                                Voltar
+                            </button>
+                            <button
+                                onClick={handleCancelSubscription}
+                                disabled={isCanceling}
+                                className="flex-1 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                            >
+                                {isCanceling ? 'A cancelar...' : 'Confirmar Cancelamento'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -79,6 +79,7 @@ export const userSubscriptions = pgTable('amz_user_subscriptions', {
     stripe_subscription_id: text('stripe_subscription_id').unique(),
     status: text('status').notNull(), // active, past_due, canceled, etc.
     current_period_end: timestamp('current_period_end'),
+    cancel_at_period_end: boolean('cancel_at_period_end').default(false),
     created_at: timestamp('created_at').defaultNow(),
     updated_at: timestamp('updated_at').defaultNow(),
 });

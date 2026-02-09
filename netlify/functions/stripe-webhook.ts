@@ -130,11 +130,12 @@ export const handler = async (event: any) => {
 
             case 'customer.subscription.updated': {
                 const subscription = stripeEvent.data.object as any;
-                // Update status in DB
+                // Update status and cancellation info in DB
                 await db.update(userSubscriptions)
                     .set({
                         status: subscription.status,
-                        current_period_end: new Date(subscription.current_period_end * 1000)
+                        current_period_end: new Date(subscription.current_period_end * 1000),
+                        cancel_at_period_end: subscription.cancel_at_period_end || false
                     })
                     .where(eq(userSubscriptions.stripe_subscription_id, subscription.id));
                 break;
