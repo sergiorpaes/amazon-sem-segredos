@@ -1,5 +1,5 @@
 import { db } from '../../src/db';
-import { usageHistory } from '../../src/db/schema';
+import { usageHistory, creditsLedger } from '../../src/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
@@ -20,15 +20,34 @@ export const handler = async (event: any) => {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
         const userId = decoded.userId;
 
-        const history = await db.select()
-            .from(usageHistory)
-            .where(eq(usageHistory.user_id, userId))
-            .orderBy(desc(usageHistory.created_at))
-            .limit(50);
+        const historyItems = await db.select().from(usageHistory).where(eq(usageHistory.user_id, userId));
+        const ledgerItems = await db.select().from(creditsLedger).where(eq(creditsLedger.user_id, userId));
+
+        const unified = [
+            ...historyItems.map(item => ({
+                id: `u-${item.id}`,
+                type: 'usage',
+                label: item.feature_used,
+                amount: -item.credits_spent,
+                created_at: item.created_at,
+                metadata: item.metadata
+            })),
+            ...ledgerItems.map(item => ({
+                id: `l-${item.id}`,
+                type: 'grant',
+                label: item.description,
+                amount: item.amount,
+                created_at: item.created_at
+            }))
+        ].sort((a, b) => {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateB - dateA;
+        });
 
         return {
             statusCode: 200,
-            body: JSON.stringify(history)
+            body: JSON.stringify(unified.slice(0, 50))
         };
     } catch (error: any) {
         console.error('Get Usage History Error:', error);

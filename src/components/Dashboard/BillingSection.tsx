@@ -3,9 +3,10 @@ import { CreditCard, History, TrendingUp, Filter, Calendar, Clock } from 'lucide
 import { useAuth } from '../../contexts/AuthContext';
 
 interface UsageEntry {
-    id: number;
-    feature_used: string;
-    credits_spent: number;
+    id: string;
+    type: 'usage' | 'grant';
+    label: string;
+    amount: number;
     created_at: string;
     metadata?: any;
 }
@@ -40,14 +41,16 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
         fetchHistory();
     }, []);
 
-    const getFeatureLabel = (feature: string) => {
+    const getLabel = (entry: UsageEntry) => {
+        if (entry.type === 'grant') return entry.label;
+
         const labels: Record<string, string> = {
             'SEARCH_PRODUCT': 'Busca de Produtos',
             'LISTING_CREATOR': 'Gerador de Listing',
             'IMAGE_GENERATION': 'Gerador de Imagens',
             'MENTOR_VIRTUAL': 'Mentor IA',
         };
-        return labels[feature] || feature;
+        return labels[entry.label] || entry.label;
     };
 
     return (
@@ -96,9 +99,9 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                             <TrendingUp className="w-6 h-6 text-green-500" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Total Gasto</p>
+                            <p className="text-sm text-gray-400">Total Consumido</p>
                             <h4 className="text-xl font-bold text-white">
-                                {history.reduce((acc, curr) => acc + curr.credits_spent, 0)} Cr.
+                                {Math.abs(history.filter(h => h.type === 'usage').reduce((acc, curr) => acc + curr.amount, 0))} Cr.
                             </h4>
                         </div>
                     </div>
@@ -124,9 +127,9 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                         <thead className="bg-dark-800/50 text-xs font-bold text-gray-500 uppercase tracking-widest">
                             <tr>
                                 <th className="px-6 py-4">Data & Hora</th>
-                                <th className="px-6 py-4">Funcionalidade</th>
+                                <th className="px-6 py-4">Descrição</th>
                                 <th className="px-6 py-4 text-right">Créditos</th>
-                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">Tipo</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-dark-700/50">
@@ -152,17 +155,20 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="text-sm font-medium text-white group-hover:text-brand-400 transition-colors">
-                                                {getFeatureLabel(entry.feature_used)}
+                                                {getLabel(entry)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <span className="text-sm font-bold text-orange-500">
-                                                -{entry.credits_spent}
+                                            <span className={`text-sm font-bold ${entry.amount > 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                                                {entry.amount > 0 ? `+${entry.amount}` : entry.amount}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-500 px-2 py-1 rounded-full">
-                                                Consumido
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${entry.type === 'grant'
+                                                    ? 'bg-green-500/10 text-green-500'
+                                                    : 'bg-orange-500/10 text-orange-500'
+                                                }`}>
+                                                {entry.type === 'grant' ? 'Crédito' : 'Consumo'}
                                             </span>
                                         </td>
                                     </tr>
@@ -170,7 +176,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                             ) : (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-20 text-center text-gray-500">
-                                        Nenhum uso registrado ainda.
+                                        Nenhum registo encontrado.
                                     </td>
                                 </tr>
                             )}
