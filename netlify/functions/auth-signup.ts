@@ -13,6 +13,9 @@ export const handler = async (event: any) => {
     }
 
     try {
+        const body = JSON.parse(event.body);
+        console.log('Signup Request Body:', { ...body, password: '[REDACTED]' });
+
         const {
             email,
             password,
@@ -23,9 +26,15 @@ export const handler = async (event: any) => {
             address_state,
             address_zip,
             selectedPlan
-        } = JSON.parse(event.body);
+        } = body;
 
         if (!email || !password || !phone || !address_street) {
+            console.error('Missing mandatory fields:', {
+                email: !!email,
+                password: !!password,
+                phone: !!phone,
+                address_street: !!address_street
+            });
             return { statusCode: 400, body: JSON.stringify({ error: 'Faltam campos obrigatórios (Email, Password, Telefone, Morada)' }) };
         }
 

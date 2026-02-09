@@ -62,6 +62,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         try {
             // First, create the user
+            console.log('Attempting signup with data:', { ...formData, password: '[REDACTED]', selectedPlan: plan.name.toLowerCase() });
             const signupResponse = await fetch('/.netlify/functions/auth-signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
