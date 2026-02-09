@@ -127,15 +127,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Grátis */}
+            {/* Free */}
             <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-8 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
-              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Grátis</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Free</h3>
               <div className="my-4">
                 <span className="text-4xl font-extrabold text-gray-900 dark:text-white">€0</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
               <ul className="space-y-4 mb-8">
-                {['50 créditos mensais', 'Product Finder AI', 'Listing Optimizer', 'Mentor.AI Básico'].map(item => (
+                {['5 pesquisas/dia', 'Análise básica', 'Suporte por email'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
                   </li>
@@ -144,39 +144,56 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
               <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Começar Grátis</button>
             </div>
 
-            {/* Pro */}
-            <div className="border-2 border-brand-500 rounded-2xl p-8 relative shadow-xl shadow-brand-100 bg-white dark:bg-dark-900">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Mais Popular</div>
-              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Pro</h3>
+            {/* Starter */}
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-8 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Starter</h3>
               <div className="my-4">
-                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">€29</span>
+                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">€19</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
               <ul className="space-y-4 mb-8">
-                {['500 créditos mensais', 'Tudo do Grátis', 'Profit Dashboard', 'Mentor.AI Ilimitado', 'Suporte prioritário'].map(item => (
+                {['50 créditos/mês', 'Acesso a Mentor', 'Suporte por e-mail'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Selecionar Plano</button>
+            </div>
+
+            {/* Pro */}
+            <div className="border-2 border-brand-500 rounded-2xl p-8 relative shadow-xl shadow-brand-100 bg-white dark:bg-dark-900">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Recomendado</div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Pro</h3>
+              <div className="my-4">
+                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">€49</span>
+                <span className="text-gray-500 dark:text-gray-400">/mês</span>
+              </div>
+              <ul className="space-y-4 mb-8">
+                {['200 créditos/mês', 'Acesso a tudo do Starter', 'Análise de ROI'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-brand-500 flex-shrink-0" /> {item}
                   </li>
                 ))}
               </ul>
-              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 bg-brand-600 text-white rounded-xl font-semibold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200">Começar Pro</button>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 bg-brand-600 text-white rounded-xl font-semibold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200">Selecionar Plano</button>
             </div>
 
             {/* Premium */}
             <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-8 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">Premium</h3>
               <div className="my-4">
-                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">€59</span>
+                <span className="text-4xl font-extrabold text-gray-900 dark:text-white">€99</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
               <ul className="space-y-4 mb-8">
-                {['2000 créditos mensais', 'Tudo do Pro', 'Ads Manager AI', 'Review Analyzer', 'Consultoria 1-on-1'].map(item => (
+                {['600 créditos/mês', 'Tudo ilimitado', 'Mentoria VIP'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
                   </li>
                 ))}
               </ul>
-              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Começar Premium</button>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Selecionar Plano</button>
             </div>
           </div>
         </div>
