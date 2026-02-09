@@ -5,6 +5,7 @@ import { generateListing } from '../../services/listingGeneratorService';
 import { generateListingImages } from '../../services/imageGenerationService';
 import { ListingGeneratorResult, SavedListing } from '../../types';
 import { useLanguage } from '../../services/languageService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Message {
   id: string;
@@ -25,6 +26,7 @@ interface ProductInput {
 
 export const ListingOptimizer: React.FC = () => {
   const { t } = useLanguage();
+  const { refreshUser } = useAuth();
 
   // Questions with translations
   const QUESTIONS = useMemo(() => [
@@ -116,6 +118,7 @@ export const ListingOptimizer: React.FC = () => {
       try {
         const result = await generateListing(updatedInputs);
         setListingResult(result);
+        refreshUser(); // Refresh credits after text generation
 
         setMessages(prev => [
           ...prev,
@@ -151,6 +154,7 @@ export const ListingOptimizer: React.FC = () => {
     try {
       const context = listingResult?.imagePromptContext || inputs.productName;
       const result = await generateListingImages(context, base64Image);
+      refreshUser(); // Refresh credits after image generation
 
       if (result.images && result.images.length > 0) {
         setGeneratedImages(result.images);

@@ -49,38 +49,43 @@ export const handler: Handler = async (event, context) => {
         // Only consume credit for "Search" (which is the main expensive/valuable action).
         // If intent is 'get_offers', we skip consumption to avoid draining credits on detail views.
         if (intent !== 'get_offers') {
+            console.log(`[Proxy] Consuming credits for intent: ${intent || 'search'}`);
             const cookies = cookie.parse(event.headers.cookie || '');
             const token = cookies.auth_token;
 
-            if (token) {
-                try {
-                    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
-                    const userId = decoded.userId;
-                    // Consume 1 credit for SEARCH_PRODUCT
-                    await consumeCredits(userId, 1, 'SEARCH_PRODUCT', {
-                        keywords,
-                        asin
-                    });
-                } catch (e: any) {
-                    console.error("Credit Consumption Error:", e);
-                    if (e.message === 'Insufficient credits') {
-                        return {
-                            statusCode: 402,
-                            headers,
-                            body: JSON.stringify({ error: 'Insufficient credits', code: 'NO_CREDITS' })
-                        };
-                    }
-                    // If token invalid or other error, we might choose to blocking or allow 
-                    // decided to block if auth token provided but failed, or allow if no auth token (but app requires auth)
-                    // The app seems to require auth for dashboard.
+            if (!token) {
+                console.error("[Proxy] No auth_token cookie provided. Blocking request.");
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({ error: "Unauthorized: Missing authentication token", code: 'AUTH_REQUIRED' }),
+                };
+            }
+
+            try {
+                const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
+                const userId = decoded.userId;
+                console.log(`[Proxy] Consuming 1 credit for UserID: ${userId}`);
+                // Consume 1 credit for SEARCH_PRODUCT
+                await consumeCredits(userId, 1, 'SEARCH_PRODUCT', {
+                    keywords,
+                    asin
+                });
+                console.log(`[Proxy] Credit consumed successfully for UserID: ${userId}`);
+            } catch (e: any) {
+                console.error("[Proxy] Credit Consumption Error:", e);
+                if (e.message === 'Insufficient credits') {
+                    return {
+                        statusCode: 402,
+                        headers,
+                        body: JSON.stringify({ error: 'Insufficient credits', code: 'NO_CREDITS' })
+                    };
                 }
-            } else {
-                // If no auth token, we could block. But for now, let's assume it might be test or public? 
-                // Actually the app is secured. So we should probably block.
-                // But to avoid breaking existing flow if cookie missing for some reason (e.g. dev), 
-                // we will log warning.
-                console.warn("No auth_token cookie found in amazon-proxy request. Skipping credit consumption.");
-                // In prod, should return 401.
+                return {
+                    statusCode: 401,
+                    headers,
+                    body: JSON.stringify({ error: "Unauthorized: Invalid or expired token", code: 'INVALID_TOKEN' }),
+                };
             }
         }
         // --------------------------------

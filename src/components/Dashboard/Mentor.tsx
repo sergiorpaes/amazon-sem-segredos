@@ -4,9 +4,11 @@ import { chatWithMentor } from '../../services/geminiService';
 import { ChatMessage } from '../../types';
 import { AGENTS, Agent } from '../../data/agents';
 import { useLanguage } from '../../services/languageService';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const Mentor: React.FC = () => {
   const { language, t } = useLanguage();
+  const { refreshUser } = useAuth();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -76,6 +78,7 @@ export const Mentor: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, botMsg]);
+      refreshUser(); // Refresh credits after mentor response
     } catch (error) {
       console.error(error);
     } finally {

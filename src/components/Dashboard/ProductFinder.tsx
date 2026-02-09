@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
+import { useAuth } from '../../contexts/AuthContext';
 import { searchProducts, getItemOffers } from '../../services/amazonAuthService';
 import { SalesGraph } from "./SalesGraph";
 import { SalesDetailModal } from "./SalesDetailModal";
@@ -141,6 +142,7 @@ const marketplaces = [
 
 export const ProductFinder: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
+  const { refreshUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>('A2Q3Y263D00KWC');
   const [isSearching, setIsSearching] = useState(false);
@@ -298,6 +300,9 @@ export const ProductFinder: React.FC = () => {
 
       const result = await searchProducts(searchTerm, selectedMarketplace, tokenToUse);
       console.log("Amazon Search Result:", result);
+
+      // Refresh credit balance since searching consumes credits
+      refreshUser();
 
       if (result && result.items && result.items.length > 0) {
         const mappedProducts = mapItemsToDisplay(result.items);

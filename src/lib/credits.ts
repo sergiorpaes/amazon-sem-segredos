@@ -94,10 +94,13 @@ export async function consumeCredits(
         });
 
         // 5. Update user total balance
+        console.log(`[Credits] Deducting ${cost} from User ${userId}. Old balance: ${user.credits_balance}`);
         const [updatedUser] = await tx.update(users)
             .set({ credits_balance: user.credits_balance - cost })
             .where(eq(users.id, userId))
             .returning();
+
+        console.log(`[Credits] New balance for User ${userId}: ${updatedUser.credits_balance}`);
 
         return {
             success: true,
