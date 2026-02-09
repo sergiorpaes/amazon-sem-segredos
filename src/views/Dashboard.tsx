@@ -170,7 +170,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   {user?.email || 'Usuário'}
                 </span>
                 <span className="text-xs text-brand-600 font-medium">
-                  {user?.role === 'ADMIN' ? t('profile.admin_label') : 'Plano Pro'}
+                  {user?.role === 'ADMIN' ? t('profile.admin_label') :
+                    user?.plan_name ? t(`plans.${user.plan_name.toLowerCase()}`) : t('plans.free')}
                 </span>
               </div>
               <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase group-hover:bg-brand-200 transition-all">

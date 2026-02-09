@@ -1,6 +1,5 @@
-
 import { db } from '../../src/db';
-import { users } from '../../src/db/schema';
+import { users, userSubscriptions, plans } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
@@ -21,18 +20,26 @@ export const handler = async (event: any) => {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
         const userId = decoded.userId;
 
-        const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        const [userWithPlan] = await db.select({
+            id: users.id,
+            email: users.email,
+            role: users.role,
+            credits_balance: users.credits_balance,
+            plan_name: plans.name
+        })
+            .from(users)
+            .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
+            .leftJoin(plans, eq(userSubscriptions.plan_id, plans.id))
+            .where(eq(users.id, userId))
+            .limit(1);
 
-        if (!user) {
+        if (!userWithPlan) {
             return { statusCode: 404, body: JSON.stringify({ error: 'User not found' }) };
         }
 
-        // Return safe user data
-        const { password_hash, ...safeUser } = user;
-
         return {
             statusCode: 200,
-            body: JSON.stringify(safeUser)
+            body: JSON.stringify(userWithPlan)
         };
     } catch (error: any) {
         console.error('Auth Error:', error);

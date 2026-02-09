@@ -1,11 +1,12 @@
 import { db } from '../../src/db';
-import { users, plans } from '../../src/db/schema';
-import { eq } from 'drizzle-orm';
+import { users, plans, userSubscriptions, creditsLedger } from '../../src/db/schema';
+import { eq, ilike } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import crypto from 'node:crypto';
 import { sendWelcomeEmail } from './utils/email';
+import { addCredits } from '../../src/lib/credits';
 
 export const handler = async (event: any) => {
     if (event.httpMethod !== 'POST') {
@@ -24,7 +25,8 @@ export const handler = async (event: any) => {
             address_city,
             address_state,
             address_zip,
-            selectedPlan
+            selectedPlan,
+            planId
         } = body;
 
         if (!email || !password || !phone || !address_street) {
@@ -41,7 +43,12 @@ export const handler = async (event: any) => {
         const passwordHash = await bcrypt.hash(password, 10);
 
         // Fetch selected plan
-        const [plan] = await db.select().from(plans).where(eq(plans.name, selectedPlan)).limit(1);
+        let plan;
+        if (planId) {
+            [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1);
+        } else if (selectedPlan) {
+            [plan] = await db.select().from(plans).where(ilike(plans.name, selectedPlan)).limit(1);
+        }
 
         if (!plan) {
             // Fallback to default if not found or invalid
@@ -81,6 +88,20 @@ export const handler = async (event: any) => {
             address_zip,
             activation_token: activationToken,
         }).returning();
+
+        // 🔗 Create User Subscription record
+        if (plan) {
+            await db.insert(userSubscriptions).values({
+                user_id: newUser.id,
+                plan_id: plan.id,
+                status: 'active',
+            });
+        }
+
+        // 💰 Initialize Credit Ledger if has initial credits
+        if (initialCredits > 0) {
+            await addCredits(newUser.id, initialCredits, 'monthly', `Créditos Iniciais Plano ${plan?.name || 'Free'}`);
+        }
 
         // 📧 Send Welcome Email with activation link
         const host = event.headers.host || 'localhost:8888';

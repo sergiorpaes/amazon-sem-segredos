@@ -1,6 +1,6 @@
 
 import { db } from '../../src/db';
-import { users } from '../../src/db/schema';
+import { users, userSubscriptions, plans } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -19,7 +19,25 @@ export const handler = async (event: any) => {
         }
 
         // Find user
-        const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        const [user] = await db.select({
+            id: users.id,
+            email: users.email,
+            role: users.role,
+            credits_balance: users.credits_balance,
+            password_hash: users.password_hash,
+            activated_at: users.activated_at,
+            plan_name: plans.name
+        })
+            .from(users)
+            .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
+            .leftJoin(plans, eq(userSubscriptions.plan_id, plans.id))
+            .where(eq(users.email, email))
+            .limit(1);
+
+        if (!user) {
+            return { statusCode: 404, body: JSON.stringify({ error: 'Usuário não encontrado' }) };
+        }
+
         // Check password
         const isValid = await bcrypt.compare(password, user.password_hash);
         if (!isValid) {
@@ -56,7 +74,15 @@ export const handler = async (event: any) => {
                 'Set-Cookie': authCookie,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ user: { id: user.id, email: user.email, role: user.role, credits: user.credits_balance } })
+            body: JSON.stringify({
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    credits_balance: user.credits_balance,
+                    plan_name: user.plan_name
+                }
+            })
         };
 
     } catch (error: any) {

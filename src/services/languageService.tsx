@@ -129,6 +129,7 @@ export const translations = {
         'lo.ui.subtitle': 'Responda as perguntas ao lado para que nossa IA crie um anúncio de alta conversão para seu produto.',
         'lo.ui.save': 'Salvar Listing',
         'lo.ui.generating_images': 'Gerando Imagens...',
+        'lock.title': 'Limite de Créditos Atingido',
     },
     es: {
         // General
