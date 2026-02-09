@@ -114,7 +114,7 @@ export const Mentor: React.FC = () => {
                   relative flex flex-col p-6 rounded-2xl border text-left transition-all duration-300 group
                   ${agent.isComingSoon
                     ? 'bg-gray-900/5 border-gray-200 cursor-not-allowed opacity-70'
-                    : 'bg-dark-900 border-dark-700 hover:border-brand-500 hover:shadow-xl hover:shadow-brand-900/10 hover:-translate-y-1'
+                    : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-dark-700 hover:border-brand-500 hover:shadow-xl hover:shadow-brand-900/10 hover:-translate-y-1'
                   }
                 `}
               >
@@ -152,17 +152,17 @@ export const Mentor: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-slate-900 rounded-xl shadow-2xl border border-dark-700 overflow-hidden">
       {/* Chat Header */}
-      <div className="p-4 border-b border-dark-700 bg-dark-900 flex items-center justify-between shrink-0">
+      <div className="p-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSelectedAgent(null)}
-            className="p-2 hover:bg-dark-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-dark-800 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-dark-800 border border-dark-700 ${selectedAgent.color}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 ${selectedAgent.color}`}>
               <AgentIcon className="w-6 h-6" />
             </div>
             <div>
@@ -172,7 +172,7 @@ export const Mentor: React.FC = () => {
           </div>
         </div>
 
-        <button className="p-2 hover:bg-dark-800 rounded-lg text-gray-400 hover:text-white transition-colors">
+        <button className="p-2 hover:bg-gray-200 dark:hover:bg-dark-800 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
       </div>
@@ -187,7 +187,7 @@ export const Mentor: React.FC = () => {
             <div
               className={`max-w-[85%] rounded-2xl p-4 shadow-lg ${msg.role === 'user'
                 ? 'bg-brand-600 text-white rounded-tr-none font-medium'
-                : 'bg-dark-800 text-gray-100 border border-dark-700 rounded-tl-none'
+                : 'bg-gray-100 dark:bg-dark-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-dark-700 rounded-tl-none'
                 }`}
             >
               <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-widest font-bold opacity-70">
@@ -203,7 +203,7 @@ export const Mentor: React.FC = () => {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-dark-800 rounded-2xl rounded-tl-none p-4 border border-dark-700 shadow-lg flex items-center gap-3">
+            <div className="bg-gray-100 dark:bg-dark-800 rounded-2xl rounded-tl-none p-4 border border-gray-300 dark:border-dark-700 shadow-lg flex items-center gap-3">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-500 border-t-transparent"></div>
               <span className="text-sm text-gray-400 font-medium animate-pulse">Analyzing...</span>
             </div>
@@ -213,15 +213,15 @@ export const Mentor: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-dark-900 border-t border-dark-700 shrink-0">
+      <div className="p-4 bg-gray-50 dark:bg-dark-900 border-t border-gray-200 dark:border-dark-700 shrink-0">
         <div className="flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={`Ask ${selectedAgent.name}...`}
-            className="flex-1 px-5 py-3 bg-dark-800 border border-dark-700 text-white placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-medium"
+            placeholder={t('mentor.placeholder')}
+            className="flex-1 px-5 py-3 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-medium"
             disabled={isLoading}
           />
           <button

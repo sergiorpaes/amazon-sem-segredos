@@ -93,7 +93,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
         <div className="space-y-8 animate-fade-in">
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
+                <div className="bg-gray-50 dark:bg-dark-800 p-6 rounded-2xl border border-gray-200 dark:border-dark-700">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-brand-500/10 rounded-xl">
                             <CreditCard className="w-6 h-6 text-brand-500" />
@@ -124,7 +124,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                     </div>
                 </div>
 
-                <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
+                <div className="bg-gray-50 dark:bg-dark-800 p-6 rounded-2xl border border-gray-200 dark:border-dark-700">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-orange-500/10 rounded-xl">
                             <History className="w-6 h-6 text-orange-500" />
@@ -142,7 +142,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                     </button>
                 </div>
 
-                <div className="bg-dark-800 p-6 rounded-2xl border border-dark-700">
+                <div className="bg-gray-50 dark:bg-dark-800 p-6 rounded-2xl border border-gray-200 dark:border-dark-700">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-green-500/10 rounded-xl">
                             <TrendingUp className="w-6 h-6 text-green-500" />
@@ -158,14 +158,14 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
             </div>
 
             {/* Usage History Table */}
-            <div className="bg-dark-900 border border-dark-700 rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-dark-700 rounded-2xl overflow-hidden shadow-xl">
                 <div className="p-6 border-b border-dark-700 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <History className="w-5 h-5 text-brand-500" />
                         <h3 className="text-lg font-bold text-white">Contabilidade de Créditos</h3>
                     </div>
                     <div className="flex gap-2">
-                        <button className="p-2 bg-dark-800 border border-dark-700 rounded-lg text-gray-400 hover:text-white transition-colors">
+                        <button className="p-2 bg-gray-100 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                             <Filter className="w-4 h-4" />
                         </button>
                     </div>
@@ -173,7 +173,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-dark-800/50 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                        <thead className="bg-gray-100 dark:bg-dark-800/50 text-xs font-bold text-gray-600 dark:text-gray-500 uppercase tracking-widest">
                             <tr>
                                 <th className="px-6 py-4">Data & Hora</th>
                                 <th className="px-6 py-4">Descrição</th>
@@ -237,7 +237,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
             {/* Cancel Confirmation Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-dark-800 rounded-2xl border border-dark-700 max-w-md w-full p-6">
+                    <div className="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 max-w-md w-full p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-3 bg-red-500/10 rounded-xl">
                                 <AlertTriangle className="w-6 h-6 text-red-500" />
@@ -245,7 +245,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                             <h3 className="text-xl font-bold text-white">Cancelar Subscrição</h3>
                             <button
                                 onClick={() => setShowCancelModal(false)}
-                                className="ml-auto p-2 hover:bg-dark-700 rounded-lg transition-colors"
+                                className="ml-auto p-2 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5 text-gray-400" />
                             </button>
@@ -256,7 +256,7 @@ export const BillingSection: React.FC<BillingSectionProps> = ({
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowCancelModal(false)}
-                                className="flex-1 py-2 px-4 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors"
+                                className="flex-1 py-2 px-4 bg-gray-200 dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-dark-600 transition-colors"
                             >
                                 Voltar
                             </button>

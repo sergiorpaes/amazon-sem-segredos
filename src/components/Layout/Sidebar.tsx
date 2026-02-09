@@ -17,6 +17,7 @@ import { DashboardModule } from '../../types';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { ShieldCheck, Users } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarProps {
   currentModule: DashboardModule;
@@ -62,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-30
-        ${isCollapsed ? 'w-20' : 'w-64'} bg-dark-900 text-gray-300 flex flex-col
+        ${isCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-dark-900 text-gray-700 dark:text-gray-300 flex flex-col border-r border-gray-200 dark:border-dark-700
         transform transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 text-[0px]'}
       `}>
@@ -77,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded hover:bg-dark-800 text-gray-400 hover:text-white transition-colors ${isCollapsed ? 'absolute -right-3 top-6 bg-dark-800 border border-dark-700 rounded-full w-6 h-6 shadow-xl' : ''}`}
+            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded hover:bg-gray-200 dark:hover:bg-dark-800 text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors ${isCollapsed ? 'absolute -right-3 top-6 bg-gray-100 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-full w-6 h-6 shadow-xl' : ''}`}
           >
             {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={18} />}
           </button>
@@ -111,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     ? 'opacity-50 cursor-not-allowed hover:bg-transparent text-gray-500'
                     : isActive
                       ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/20'
-                      : 'hover:bg-dark-800 hover:text-white'
+                      : 'hover:bg-gray-100 dark:hover:bg-dark-800 hover:text-gray-900 dark:hover:text-white'
                   }
                 `}
                 title={isCollapsed ? item.label : ''}
@@ -130,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="relative">
             <button
               onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-4'} py-2 text-gray-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors text-sm`}
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-4'} py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors text-sm`}
             >
               {isCollapsed ? (
                 <span className="text-xl">
@@ -149,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
 
             {isLanguageOpen && (
-              <div className={`absolute bottom-full ${isCollapsed ? 'left-full ml-2 w-48' : 'left-0 w-full'} mb-2 bg-dark-800 rounded-lg shadow-xl border border-dark-700 overflow-hidden z-50`}>
+              <div className={`absolute bottom-full ${isCollapsed ? 'left-full ml-2 w-48' : 'left-0 w-full'} mb-2 bg-white dark:bg-dark-800 rounded-lg shadow-xl border border-gray-200 dark:border-dark-700 overflow-hidden z-50`}>
                 <button
                   onClick={() => { setLanguage('pt'); setIsLanguageOpen(false); }}
                   className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-dark-700 hover:text-white flex items-center justify-between"
@@ -178,13 +179,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {user?.role === 'ADMIN' && (
             <button
               onClick={() => onModuleChange(DashboardModule.SETTINGS)}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} gap-3 py-2 rounded-lg hover:bg-dark-800 hover:text-white transition-colors`}
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} gap-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 hover:text-gray-900 dark:hover:text-white transition-colors`}
               title={isCollapsed ? t('module.settings') : ''}
             >
               <Settings className={`w-4 h-4 min-w-[16px] ${currentModule === DashboardModule.SETTINGS ? 'text-white' : 'text-gray-400'}`} />
               {!isCollapsed && <span className={`text-sm ${currentModule === DashboardModule.SETTINGS ? 'text-white' : 'text-gray-400'}`}>{t('module.settings')}</span>}
             </button>
           )}
+          <div className={`${isCollapsed ? 'flex justify-center' : 'px-4'}`}>
+            <ThemeToggle />
+          </div>
           <button
             onClick={onLogout}
             className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} gap-3 py-2 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-red-400/80 transition-colors`}

@@ -100,7 +100,7 @@ export const ProfileSection: React.FC = () => {
         <div className="space-y-8 animate-fade-in">
             <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="relative group">
-                    <div className="w-32 h-32 rounded-2xl overflow-hidden bg-dark-800 border-2 border-dark-700 flex items-center justify-center relative">
+                    <div className="w-32 h-32 rounded-2xl overflow-hidden bg-gray-100 dark:bg-dark-800 border-2 border-gray-300 dark:border-dark-700 flex items-center justify-center relative">
                         {formData.profile_image ? (
                             <img src={formData.profile_image} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
@@ -138,7 +138,7 @@ export const ProfileSection: React.FC = () => {
                                 type="text"
                                 value={user?.email || ''}
                                 disabled
-                                className="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-3 text-gray-500 cursor-not-allowed"
+                                className="w-full bg-gray-100 dark:bg-dark-900 border border-gray-300 dark:border-dark-700 rounded-xl px-4 py-3 text-gray-500 dark:text-gray-500 cursor-not-allowed"
                             />
                         </div>
                         <div className="space-y-2">

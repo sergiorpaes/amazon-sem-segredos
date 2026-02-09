@@ -45,7 +45,7 @@ export const AccountDashboard: React.FC<AccountDashboardProps> = ({
                                     w-full flex items-center justify-between p-4 rounded-xl transition-all duration-300
                                     ${activeTab === tab.id
                                         ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
-                                        : 'bg-dark-900/50 text-gray-400 hover:bg-dark-900 hover:text-white border border-transparent hover:border-dark-700'
+                                        : 'bg-gray-100 dark:bg-dark-900/50 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-900 hover:text-gray-900 dark:hover:text-white border border-transparent hover:border-gray-300 dark:hover:border-dark-700'
                                     }
                                 `}
                             >
