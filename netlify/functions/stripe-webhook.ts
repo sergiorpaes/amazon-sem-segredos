@@ -37,14 +37,18 @@ export const handler = async (event: any) => {
             case 'checkout.session.completed': {
                 const session = stripeEvent.data.object as Stripe.Checkout.Session;
                 const metadata = session.metadata || {};
+                console.log(`Checkout Metadata:`, metadata);
                 const userId = parseInt(metadata.userId);
 
                 if (metadata.type === 'credits') {
                     // One-time credit purchase
                     const amount = parseInt(metadata.creditsAmount || '0');
+                    console.log(`Processing Credit Purchase: User=${userId}, Amount=${amount}`);
                     if (amount > 0 && userId) {
                         await addCredits(userId, amount, 'purchased', 'Pacote de Créditos');
-                        console.log(`Added ${amount} credits to user ${userId}`);
+                        console.log(`✅ Success: Added ${amount} credits to user ${userId}`);
+                    } else {
+                        console.warn(`⚠️ Warning: Missing userId (${userId}) or amount (${amount}) in metadata.`);
                     }
                 } else if (metadata.type === 'plan') {
                     // New Subscription Created
