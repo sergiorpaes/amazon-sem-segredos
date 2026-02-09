@@ -81,44 +81,40 @@ export const handler = async (event: any) => {
                 const subscriptionId = invoice.subscription as string;
 
                 if (subscriptionId) {
-                    // Find our internal subscription record
-                    const [sub] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.stripe_subscription_id, subscriptionId)).limit(1);
+                    // 1. Try to find our internal subscription record
+                    let [sub] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.stripe_subscription_id, subscriptionId)).limit(1);
 
-                    if (sub) {
+                    let userId: number | null = sub?.user_id || null;
+                    let planId: number | null = sub?.plan_id || null;
+
+                    // 2. Fallback: If not in DB, fetch subscription from Stripe to get metadata
+                    if (!userId || !planId) {
+                        console.log(`[Webhook] Subscription ${subscriptionId} not found in DB yet. Fetching from Stripe...`);
+                        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                        userId = parseInt(subscription.metadata.userId || '0');
+                        planId = parseInt(subscription.metadata.planId || '0');
+                        console.log(`[Webhook] Fetched metadata from Stripe: User=${userId}, Plan=${planId}`);
+                    }
+
+                    if (userId && planId) {
                         // Find the plan details
-                        const [plan] = await db.select().from(plans).where(eq(plans.id, sub.plan_id)).limit(1);
+                        const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1);
 
                         if (plan && plan.credit_limit > 0) {
                             // Grant Monthly Credits
-                            // Note: 'monthly' credits could replace previous ones or stack?
-                            // User says: "créditos do plano resetam mensalmente". 
-                            // This implies we might want to expire old 'monthly' credits effectively or just add new ones with 30d expiry.
-                            // Our addCredits logic adds with 1 month expiry.
-                            // "Reset" could mean remove old ones? 
-                            // For simplicity/safety, we just add new ones which expire. 
-                            // If logic requires *removing* old ones, we'd need to set remaining=0 on old 'monthly' batches.
-
-                            // Let's EXPIRE old monthly credits for this user?
-                            // "créditos avulsos não expiram; créditos do plano resetam mensalmente".
-                            // "Reset" suggests if I have 10 left, I go to 50 (if limit is 50). Not 60.
-                            // BUT implementation of 'reset' is complex if they consumed some. 
-                            // EASIER INTERPRETATION: Pack credits = no expire. Monthly = expire in 30 days.
-                            // If they don't use it, they lose it.
-                            // The `consumeCredits` consumes expiring first.
-                            // So effectively it works as a "use it or lose it".
-
-                            await addCredits(sub.user_id, plan.credit_limit, 'monthly', `Renovação Plano ${plan.name}`);
-                            console.log(`Added monthly credits (${plan.credit_limit}) for user ${sub.user_id}`);
+                            // NOTE: We could add idempotency check here based on invoice ID
+                            await addCredits(userId, plan.credit_limit, 'monthly', `Plano ${plan.name}`);
+                            console.log(`✅ Success: Added monthly credits (${plan.credit_limit}) for user ${userId}`);
                         }
 
-                        // Update subscription status just in case
-                        await db.update(userSubscriptions)
-                            .set({
-                                status: 'active',
-                                // invoice.lines.data[0].period.end? 
-                                // checking invoice structure for period end is safe
-                            })
-                            .where(eq(userSubscriptions.id, sub.id));
+                        // Update subscription status in DB (only if record exists)
+                        if (sub) {
+                            await db.update(userSubscriptions)
+                                .set({ status: 'active' })
+                                .where(eq(userSubscriptions.id, sub.id));
+                        }
+                    } else {
+                        console.warn(`⚠️ Warning: Could not resolve userId/planId for subscription ${subscriptionId}`);
                     }
                 }
                 break;

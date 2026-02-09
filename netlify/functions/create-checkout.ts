@@ -172,6 +172,12 @@ export const handler = async (event: any) => {
                 line_items: [{ price: priceId, quantity: 1 }],
                 success_url: SUCCESS_URL,
                 cancel_url: CANCEL_URL,
+                subscription_data: {
+                    metadata: {
+                        userId: user.id.toString(),
+                        planId: planId ? planId.toString() : ''
+                    }
+                },
                 metadata: {
                     userId: user.id.toString(),
                     type: 'plan',
