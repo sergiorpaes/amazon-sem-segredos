@@ -1,6 +1,6 @@
 import { db } from '../../src/db';
 import { users, userSubscriptions, plans } from '../../src/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 
@@ -35,6 +35,7 @@ export const handler = async (event: any) => {
             .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
             .leftJoin(plans, eq(userSubscriptions.plan_id, plans.id))
             .where(eq(users.id, userId))
+            .orderBy(desc(userSubscriptions.id))
             .limit(1);
 
         if (!userWithPlan) {

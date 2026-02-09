@@ -2,7 +2,7 @@
 import Stripe from 'stripe';
 import { db } from '../../src/db';
 import { users, userSubscriptions, plans } from '../../src/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { addCredits } from '../../src/lib/credits';
 
 const getStripe = () => {
@@ -62,12 +62,20 @@ export const handler = async (event: any) => {
 
                         // We need the plan to know the limit, but for insertion we just need ID
                         if (!existing) {
+                            // Cancel any previous active subscriptions in our DB for this user
+                            await db.update(userSubscriptions)
+                                .set({ status: 'canceled' })
+                                .where(and(
+                                    eq(userSubscriptions.user_id, userId),
+                                    eq(userSubscriptions.status, 'active')
+                                ));
+
                             await db.insert(userSubscriptions).values({
                                 user_id: userId,
                                 plan_id: planId,
                                 stripe_subscription_id: subscriptionId,
-                                status: 'active', // Assume active on creation success
-                                current_period_end: new Date() // Will be updated by subscription update/invoice
+                                status: 'active',
+                                current_period_end: new Date()
                             });
                             console.log(`Created subscription record for user ${userId}, plan ${planId}`);
                         }
