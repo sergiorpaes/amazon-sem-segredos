@@ -80,6 +80,22 @@ export const handler = async (event: any) => {
                 }
             }
 
+            // --- RESOLVE PRODUCT ID TO PRICE ID IF NEEDED ---
+            if (priceId.startsWith('prod_')) {
+                console.log(`Resolvendo Price ID para Produto de Crédito: ${priceId}`);
+                const prices = await stripe.prices.list({
+                    product: priceId,
+                    active: true,
+                    limit: 1
+                });
+                if (prices.data.length > 0) {
+                    priceId = prices.data[0].id;
+                } else {
+                    throw new Error(`Nenhum preço ativo encontrado para o produto: ${priceId}`);
+                }
+            }
+            // ------------------------------------------------
+
             session = await stripe.checkout.sessions.create({
                 customer: customerId,
                 mode: 'payment',
