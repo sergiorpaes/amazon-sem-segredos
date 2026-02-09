@@ -10,6 +10,8 @@ export const users = pgTable('amz_users', {
     stripe_customer_id: text('stripe_customer_id'),
 
     // Extended Profile
+    full_name: text('full_name'),
+    profile_image: text('profile_image'), // Base64 or URL
     phone: text('phone'),
     company_name: text('company_name'),
     address_street: text('address_street'),

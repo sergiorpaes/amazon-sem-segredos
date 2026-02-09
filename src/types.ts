@@ -15,7 +15,8 @@ export enum DashboardModule {
   ADS_MANAGER = 'ADS_MANAGER',
   SETTINGS = 'SETTINGS',
   ADMIN_DASHBOARD = 'ADMIN_DASHBOARD',
-  ADMIN_USERS = 'ADMIN_USERS'
+  ADMIN_USERS = 'ADMIN_USERS',
+  ACCOUNT = 'ACCOUNT'
 }
 
 export interface ChatMessage {

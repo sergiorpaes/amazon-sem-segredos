@@ -25,6 +25,10 @@ export const handler = async (event: any) => {
             email: users.email,
             role: users.role,
             credits_balance: users.credits_balance,
+            full_name: users.full_name,
+            profile_image: users.profile_image,
+            phone: users.phone,
+            company_name: users.company_name,
             plan_name: plans.name
         })
             .from(users)

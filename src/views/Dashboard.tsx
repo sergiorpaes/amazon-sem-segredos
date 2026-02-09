@@ -6,6 +6,7 @@ import { ListingOptimizer } from '../components/Dashboard/ListingOptimizer';
 import { ProfitAnalytics } from '../components/Dashboard/ProfitAnalytics';
 import { ProductFinder } from '../components/Dashboard/ProductFinder';
 import { Settings } from '../components/Dashboard/Settings';
+import { AccountDashboard } from '../components/Dashboard/AccountDashboard';
 import { DashboardModule } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../services/languageService';
@@ -72,6 +73,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             </button>
           </div>
         );
+      case DashboardModule.ACCOUNT:
+        return (
+          <AccountDashboard
+            onOpenBuyCredits={() => setIsBuyCreditsOpen(true)}
+            onOpenChangePlan={() => setIsChangePlanOpen(true)}
+            onOpenChangePassword={() => setIsChangePassOpen(true)}
+          />
+        );
       default:
         return (
           <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
@@ -89,6 +98,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.PROFIT_ANALYTICS: return t('module.dashboard');
       case DashboardModule.ADS_MANAGER: return t('module.ads_manager');
       case DashboardModule.SETTINGS: return t('module.settings');
+      case DashboardModule.ACCOUNT: return "Minha Conta";
       default: return "Dashboard";
     }
   };
@@ -174,8 +184,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                     user?.plan_name ? t(`plans.${user.plan_name.toLowerCase()}`) : t('plans.free')}
                 </span>
               </div>
-              <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase group-hover:bg-brand-200 transition-all">
-                {(user?.email || 'U').substring(0, 2)}
+              <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase group-hover:bg-brand-200 transition-all overflow-hidden">
+                {user?.profile_image ? (
+                  <img src={user.profile_image} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  (user?.email || 'U').substring(0, 2)
+                )}
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -194,7 +208,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   </div>
 
                   <button
-                    onClick={() => { setIsChangePassOpen(true); setIsProfileOpen(false); }}
+                    onClick={() => { setCurrentModule(DashboardModule.ACCOUNT); setIsProfileOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    Minha Conta
+                  </button>
+
+                  <button
+                    onClick={() => { setCurrentModule(DashboardModule.ACCOUNT); setIsProfileOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <Key className="w-4 h-4" />
@@ -202,7 +224,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   </button>
 
                   <button
-                    onClick={() => { setIsBuyCreditsOpen(true); setIsProfileOpen(false); }}
+                    onClick={() => { setCurrentModule(DashboardModule.ACCOUNT); setIsProfileOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
@@ -210,7 +232,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   </button>
 
                   <button
-                    onClick={() => { setIsChangePlanOpen(true); setIsProfileOpen(false); }}
+                    onClick={() => { setCurrentModule(DashboardModule.ACCOUNT); setIsProfileOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
