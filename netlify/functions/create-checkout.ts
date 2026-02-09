@@ -55,9 +55,9 @@ export const handler = async (event: any) => {
         const CANCEL_URL = `${process.env.URL || 'http://localhost:8888'}/dashboard?canceled=true`;
 
         const CREDIT_PACKS: Record<string, { priceId: string, credits: number }> = {
-            'micro': { priceId: process.env.STRIPE_PRICE_MICRO || 'price_micro_placeholder', credits: 20 },
-            'business': { priceId: process.env.STRIPE_PRICE_BUSINESS || 'price_business_placeholder', credits: 100 },
-            'bulk': { priceId: process.env.STRIPE_PRICE_BULK || 'price_bulk_placeholder', credits: 300 }
+            'micro': { priceId: process.env.STRIPE_PRICE_MICRO || '', credits: 20 },
+            'business': { priceId: process.env.STRIPE_PRICE_BUSINESS || '', credits: 100 },
+            'bulk': { priceId: process.env.STRIPE_PRICE_BULK || '', credits: 300 }
         };
 
         if (type === 'credits') {
@@ -68,9 +68,16 @@ export const handler = async (event: any) => {
             if (body.pack && CREDIT_PACKS[body.pack]) {
                 priceId = CREDIT_PACKS[body.pack].priceId;
                 creditsAmount = CREDIT_PACKS[body.pack].credits;
+
+                if (!priceId) {
+                    throw new Error(`Configuração do Stripe ausente para o pacote: ${body.pack}. Verifique as variáveis de ambiente.`);
+                }
             } else {
                 // Fallback or specific priceId passed
-                priceId = priceId || process.env.STRIPE_CREDITS_PRICE_ID || 'price_placeholder_credits';
+                priceId = priceId || process.env.STRIPE_CREDITS_PRICE_ID || '';
+                if (!priceId) {
+                    throw new Error("ID de Preço de créditos não configurado. Verifique STRIPE_CREDITS_PRICE_ID.");
+                }
             }
 
             session = await stripe.checkout.sessions.create({
@@ -130,6 +137,10 @@ export const handler = async (event: any) => {
                     if (proPlan?.stripe_price_id && !proPlan.stripe_price_id.includes('placeholder')) {
                         priceId = proPlan.stripe_price_id;
                     }
+                }
+
+                if (!priceId || priceId.includes('placeholder')) {
+                    throw new Error("Plano Pro não configurado corretamente no Stripe.");
                 }
 
                 if (!planId && priceId) {
