@@ -18,6 +18,18 @@ export const ProfileSection: React.FC = () => {
         profile_image: user?.profile_image || '',
     });
 
+    // Update form when user data changes (e.g. after refresh or initial load)
+    React.useEffect(() => {
+        if (user) {
+            setFormData({
+                full_name: user.full_name || '',
+                phone: user.phone || '',
+                company_name: user.company_name || '',
+                profile_image: user.profile_image || '',
+            });
+        }
+    }, [user]);
+
     const handleSave = async () => {
         setIsSaving(true);
         try {

@@ -6,9 +6,12 @@ interface User {
     email: string;
     role: string;
     credits_balance: number;
-    plan_name?: string;
-    stripe_customer_id?: string;
-    // Add other fields as needed
+    full_name?: string | null;
+    profile_image?: string | null;
+    phone?: string | null;
+    company_name?: string | null;
+    plan_name?: string | null;
+    stripe_customer_id?: string | null;
 }
 
 interface AuthContextType {

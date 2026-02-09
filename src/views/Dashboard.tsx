@@ -178,7 +178,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             >
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-semibold text-gray-700 group-hover:text-brand-600 transition-colors">
-                  {user?.email || 'Usuário'}
+                  {user?.full_name || user?.email || 'Usuário'}
                 </span>
                 <span className="text-xs text-brand-600 font-medium">
                   {user?.role === 'ADMIN' ? t('profile.admin_label') :
