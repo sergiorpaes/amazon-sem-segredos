@@ -139,6 +139,22 @@ export const translations = {
         'analyze.recent_reviews': 'Últimos Reviews',
         'summary.feb_2026': 'Fev 2026',
         'lock.title': 'Limite de Créditos Atingido',
+
+        // Profit Simulator
+        'sim.title': 'Simulador de Lucro Real',
+        'sim.product_cost': 'Custo do Produto',
+        'sim.product_cost_help': 'O preço que você paga ao seu fornecedor por unidade, incluindo o frete até o seu armazém.',
+        'sim.tax_rate': 'Imposto (%)',
+        'sim.tax_rate_help': 'A alíquota de imposto do seu negócio (ex: SIMPLES Nacional). Geralmente entre 4% e 15% no Brasil.',
+        'sim.op_expenses': 'Despesas Operacionais',
+        'sim.op_expenses_help': 'Custo de embalagem, etiquetas e serviço de preparação por unidade.',
+        'sim.ads_ppc': 'Investimento em Ads (PPC)',
+        'sim.ads_ppc_help': 'Quanto você planeja gastar em Amazon Advertising para obter uma venda. Um começo seguro é entre 10-15% do preço.',
+        'sim.total_expenses': 'Total de Despesas',
+        'sim.net_profit': 'Lucro Líquido',
+        'sim.net_margin': 'Margem Líquida',
+        'sim.roi': 'ROI (Retorno)',
+        'sim.export_pdf': 'Exportar Relatório PDF',
     },
     es: {
         // General
@@ -242,6 +258,22 @@ export const translations = {
         'analyze.recent_reviews': 'Últimas Reseñas',
         'summary.feb_2026': 'Feb 2026',
 
+        // Profit Simulator
+        'sim.title': 'Simulador de Lucro Real',
+        'sim.product_cost': 'Costo del Producto',
+        'sim.product_cost_help': 'El precio que paga a su proveedor por unidad, incluido el envío a su almacén.',
+        'sim.tax_rate': 'Impuesto (%)',
+        'sim.tax_rate_help': 'La tasa de impuestos de su negocio. Generalmente entre 4% y 15% en Brasil.',
+        'sim.op_expenses': 'Gastos Operativos',
+        'sim.op_expenses_help': 'Costo de embalaje, etiquetas y servicio de preparación por unidad.',
+        'sim.ads_ppc': 'Inversión en Ads (PPC)',
+        'sim.ads_ppc_help': 'Cuánto planea gastar en Amazon Advertising para obtener una venta. Un comienzo seguro es entre 10-15% del precio.',
+        'sim.total_expenses': 'Gastos Totales',
+        'sim.net_profit': 'Beneficio Neto',
+        'sim.net_margin': 'Margen Neto',
+        'sim.roi': 'ROI (Retorno)',
+        'sim.export_pdf': 'Exportar Informe PDF',
+
         // Plans
         'plans.starter': 'Starter',
         'plans.starter_desc': 'Ideal para comenzar',
@@ -249,11 +281,11 @@ export const translations = {
         'plans.pro': 'Plan Pro',
         'plans.pro_desc': 'Para vendedores en crecimiento',
         'plans.pro_price': '29€/mes',
-        'plans.premium': 'Plan Premium',
+        'plans.premium': 'Plano Premium',
         'plans.premium_desc': 'Poder total de la IA',
         'plans.premium_price': '49€/mes',
         'plans.select': 'Seleccionar Plan',
-        'plans.free': 'Gratis',
+        'plans.free': 'Grátis',
     },
     en: {
         // General
@@ -356,6 +388,22 @@ export const translations = {
         'analyze.credits_info': 'Consumes 5 premium credits',
         'analyze.recent_reviews': 'Latest Reviews',
         'summary.feb_2026': 'Feb 2026',
+
+        // Profit Simulator
+        'sim.title': 'Real Profit Simulator',
+        'sim.product_cost': 'Product Cost',
+        'sim.product_cost_help': 'The price you pay your supplier per unit, including shipping to your warehouse.',
+        'sim.tax_rate': 'Tax (%)',
+        'sim.tax_rate_help': 'Your business tax rate (e.g., SIMPLES Nacional). Usually between 4% and 15% in Brazil.',
+        'sim.op_expenses': 'Operational Expenses',
+        'sim.op_expenses_help': 'Cost of packaging, labels, and prep service per unit.',
+        'sim.ads_ppc': 'Ads Investment (PPC)',
+        'sim.ads_ppc_help': 'How much you plan to spend on Amazon Advertising to get one sale. A safe start is 10-15% of the price.',
+        'sim.total_expenses': 'Total Expenses',
+        'sim.net_profit': 'Net Profit',
+        'sim.net_margin': 'Net Margin',
+        'sim.roi': 'ROI (Return)',
+        'sim.export_pdf': 'Export PDF Report',
 
         // Profile & Billing
         'profile.title': 'Profile',
