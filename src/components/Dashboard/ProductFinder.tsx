@@ -63,17 +63,18 @@ const generateHistoricalData = (currentSales: number | null): number[] => {
 const calculateFBAFeesFrontend = (price: number, rawData?: any): { total: number, referral: number, fulfillment: number, isEstimate: boolean } => {
   // 1. Referral (Dynamic: 12% tech caps or 15% standard)
   const category = rawData?.summaries?.[0]?.websiteDisplayGroupName || '';
-  const isHighValueTech = category && (
-    category.includes('Electrónica') ||
-    category.includes('Electronics') ||
-    category.includes('Grandes electrodomésticos') ||
-    category.includes('Major Appliances')
-  );
+  const normCategory = category.toLowerCase();
+
+  const isHighValueTech =
+    normCategory.includes('electrónica') ||
+    normCategory.includes('electronics') ||
+    normCategory.includes('grandes electrodomésticos') ||
+    normCategory.includes('major appliances');
 
   const rate = (isHighValueTech && price > 150) ? 0.12 : 0.15;
   const referral = price * rate;
 
-  // 2. Fulfillment (Simplified tiered logic)
+  // 2. Fulfillment (Simplified tiered logic with robust unit conversion)
   const dimensions = rawData?.attributes?.item_dimensions?.[0];
   const weight = rawData?.attributes?.item_weight?.[0];
   let fulfillment = 0;
@@ -81,14 +82,30 @@ const calculateFBAFeesFrontend = (price: number, rawData?: any): { total: number
   if (!dimensions || !weight) {
     fulfillment = price * 0.15; // Rough estimate for total being 30%
   } else {
-    const unitUpper = dimensions.unit?.toUpperCase() || '';
-    const cm_l = unitUpper === 'INCHES' ? dimensions.length * 2.54 : dimensions.length;
-    const cm_w = unitUpper === 'INCHES' ? dimensions.width * 2.54 : dimensions.width;
-    const cm_h = unitUpper === 'INCHES' ? dimensions.height * 2.54 : dimensions.height;
+    // --- Robust Unit Conversion ---
+    const unitUpper = dimensions.unit?.toUpperCase() || 'CM';
+    let cm_l = dimensions.length;
+    let cm_w = dimensions.width;
+    let cm_h = dimensions.height;
 
-    const weightUnitUpper = weight.unit?.toUpperCase() || '';
-    const kg = weightUnitUpper === 'POUNDS' ? weight.value * 0.453592 : weight.value;
+    if (unitUpper === 'INCHES') {
+      cm_l *= 2.54; cm_w *= 2.54; cm_h *= 2.54;
+    } else if (unitUpper === 'MILLIMETERS' || unitUpper === 'MM') {
+      cm_l /= 10; cm_w /= 10; cm_h /= 10;
+    }
 
+    const weightUnitUpper = weight.unit?.toUpperCase() || 'KG';
+    let kg = weight.value;
+
+    if (weightUnitUpper === 'POUNDS' || weightUnitUpper === 'LB') {
+      kg *= 0.453592;
+    } else if (weightUnitUpper === 'OUNCES' || weightUnitUpper === 'OZ') {
+      kg *= 0.0283495;
+    } else if (weightUnitUpper === 'GRAMS' || weightUnitUpper === 'G') {
+      kg /= 1000;
+    }
+
+    // --- Tier Logic ---
     if (cm_l <= 35 && cm_w <= 25 && cm_h <= 2 && kg <= 0.1) {
       fulfillment = 2.50;
     } else if (cm_l <= 45 && cm_w <= 34 && cm_h <= 26 && kg <= 1) {
@@ -96,16 +113,21 @@ const calculateFBAFeesFrontend = (price: number, rawData?: any): { total: number
     } else if (kg <= 2) {
       fulfillment = 6.50;
     } else {
-      fulfillment = 7.50 + (kg * 0.50);
+      fulfillment = 9.50 + Math.max(0, (kg - 2) * 1.0);
     }
 
     // --- FBA Sanity Check (Toys Logic) ---
-    const isToys = category && (category.includes('Brinquedos') || category.includes('Toys'));
+    const isToys = normCategory.includes('brinquedo') || normCategory.includes('toy');
     if (isToys && kg < 2) {
       const cap = price * 0.40;
-      if (fulfillment > cap) {
-        fulfillment = cap;
+      if (fulfillment > cap || fulfillment > 18.0) {
+        fulfillment = Math.min(fulfillment, cap);
       }
+    }
+
+    // Safety: Max 60% for anything standard under 5kg
+    if (kg < 5 && fulfillment > (price * 0.60)) {
+      fulfillment = price * 0.60;
     }
   }
 

@@ -58,34 +58,55 @@ export function calculateFBAFees(price: number, dimensions?: Dimensions, weight?
         };
     }
 
-    // Convert to target units (cm and kg)
-    const unitLower = dimensions.unit?.toUpperCase() || '';
-    const cm_l = unitLower === 'INCHES' ? dimensions.length * 2.54 : dimensions.length;
-    const cm_w = unitLower === 'INCHES' ? dimensions.width * 2.54 : dimensions.width;
-    const cm_h = unitLower === 'INCHES' ? dimensions.height * 2.54 : dimensions.height;
+    // --- Robust Unit Conversion ---
+    const unitUpper = dimensions.unit?.toUpperCase() || '';
+    let cm_l = dimensions.length;
+    let cm_w = dimensions.width;
+    let cm_h = dimensions.height;
 
-    const weightUnitLower = weight.unit?.toUpperCase() || '';
-    const kg = weightUnitLower === 'POUNDS' ? weight.value * 0.453592 : weight.value;
-
-    // Simple Tier Logic for Amazon (Simplified for approximation)
-    if (cm_l <= 35 && cm_w <= 25 && cm_h <= 2 && kg <= 0.1) {
-        fulfillmentFee = 250; // 2.50 EUR
-    } else if (cm_l <= 45 && cm_w <= 34 && cm_h <= 26 && kg <= 1) {
-        fulfillmentFee = 450; // 4.50 EUR
-    } else if (kg <= 2) {
-        fulfillmentFee = 650; // 6.50 EUR tier
-    } else {
-        fulfillmentFee = 750 + Math.floor(kg * 50); // Base 7.50 + weight surcharge
+    if (unitUpper === 'INCHES') {
+        cm_l *= 2.54; cm_w *= 2.54; cm_h *= 2.54;
+    } else if (unitUpper === 'MILLIMETERS' || unitUpper === 'MM') {
+        cm_l /= 10; cm_w /= 10; cm_h /= 10;
     }
 
-    // --- FBA Sanity Check (Toys Logic) ---
-    // For 'Brinquedos' under 2kg, Fulfillment Fee must not exceed 40% of the price
-    const isToys = category && (category.includes('Brinquedos') || category.includes('Toys'));
+    const weightUnitUpper = weight.unit?.toUpperCase() || '';
+    let kg = weight.value;
+
+    if (weightUnitUpper === 'POUNDS' || weightUnitUpper === 'LB') {
+        kg *= 0.453592;
+    } else if (weightUnitUpper === 'OUNCES' || weightUnitUpper === 'OZ') {
+        kg *= 0.0283495;
+    } else if (weightUnitUpper === 'GRAMS' || weightUnitUpper === 'G') {
+        kg /= 1000;
+    }
+
+    // --- Tier Logic (Simplified but standard) ---
+    if (cm_l <= 35 && cm_w <= 25 && cm_h <= 2 && kg <= 0.1) {
+        fulfillmentFee = 250; // Small Envelope
+    } else if (cm_l <= 45 && cm_w <= 34 && cm_h <= 26 && kg <= 1) {
+        fulfillmentFee = 450; // Standard
+    } else if (kg <= 2 && cm_l <= 45 && cm_w <= 34 && cm_h <= 26) {
+        fulfillmentFee = 650; // Standard 2kg
+    } else {
+        // Oversized or Heavy
+        fulfillmentFee = 950 + Math.max(0, Math.floor((kg - 2) * 100)); // Base + surcharge
+    }
+
+    // --- FBA Sanity Check (Toys & Safety Cap) ---
+    const normCategory = (category || '').toLowerCase();
+    const isToys = normCategory.includes('brinquedo') || normCategory.includes('toy');
+
     if (isToys && kg < 2) {
         const cap = Math.round(price * 100 * 0.40);
-        if (fulfillmentFee > cap) {
-            fulfillmentFee = cap;
+        if (fulfillmentFee > cap || fulfillmentFee > 1800) { // Max 18.00 for small toys
+            fulfillmentFee = Math.min(fulfillmentFee, cap);
         }
+    }
+
+    // Secondary safety: Never charge more than 60% of price for ANY standard item under 5kg
+    if (kg < 5 && fulfillmentFee > (price * 100 * 0.60)) {
+        fulfillmentFee = Math.round(price * 100 * 0.60);
     }
 
     return {
