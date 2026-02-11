@@ -324,7 +324,7 @@ export const ProductFinder: React.FC = () => {
 
       return {
         id: item.asin,
-        title: summary?.itemName ? (summary.itemName.length > 300 ? summary.itemName.substring(0, 300) + '...' : summary.itemName) : 'Título Indisponível',
+        title: summary?.itemName ? (summary.itemName.length > 120 ? summary.itemName.substring(0, 120) + '...' : summary.itemName) : 'Título Indisponível',
         image: mainImage,
         category: categoryKey !== 'category.Unknown' ? categoryKey : (rawCategory || 'category.Unknown'), // Store key or raw if no match
         brand: summary?.brand || summary?.brandName || '-',
@@ -759,7 +759,7 @@ export const ProductFinder: React.FC = () => {
                         <div className="flex-1 min-w-0 py-0.5">
                           <button
                             onClick={() => setSelectedProductForDetail(product)}
-                            className="font-medium text-brand-700 truncate mb-1.5 hover:underline cursor-pointer text-base text-left w-full"
+                            className="font-medium text-brand-700 line-clamp-2 mb-1.5 hover:underline cursor-pointer text-base text-left w-full max-w-[400px]"
                             title={product.title}
                           >
                             {product.title}
