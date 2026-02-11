@@ -259,10 +259,16 @@ export const handler: Handler = async (event, context) => {
                 // Calculate Revenue
                 // --- Buy Box Price Supremacy ---
                 // Force Current Offer Price (summaries) as primary, ignore MSRP (list_price)
+                // In Brazil, 'price' in summaries often reflects the actual selling price
                 const sellingPrice = item.summaries?.[0]?.price?.amount;
+                const buyBoxPrice = item.summaries?.[0]?.buyBoxPrice?.amount; // Some API versions include this
+
                 const msrp = item.attributes?.list_price?.[0]?.value_with_tax;
-                const isListPrice = !sellingPrice && !!msrp;
-                const priceValue = sellingPrice || msrp || 0;
+
+                // If sellingPrice matches MSRP, it might be the non-discounted one, 
+                // but usually summaries.price is the most current price Amazon has.
+                const priceValue = buyBoxPrice || sellingPrice || msrp || 0;
+                const isListPrice = !buyBoxPrice && !sellingPrice && !!msrp;
 
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0;
 

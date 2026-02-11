@@ -250,16 +250,18 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
                     return;
                 }
 
+                // Helper to extract amount from price object (Landed or Listing)
                 const getAmountFromPrice = (priceObj: any) => {
                     if (priceObj?.LandedPrice?.Amount > 0) return { amount: priceObj.LandedPrice.Amount, currency: priceObj.LandedPrice.CurrencyCode };
                     if (priceObj?.ListingPrice?.Amount > 0) return { amount: priceObj.ListingPrice.Amount, currency: priceObj.ListingPrice.CurrencyCode };
+                    if (priceObj?.Price?.Amount > 0) return { amount: priceObj.Price.Amount, currency: priceObj.Price.CurrencyCode };
                     return null;
                 };
 
                 const findNewCondition = (items: any[]) => {
                     if (!items || !Array.isArray(items)) return null;
                     return items.find((p: any) => {
-                        const condition = (p.Condition || p.condition || '').toLowerCase();
+                        const condition = (p.Condition || p.condition || p.SubCondition || '').toLowerCase();
                         return condition === 'new';
                     });
                 };
@@ -268,38 +270,33 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
                 let priceResult = getAmountFromPrice(findNewCondition(summary.BuyBoxPrices));
                 let fallbackUsed = false;
 
-                // 2. Secondary: Lowest New Price among active Professional Sellers
+                // 2. Secondary: CompetitivePricing (Often contains the Featured/Discounted price)
+                if (!priceResult && summary.CompetitivePricing?.CompetitivePrices) {
+                    const compPrices = summary.CompetitivePricing.CompetitivePrices;
+                    // Look for IDs 1 (New) or 2 (Used) or any Featured Offer
+                    const bestComp = compPrices.find((cp: any) => cp.CompetitivePriceId === '1') || compPrices[0];
+                    if (bestComp?.Price) {
+                        priceResult = getAmountFromPrice(bestComp.Price);
+                        if (priceResult) fallbackUsed = true;
+                    }
+                }
+
+                // 3. Tertiary: Lowest New Price among active Professional Sellers
                 if (!priceResult) {
                     const lowestNew = findNewCondition(summary.LowestPrices);
                     priceResult = getAmountFromPrice(lowestNew);
                     if (priceResult) fallbackUsed = true;
                 }
 
-                // 3. Tertiary: Competitive Price / Offers Fallback
-                if (!priceResult && Array.isArray(offers)) {
-                    // Filter for Professional Sellers / New condition if available in offer list
-                    const bestOffer = offers.find((o: any) =>
-                        o.IsBuyBoxWinner === true ||
-                        (o.SubCondition === 'New' && o.SellerId)
-                    );
-                    if (bestOffer && bestOffer.ListingPrice) {
-                        priceResult = {
-                            amount: bestOffer.ListingPrice.Amount,
-                            currency: bestOffer.ListingPrice.CurrencyCode
-                        };
-                        fallbackUsed = true;
-                    }
-                }
+                // 4. Quaternary: Detailed Offers list fallback
+                if (!priceResult && Array.isArray(offers) && offers.length > 0) {
+                    const bestOffer = offers.find((o: any) => o.IsBuyBoxWinner === true) ||
+                        offers.find((o: any) => (o.SubCondition || o.Condition) === 'New') ||
+                        offers[0];
 
-                // 4. Quaternary: CompetitivePricing (Summary level)
-                if (!priceResult && summary.CompetitivePricing?.CompetitivePrices) {
-                    const compPrice = summary.CompetitivePricing.CompetitivePrices.find((cp: any) => cp.CompetitivePriceId === '1' || cp.CompetitivePriceId === '2');
-                    if (compPrice?.Price) {
-                        priceResult = {
-                            amount: compPrice.Price.Amount,
-                            currency: compPrice.Price.CurrencyCode
-                        };
-                        fallbackUsed = true;
+                    if (bestOffer) {
+                        priceResult = getAmountFromPrice(bestOffer); // Handles LandedPrice/ListingPrice
+                        if (priceResult) fallbackUsed = true;
                     }
                 }
 
