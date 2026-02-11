@@ -16,6 +16,7 @@ interface ProductDisplay {
   currency?: string; // Added currency field
   sales: number | null;
   percentile?: string; // Added for Sales Badge
+  categoryTotal?: number; // Added for Tooltip details
   salesGraph?: string;
   salesHistory?: number[]; // Added for Graph Data
   revenue: number | null;
@@ -280,8 +281,9 @@ export const ProductFinder: React.FC = () => {
 
         sales: item.estimated_sales || null, // Using backend estimated sales
         percentile: item.sales_percentile, // Using backend percentile
+        categoryTotal: item.category_total, // For Enterprise tooltips
         salesHistory: generateHistoricalData(item.estimated_sales || 10), // Generate Graph Data
-        revenue: null,
+        revenue: item.estimated_revenue || null, // Using backend automated revenue
         score: null,
         bsr: item.salesRanks?.[0]?.displayGroupRanks?.[0]?.rank || null,
         fbaFees: null,
@@ -585,8 +587,8 @@ export const ProductFinder: React.FC = () => {
                   </div>
                 </th>
 
-                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('sales')}>
-                  <div className="flex items-center justify-end gap-1">
+                <th className="px-5 py-4 border-b border-gray-100 text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('sales')}>
+                  <div className="flex items-center justify-center gap-1">
                     {t('col.sales')}
                     {sortConfig?.key === 'sales' && (
                       sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
@@ -696,25 +698,23 @@ export const ProductFinder: React.FC = () => {
                     <td className="px-5 py-4 text-right font-bold text-gray-900">
                       {product.price ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.price) : '-'}
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex flex-col items-end gap-1">
-                        <div className="flex items-center gap-2">
-                          {product.percentile && (
-                            <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${product.percentile === '1%' ? 'bg-green-800 text-white' :
-                                  product.percentile === '3%' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-600'
-                                }`}
-                              title={`Top ${product.percentile} nesta categoria`}
-                            >
-                              Top {product.percentile}
-                            </span>
-                          )}
-                          <span className="text-gray-900 font-bold text-base" title={`Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
-                            {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : '-'}
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col items-center gap-1.5">
+                        {product.percentile && (
+                          <span
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter shadow-sm border ${product.percentile === '1%' ? 'bg-green-800 text-white border-green-900' :
+                                product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
+                                  'bg-gray-100 text-gray-600 border-gray-200'
+                              }`}
+                            title={`Este produto está entre os top ${product.categoryTotal?.toLocaleString()} itens da categoria ${t(product.category)} (Baseado no Censo 2025).`}
+                          >
+                            Top {product.percentile}
                           </span>
-                        </div>
-                        {product.sales && <span className="text-[10px] text-gray-400 font-medium">unidades/mês</span>}
+                        )}
+                        <span className="text-gray-900 font-bold text-base leading-none" title={`Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
+                          {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : '-'}
+                        </span>
+                        {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
                       </div>
                     </td>
                     <td className="px-5 py-4 text-center">
@@ -723,8 +723,13 @@ export const ProductFinder: React.FC = () => {
                         onClick={() => setSelectedProductForGraph(product)}
                       />
                     </td>
-                    <td className="px-5 py-4 text-right font-bold text-gray-900">
-                      {product.revenue ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.revenue) : '-'}
+                    <td className="px-5 py-4 text-right font-bold text-gray-900 tabular-nums">
+                      {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'de-DE', {
+                        style: 'currency',
+                        currency: product.currency || 'USD',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      }).format(product.revenue) : '-'}
                     </td>
                     <td className="px-5 py-4 text-right text-gray-600 font-medium">
                       {product.bsr ? product.bsr.toLocaleString() : '-'}

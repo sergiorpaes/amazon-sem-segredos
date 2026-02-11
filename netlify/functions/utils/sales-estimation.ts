@@ -34,7 +34,7 @@ const bsrTable2025: Record<string, Record<string, number>> = {
 /**
  * Estimates monthly sales based on BSR and Category for Spain 2025.
  */
-export function estimateSales(bsr: number, category: string): { estimatedSales: number; percentile: string | undefined } {
+export function estimateSales(bsr: number, category: string): { estimatedSales: number; percentile: string | undefined; categoryTotal: number } {
     // 1. Resolve normalized category name (mapping raw SP-API names to our census names)
     let normalizedCategory = "Otros Productos";
 
@@ -67,32 +67,29 @@ export function estimateSales(bsr: number, category: string): { estimatedSales: 
 
     if (bsr <= census.top1) {
         // Top 1% - Interpolate between 300 and 2500
-        // bsr: 1 -> 2500, bsr: census.top1 -> 300
         const ratio = (census.top1 - bsr) / census.top1;
         const estimated = Math.floor(300 + (ratio * 2200));
-        return { estimatedSales: estimated, percentile: "1%" };
+        return { estimatedSales: estimated, percentile: "1%", categoryTotal: census.top10 };
     }
 
     if (bsr <= census.top3) {
         // Top 3% - Interpolate between 100 and 299
-        // bsr: census.top1 + 1 -> 299, bsr: census.top3 -> 100
         const range = census.top3 - census.top1;
         const offset = bsr - census.top1;
         const ratio = (range - offset) / range;
         const estimated = Math.floor(100 + (ratio * 199));
-        return { estimatedSales: estimated, percentile: "3%" };
+        return { estimatedSales: estimated, percentile: "3%", categoryTotal: census.top10 };
     }
 
     if (bsr <= census.top10) {
         // Top 10% - Interpolate between 10 and 45
-        // bsr: census.top3 + 1 -> 45, bsr: census.top10 -> 10
         const range = census.top10 - census.top3;
         const offset = bsr - census.top3;
         const ratio = (range - offset) / range;
         const estimated = Math.floor(10 + (ratio * 35));
-        return { estimatedSales: estimated, percentile: "10%" };
+        return { estimatedSales: estimated, percentile: "10%", categoryTotal: census.top10 };
     }
 
     // Outside Top 10%
-    return { estimatedSales: 5, percentile: undefined }; // Show as < 10 in UI
+    return { estimatedSales: 5, percentile: undefined, categoryTotal: census.top10 }; // Show as < 10 in UI
 }

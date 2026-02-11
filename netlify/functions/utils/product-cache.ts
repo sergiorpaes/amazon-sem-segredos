@@ -42,6 +42,7 @@ export async function cacheProduct(data: {
     currency?: string;
     bsr?: number;
     estimated_sales?: number;
+    estimated_revenue?: number;
     sales_percentile?: string;
     raw_data?: any;
 }) {

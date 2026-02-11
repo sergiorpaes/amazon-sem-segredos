@@ -171,12 +171,18 @@ export const handler: Handler = async (event, context) => {
 
                 let estimated_sales = null;
                 let sales_percentile = undefined;
+                let category_total = 0;
 
                 if (mainRank) {
                     const estimate = estimateSales(mainRank.rank, mainRank.displayGroup || item.summaries?.[0]?.websiteDisplayGroupName || '');
                     estimated_sales = estimate.estimatedSales;
                     sales_percentile = estimate.percentile;
+                    category_total = estimate.categoryTotal;
                 }
+
+                // Calculate Revenue
+                const priceValue = item.attributes?.list_price?.[0]?.value_with_tax || item.summaries?.[0]?.price?.amount || 0;
+                const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0; // In cents for cache
 
                 // Async Cache Save (Don't await to keep response fast)
                 const summary = item.summaries?.[0];
@@ -189,11 +195,11 @@ export const handler: Handler = async (event, context) => {
                     image: mainImage,
                     category: summary?.websiteDisplayGroupName,
                     brand: summary?.brandName || summary?.brand,
-                    price: summary?.price?.amount ? Math.round(summary.price.amount * 100) :
-                        (item.attributes?.list_price?.[0]?.value_with_tax ? Math.round(item.attributes.list_price[0].value_with_tax * 100) : undefined),
+                    price: Math.round(priceValue * 100),
                     currency: summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency,
                     bsr: mainRank?.rank,
                     estimated_sales: estimated_sales || undefined,
+                    estimated_revenue: estimated_revenue || undefined,
                     sales_percentile: sales_percentile as string | undefined, // Type cast for compatibility
                     raw_data: item
                 }).catch(err => console.error("[Cache] Save error:", err));
@@ -201,7 +207,9 @@ export const handler: Handler = async (event, context) => {
                 return {
                     ...item,
                     estimated_sales,
-                    sales_percentile
+                    estimated_revenue: estimated_revenue / 100, // Return as float
+                    sales_percentile,
+                    category_total
                 };
             }));
 

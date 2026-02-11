@@ -115,6 +115,7 @@ export const productsCache = pgTable('amz_products_cache', {
     currency: text('currency'),
     bsr: integer('bsr'),
     estimated_sales: integer('estimated_sales'),
+    estimated_revenue: integer('estimated_revenue'), // In cents or lowest currency unit
     sales_percentile: text('sales_percentile'),
     raw_data: jsonb('raw_data'),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
