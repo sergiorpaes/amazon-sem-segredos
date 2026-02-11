@@ -82,41 +82,43 @@ export const SalesDetailModal: React.FC<SalesDetailModalProps> = ({
                     </div>
 
                     {/* Main Chart */}
-                    <div className="h-80 w-full bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                    <div className="min-h-[400px] w-full bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-4">Histórico de Vendas (Simulado)</h3>
-                        <ResponsiveContainer width="100%" height="100%" minWidth={300} minHeight={300}>
-                            <AreaChart data={chartData}>
-                                <defs>
-                                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                <XAxis
-                                    dataKey="date"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 12, fill: '#6B7280' }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 12, fill: '#6B7280' }}
-                                />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="sales"
-                                    stroke="#8884d8"
-                                    fillOpacity={1}
-                                    fill="url(#colorSales)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        <div style={{ height: 300 }}>
+                            <ResponsiveContainer width="100%" height="100%" minWidth={300} minHeight={300}>
+                                <AreaChart data={chartData}>
+                                    <defs>
+                                        <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                    <XAxis
+                                        dataKey="date"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 12, fill: '#6B7280' }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 12, fill: '#6B7280' }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="sales"
+                                        stroke="#8884d8"
+                                        fillOpacity={1}
+                                        fill="url(#colorSales)"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
 
                     <p className="text-xs text-gray-400 text-center italic">

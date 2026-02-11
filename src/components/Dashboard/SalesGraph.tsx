@@ -14,6 +14,7 @@ export const SalesGraph: React.FC<SalesGraphProps> = ({ data, color = '#10B981',
     return (
         <div
             className="h-12 w-24 cursor-pointer hover:opacity-80 transition-opacity"
+            style={{ height: 48, width: 96 }}
             onClick={(e) => {
                 e.stopPropagation();
                 onClick?.();

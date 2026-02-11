@@ -41,12 +41,12 @@ export const handler: Handler = async (event, context) => {
         const body = JSON.parse(event.body || "{}");
         const { access_token, asin, keywords, marketplaceId, region, pageToken, intent } = body;
 
-        // Validation: Must have token AND (asin OR keywords)
-        if (!access_token || (!asin && !keywords)) {
+        // Validation: Must have token AND (asin OR keywords OR asins)
+        if (!access_token || (!asin && !keywords && !body.asins)) {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ error: "Missing required fields: access_token, and either asin or keywords" }),
+                body: JSON.stringify({ error: "Missing required fields: access_token, and either asin, keywords or asins" }),
             };
         }
 
@@ -54,7 +54,7 @@ export const handler: Handler = async (event, context) => {
         let userId: number | null = null;
         let userRole: string | null = null;
 
-        if (intent !== 'get_offers') {
+        if (intent !== 'get_offers' && intent !== 'get_batch_offers') {
             // 1. Try Authorization Header
             let token = event.headers.authorization?.replace('Bearer ', '');
 
@@ -86,7 +86,7 @@ export const handler: Handler = async (event, context) => {
         }
 
         // --- CACHE CHECK (Only for Search/GetItem, not Pricing) ---
-        if (intent !== 'get_offers' && asin && !keywords) {
+        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && asin && !keywords) {
             const cached = await getCachedProduct(asin);
             if (cached) {
                 console.log(`[Proxy] Cache hit for ASIN: ${asin}`);
@@ -113,7 +113,7 @@ export const handler: Handler = async (event, context) => {
         }
 
         // --- CREDIT CONSUMPTION (Only if not cached and not Pricing) ---
-        if (intent !== 'get_offers' && userId && userRole !== 'ADMIN') {
+        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && userId && userRole !== 'ADMIN') {
             try {
                 await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords, asin });
                 console.log(`[Proxy] Credit consumed for UserID: ${userId}`);
