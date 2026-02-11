@@ -58,26 +58,26 @@ export function calculateFBAFees(price: number, dimensions?: Dimensions, weight?
         };
     }
 
-    // --- Robust Unit Conversion ---
+    // --- Robust Unit Conversion (Exhaustive) ---
     const unitUpper = dimensions.unit?.toUpperCase() || '';
     let cm_l = dimensions.length;
     let cm_w = dimensions.width;
     let cm_h = dimensions.height;
 
-    if (unitUpper === 'INCHES') {
+    if (unitUpper.includes('INCH')) {
         cm_l *= 2.54; cm_w *= 2.54; cm_h *= 2.54;
-    } else if (unitUpper === 'MILLIMETERS' || unitUpper === 'MM') {
+    } else if (unitUpper.includes('MILLI') || unitUpper === 'MM') {
         cm_l /= 10; cm_w /= 10; cm_h /= 10;
     }
 
     const weightUnitUpper = weight.unit?.toUpperCase() || '';
     let kg = weight.value;
 
-    if (weightUnitUpper === 'POUNDS' || weightUnitUpper === 'LB') {
+    if (weightUnitUpper.includes('POUND') || weightUnitUpper === 'LB' || weightUnitUpper === 'LBS') {
         kg *= 0.453592;
-    } else if (weightUnitUpper === 'OUNCES' || weightUnitUpper === 'OZ') {
+    } else if (weightUnitUpper.includes('OUNCE') || weightUnitUpper === 'OZ') {
         kg *= 0.0283495;
-    } else if (weightUnitUpper === 'GRAMS' || weightUnitUpper === 'G') {
+    } else if (weightUnitUpper.includes('GRAM') || weightUnitUpper === 'G' || weightUnitUpper === 'GR') {
         kg /= 1000;
     }
 

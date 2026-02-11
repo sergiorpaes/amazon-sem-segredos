@@ -97,35 +97,42 @@ const calculateFBAFeesFrontend = (price: number, rawData?: any): { total: number
     const weightUnitUpper = weight.unit?.toUpperCase() || 'KG';
     let kg = weight.value;
 
-    if (weightUnitUpper === 'POUNDS' || weightUnitUpper === 'LB') {
+    if (weightUnitUpper.includes('POUND') || weightUnitUpper === 'LB' || weightUnitUpper === 'LBS') {
       kg *= 0.453592;
-    } else if (weightUnitUpper === 'OUNCES' || weightUnitUpper === 'OZ') {
+    } else if (weightUnitUpper.includes('OUNCE') || weightUnitUpper === 'OZ') {
       kg *= 0.0283495;
-    } else if (weightUnitUpper === 'GRAMS' || weightUnitUpper === 'G') {
+    } else if (weightUnitUpper.includes('GRAM') || weightUnitUpper === 'G' || weightUnitUpper === 'GR') {
       kg /= 1000;
     }
 
-    // --- Tier Logic ---
+    // --- Tier Logic (Simplified but standard) ---
     if (cm_l <= 35 && cm_w <= 25 && cm_h <= 2 && kg <= 0.1) {
-      fulfillment = 2.50;
+      fulfillment = 2.50; // Small Envelope
     } else if (cm_l <= 45 && cm_w <= 34 && cm_h <= 26 && kg <= 1) {
-      fulfillment = 4.50;
+      fulfillment = 4.50; // Standard
     } else if (kg <= 2) {
-      fulfillment = 6.50;
+      fulfillment = 6.50; // Standard 2kg
     } else {
+      // Oversized or Heavy
       fulfillment = 9.50 + Math.max(0, (kg - 2) * 1.0);
     }
 
     // --- FBA Sanity Check (Toys Logic) ---
     const isToys = normCategory.includes('brinquedo') || normCategory.includes('toy');
-    if (isToys && kg < 2) {
+
+    // If it's a toy, it should NEVER have massive fulfillment fees
+    if (isToys) {
       const cap = price * 0.40;
-      if (fulfillment > cap || fulfillment > 18.0) {
-        fulfillment = Math.min(fulfillment, cap);
+      // If it was wrongly flagged as ultra-heavy, force a reasonable tier
+      if (kg < 2 && fulfillment > 18.0) {
+        fulfillment = 4.50;
+      }
+      if (fulfillment > cap) {
+        fulfillment = cap;
       }
     }
 
-    // Safety: Max 60% for anything standard under 5kg
+    // Secondary Safety: Max 60% for anything standard under 5kg
     if (kg < 5 && fulfillment > (price * 0.60)) {
       fulfillment = price * 0.60;
     }
@@ -366,8 +373,8 @@ export const ProductFinder: React.FC = () => {
         image: mainImage,
         category: categoryKey !== 'category.Unknown' ? categoryKey : (rawCategory || 'category.Unknown'), // Store key or raw if no match
         brand: summary?.brand || summary?.brandName || '-',
-        price: item.attributes?.list_price?.[0]?.value_with_tax || summary?.price?.amount || 0,
-        currency: item.attributes?.list_price?.[0]?.currency || summary?.price?.currencyCode || 'USD',
+        price: summary?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0,
+        currency: summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency || 'USD',
 
         sales: item.estimated_sales || null, // Using backend estimated sales
         percentile: item.sales_percentile, // Using backend percentile (including NEW_RISING)
@@ -436,10 +443,11 @@ export const ProductFinder: React.FC = () => {
                   const newFees = calculateFBAFeesFrontend(newPrice, p.rawData);
                   const newRevenue = p.sales ? newPrice * p.sales : (p.revenue || null);
 
-                  // Trigger Cache Update in backend if this product was missing price
-                  if (!p.price || p.price === 0) {
+                  // Trigger Cache Update in backend if price changed from initial search
+                  if (p.price !== newPrice || !p.price) {
                     fetch('/.netlify/functions/amazon-proxy', {
                       method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         intent: 'update_cache',
                         asin: p.id,
@@ -458,7 +466,7 @@ export const ProductFinder: React.FC = () => {
                         net_profit: Math.round((newPrice - newFees.total) * 100),
                         sales_percentile: p.percentile,
                         raw_data: p.rawData,
-                        access_token: 'internal', // Proxy will handle
+                        access_token: 'internal',
                         marketplaceId: selectedMarketplace
                       })
                     }).catch(err => console.error("Cache sync failed:", err));

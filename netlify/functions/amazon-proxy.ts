@@ -90,6 +90,34 @@ export const handler: Handler = async (event, context) => {
             const cached = await getCachedProduct(asin);
             if (cached) {
                 console.log(`[Proxy] Cache hit for ASIN: ${asin}`);
+
+                // Re-calculate FBA fees to ensure they follow the latest logic
+                let fba_fees = (cached.fba_fees || 0) * 100; // stored in cents logic for re-calc
+                let fba_breakdown = {
+                    referral: (cached.referral_fee || 0) / 100,
+                    fulfillment: (cached.fulfillment_fee || 0) / 100,
+                    is_estimate: false
+                };
+
+                if (cached.raw_data && Object.keys(cached.raw_data).length > 0) {
+                    const priceValue = (cached.price || 0) / 100;
+                    const rawData = cached.raw_data as any;
+                    const dimObj = rawData.attributes?.item_dimensions?.[0];
+                    const weightObj = rawData.attributes?.item_weight?.[0];
+                    const fbaResult = calculateFBAFees(
+                        priceValue,
+                        dimObj ? { height: dimObj.height?.value, width: dimObj.width?.value, length: dimObj.length?.value, unit: dimObj.height?.unit } : undefined,
+                        weightObj ? { value: weightObj.value, unit: weightObj.unit } : undefined,
+                        cached.category || undefined
+                    );
+                    fba_fees = fbaResult.totalFees;
+                    fba_breakdown = {
+                        referral: fbaResult.referralFee / 100,
+                        fulfillment: fbaResult.fulfillmentFee / 100,
+                        is_estimate: fbaResult.isEstimate
+                    };
+                }
+
                 return {
                     statusCode: 200,
                     headers,
@@ -105,7 +133,10 @@ export const handler: Handler = async (event, context) => {
                             images: cached.image ? [{ images: [{ variant: 'MAIN', link: cached.image }] }] : [],
                             attributes: { list_price: [{ value_with_tax: cached.price ? cached.price / 100 : 0, currency: cached.currency }] },
                             estimated_sales: cached.estimated_sales,
-                            sales_percentile: cached.sales_percentile
+                            sales_percentile: cached.sales_percentile,
+                            fba_fees: fba_fees / 100,
+                            fba_breakdown: fba_breakdown,
+                            net_profit: ((cached.price || 0) - (fba_fees || 0)) / 100
                         }]
                     }),
                 };
