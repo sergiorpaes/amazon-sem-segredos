@@ -306,6 +306,24 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
                     }
                 }
 
+                // 5. Quinary: Global Discovery - Pick ANYTHING from summary that has a price
+                if (!priceResult) {
+                    const anyLowest = Array.isArray(summary.LowestPrices) ? summary.LowestPrices[0] : null;
+                    const anyBuyBox = Array.isArray(summary.BuyBoxPrices) ? summary.BuyBoxPrices[0] : null;
+                    const anyComp = (summary.CompetitivePricing?.CompetitivePrices && summary.CompetitivePricing.CompetitivePrices[0]);
+
+                    const lastDitch = anyBuyBox || anyComp || anyLowest;
+                    if (lastDitch) {
+                        priceResult = getAmountFromPrice(lastDitch);
+                        if (priceResult) fallbackUsed = true;
+                    }
+                }
+
+                if (!priceResult) {
+                    results[asin] = null;
+                    return;
+                }
+
                 results[asin] = {
                     price: priceResult ? priceResult.amount : 0,
                     activeSellers: summary.TotalOfferCount || 0,

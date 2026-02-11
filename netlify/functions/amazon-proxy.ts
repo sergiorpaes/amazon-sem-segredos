@@ -264,17 +264,18 @@ export const handler: Handler = async (event, context) => {
                 const sellingPrice = summary?.price?.amount;
                 const buyBoxPrice = summary?.buyBoxPrice?.amount; // Some API versions include this
 
-                // Fallbacks from Catalog Attributes
-                const attrListPrice = item.attributes?.list_price?.[0]?.value_with_tax;
-                const attrStandardPrice = item.attributes?.standard_price?.[0]?.value_with_tax;
-                const attrPurchasablePrice = item.attributes?.purchasable_offer?.[0]?.our_price?.[0]?.value_with_tax;
+                // Fallbacks from Catalog Attributes (Exhaustive search for Brazil)
+                const attrListPrice = item.attributes?.list_price?.[0]?.value_with_tax || item.attributes?.list_price?.[0]?.amount;
+                const attrStandardPrice = item.attributes?.standard_price?.[0]?.value_with_tax || item.attributes?.standard_price?.[0]?.amount;
+                const attrPurchasablePrice = item.attributes?.purchasable_offer?.[0]?.our_price?.[0]?.value_with_tax || item.attributes?.purchasable_offer?.[0]?.our_price?.[0]?.amount;
+                const attrMapPrice = item.attributes?.map_price?.[0]?.value_with_tax || item.attributes?.map_price?.[0]?.amount;
 
                 // If sellingPrice matches attrListPrice, it might be the non-discounted one, 
                 // but usually summaries.price is the most current price Amazon has.
-                const priceValue = buyBoxPrice || sellingPrice || attrStandardPrice || attrPurchasablePrice || attrListPrice || 0;
+                const priceValue = buyBoxPrice || sellingPrice || attrStandardPrice || attrPurchasablePrice || attrMapPrice || attrListPrice || 0;
 
                 // It's a "List Price" fallback only if we didn't find ANY sellable price and had to use attrListPrice
-                const isListPrice = !buyBoxPrice && !sellingPrice && !attrStandardPrice && !attrPurchasablePrice && !!attrListPrice;
+                const isListPrice = !buyBoxPrice && !sellingPrice && !attrStandardPrice && !attrPurchasablePrice && !attrMapPrice && !!attrListPrice;
 
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0;
 
