@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag } from 'lucide-react';
+import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag, Sparkles } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { searchProducts, getItemOffers, getBatchOffers } from '../../services/amazonAuthService';
@@ -613,10 +613,15 @@ export const ProductFinder: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Niche Sales */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Vendas Totais do Nicho</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('summary.search_volume')}</div>
+            <span className="bg-brand-100 text-brand-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter">
+              {t('summary.feb_2026')}
+            </span>
+          </div>
           <div className="flex items-end gap-2">
             <span className="text-3xl font-bold text-gray-900">{totalNicheSales.toLocaleString()}</span>
-            <BarChart2 className="w-5 h-5 text-brand-500 mb-1.5" />
+            <Search className="w-5 h-5 text-brand-500 mb-1.5" />
           </div>
           <div className="text-[10px] text-gray-500 mt-1">unidades estimadas / mês</div>
         </div>
@@ -816,7 +821,13 @@ export const ProductFinder: React.FC = () => {
                                 {t(product.category.startsWith('category.') ? product.category : product.category)}
                               </span>
                             )}
-                            {/* Add rating stars later */}
+                            <button
+                              onClick={() => setSelectedProductForDetail(product)}
+                              className="text-brand-600 hover:text-brand-800 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+                              title={t('analyze.button')}
+                            >
+                              <Sparkles className="w-3 h-3" /> {t('analyze.button')}
+                            </button>
                           </div>
                         </div>
                       </div>

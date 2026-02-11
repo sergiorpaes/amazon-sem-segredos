@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, ExternalLink, Package, Trophy, DollarSign, BarChart3, Users, MessageSquare, Tag } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, ExternalLink, Package, Trophy, DollarSign, BarChart3, Users, MessageSquare, Tag, Sparkles } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { translations } from '../../services/languageService';
 
@@ -15,6 +15,32 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     const t = (key: string) => {
         // @ts-ignore
         return translations[language][key] || key;
+    };
+
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState<any>(null);
+    const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+    const handleAnalyzeCompetition = async () => {
+        setIsAnalyzing(true);
+        setAnalysisError(null);
+        try {
+            const response = await fetch('/.netlify/functions/analyze-competition', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asin: product.id, marketplaceId: product.marketplace_id })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to analyze');
+
+            setAnalysisResult(data);
+        } catch (err: any) {
+            console.error(err);
+            setAnalysisError(err.message);
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     if (!isOpen || !product) return null;
@@ -148,8 +174,77 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                 </div>
                                 <div className="text-xl font-bold text-gray-900">{product.score || '-'}</div>
                             </div>
-
                         </div>
+                    </div>
+
+                    {/* AI Competition Analysis Section */}
+                    <div className="mt-8 border-t border-gray-100 pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-brand-500" />
+                                {t('analyze.modal_title')}
+                            </h3>
+                            {!analysisResult && !isAnalyzing && (
+                                <button
+                                    onClick={handleAnalyzeCompetition}
+                                    className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm"
+                                >
+                                    <BarChart3 className="w-4 h-4" />
+                                    {t('analyze.button')}
+                                </button>
+                            )}
+                        </div>
+
+                        {isAnalyzing && (
+                            <div className="bg-brand-50 border border-brand-100 rounded-xl p-6 text-center animate-pulse">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand-600 border-t-transparent mb-3"></div>
+                                <p className="text-brand-800 font-medium">{t('analyze.processing')}</p>
+                                <p className="text-xs text-brand-600 mt-1">{t('analyze.credits_info')}</p>
+                            </div>
+                        )}
+
+                        {analysisError && (
+                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-700 text-sm flex items-center gap-2">
+                                <span className="p-1 bg-red-100 rounded-full">⚠️</span>
+                                {analysisError}
+                            </div>
+                        )}
+
+                        {analysisResult && (
+                            <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="bg-red-50 border border-red-100 rounded-xl p-5">
+                                        <h4 className="text-red-800 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <X className="w-4 h-4" /> {t('analyze.weaknesses')}
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {analysisResult.weaknesses.map((w: string, i: number) => (
+                                                <li key={i} className="text-sm text-red-700 flex gap-2">
+                                                    <span className="shrink-0 font-bold">•</span>
+                                                    {w}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+                                        <h4 className="text-emerald-800 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <Sparkles className="w-4 h-4" /> {t('analyze.improvements')}
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {analysisResult.improvements.map((m: string, i: number) => (
+                                                <li key={i} className="text-sm text-emerald-700 flex gap-2">
+                                                    <span className="shrink-0 font-bold">✓</span>
+                                                    {m}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 text-xs text-gray-500 italic">
+                                    {analysisResult.summary}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -157,7 +252,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                 <div className="p-4 border-t border-gray-100 bg-gray-50 text-center text-xs text-gray-400">
                     {t('modal.footer_disclaimer')}
                 </div>
-
             </div>
         </div>
     );
