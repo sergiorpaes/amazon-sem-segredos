@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
-import { searchProducts, getItemOffers } from '../../services/amazonAuthService';
+import { searchProducts, getItemOffers, getBatchOffers } from '../../services/amazonAuthService';
 import { SalesGraph } from "./SalesGraph";
 import { SalesDetailModal } from "./SalesDetailModal";
 import { ProductDetailModal } from "./ProductDetailModal";
@@ -332,33 +332,29 @@ export const ProductFinder: React.FC = () => {
           setShowLoadMore(false);
         }
 
-        // --- Background Fetch for Pricing and Offers (Sequential with Delay) ---
-        // We do this AFTER setting the initial products to allow UI to render quickly with basic info
+        // --- Background Batch Fetch for Pricing and Offers ---
         const fetchPricing = async () => {
-          const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+          const asins = mappedProducts.map(p => p.id);
+          if (asins.length === 0) return;
 
-          for (const prod of mappedProducts) {
-            // Delay to respect rate limits (600ms)
-            await delay(600);
+          console.log(`Starting Batch Pricing Fetch for ${asins.length} ASINs`);
+          const batchResults = await getBatchOffers(asins, selectedMarketplace);
 
-            const offers = await getItemOffers(prod.id, selectedMarketplace);
-            if (offers) {
-              setProducts(currentProducts => {
-                return currentProducts.map(p => {
-                  if (p.id === prod.id) {
-                    return {
-                      ...p,
-                      // Only overwrite price if we got a valid non-zero price from the offers API
-                      // Otherwise, keep the existing price (which might be from the Catalog API)
-                      price: (offers.price && offers.price > 0) ? offers.price : p.price,
-                      activeSellers: offers.activeSellers,
-                      currency: (offers.price && offers.price > 0) ? offers.currency : (p.currency || offers.currency)
-                    };
-                  }
-                  return p;
-                });
+          if (Object.keys(batchResults).length > 0) {
+            setProducts(currentProducts => {
+              return currentProducts.map(p => {
+                const offers = batchResults[p.id];
+                if (offers) {
+                  return {
+                    ...p,
+                    price: (offers.price && offers.price > 0) ? offers.price : p.price,
+                    activeSellers: offers.activeSellers,
+                    currency: (offers.price && offers.price > 0) ? offers.currency : (p.currency || offers.currency)
+                  };
+                }
+                return p;
               });
-            }
+            });
           }
         };
         fetchPricing();

@@ -134,7 +134,21 @@ export const handler: Handler = async (event, context) => {
         const targetMarketplace = marketplaceId || "A1RKKUPIHCS9HS";
 
         let url = "";
-        if (intent === 'get_offers' && asin) {
+        let method = "GET";
+        let requestBody = null;
+
+        if (intent === 'get_batch_offers' && body.asins) {
+            url = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
+            method = "POST";
+            requestBody = JSON.stringify({
+                requests: body.asins.map((asin: string) => ({
+                    uri: `/products/pricing/v0/items/${asin}/offers`,
+                    method: 'GET',
+                    MarketplaceId: targetMarketplace,
+                    ItemCondition: 'New'
+                }))
+            });
+        } else if (intent === 'get_offers' && asin) {
             url = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
         } else if (asin) {
             url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${asin}&identifiersType=ASIN&includedData=salesRanks,summaries,images,attributes`;
@@ -143,14 +157,15 @@ export const handler: Handler = async (event, context) => {
             if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
         }
 
-        console.log(`Proxying request: ${url}`);
+        console.log(`Proxying request: ${url} (Method: ${method})`);
 
         const amazonResponse = await fetch(url, {
-            method: "GET",
+            method: method,
             headers: {
                 "x-amz-access-token": access_token,
                 "Content-Type": "application/json",
             },
+            body: requestBody
         });
 
         const data = await amazonResponse.json();

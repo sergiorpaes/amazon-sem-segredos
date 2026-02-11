@@ -84,7 +84,7 @@ export const SalesDetailModal: React.FC<SalesDetailModalProps> = ({
                     {/* Main Chart */}
                     <div className="h-80 w-full bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-4">Histórico de Vendas (Simulado)</h3>
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">

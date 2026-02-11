@@ -206,6 +206,84 @@ export const searchProducts = async (query: string, marketplaceId?: string, page
     return data;
 };
 
+export const getBatchOffers = async (asins: string[], marketplaceId?: string): Promise<Record<string, { price: number, activeSellers: number, currency: string } | null>> => {
+    const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
+    const region = getRegionFromMarketplaceId(targetMarketplace);
+    const token = await getValidAccessToken(region);
+
+    if (!token || !asins.length) return {};
+
+    const payload = {
+        access_token: token,
+        marketplaceId: targetMarketplace,
+        region: region,
+        asins: asins,
+        intent: 'get_batch_offers'
+    };
+
+    try {
+        const response = await fetch('/.netlify/functions/amazon-proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            console.error(`Error fetching batch offers:`, data);
+            return {};
+        }
+
+        const results: Record<string, { price: number, activeSellers: number, currency: string } | null> = {};
+
+        if (data.responses && Array.isArray(data.responses)) {
+            data.responses.forEach((resp: any) => {
+                const asin = resp.request?.uri?.split('/')[4]; // Extract ASIN from URI
+                if (!asin) return;
+
+                const summary = resp.body?.payload?.Summary;
+                if (!summary) {
+                    results[asin] = null;
+                    return;
+                }
+
+                const getAmount = (priceObj: any) => {
+                    if (priceObj?.LandedPrice?.Amount > 0) return { amount: priceObj.LandedPrice.Amount, currency: priceObj.LandedPrice.CurrencyCode };
+                    if (priceObj?.ListingPrice?.Amount > 0) return { amount: priceObj.ListingPrice.Amount, currency: priceObj.ListingPrice.CurrencyCode };
+                    return null;
+                };
+
+                const findNewCondition = (items: any[]) => {
+                    if (!items || !Array.isArray(items)) return null;
+                    return items.find((p: any) => {
+                        const condition = p.Condition || p.condition;
+                        return condition && condition.toLowerCase() === 'new';
+                    });
+                };
+
+                // Extract price
+                let buyBoxPriceObj = findNewCondition(summary.BuyBoxPrices);
+                let result = getAmount(buyBoxPriceObj);
+                if (!result) {
+                    const lowestNew = findNewCondition(summary.LowestPrices);
+                    result = getAmount(lowestNew);
+                }
+
+                results[asin] = {
+                    price: result ? result.amount : 0,
+                    activeSellers: summary.TotalOfferCount || 0,
+                    currency: result ? result.currency : 'USD'
+                };
+            });
+        }
+
+        return results;
+    } catch (e) {
+        console.error("Error in getBatchOffers:", e);
+        return {};
+    }
+};
+
 export const getItemOffers = async (asin: string, marketplaceId?: string): Promise<{ price: number, activeSellers: number, currency: string } | null> => {
     const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
     const region = getRegionFromMarketplaceId(targetMarketplace);

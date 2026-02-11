@@ -19,7 +19,7 @@ export const SalesGraph: React.FC<SalesGraphProps> = ({ data, color = '#10B981',
                 onClick?.();
             }}
         >
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart data={chartData}>
                     <defs>
                         <linearGradient id={`gradient-${color}`} x1="0" y1="0" x2="0" y2="1">
