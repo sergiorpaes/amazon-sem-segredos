@@ -27,14 +27,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     const [productCost, setProductCost] = useState<number>(0);
     const [taxRate, setTaxRate] = useState<number>(10); // Standard starting point in Brazil (Simples Nacional)
     const [opExpenses, setOpExpenses] = useState<number>(1.50); // Prep/Packaging estimate
-    const [adsCost, setAdsCost] = useState<number>(Math.round((product.price || 0) * 0.12 * 100) / 100); // 12% as safe start
+    const [adsCost, setAdsCost] = useState<number>(Math.round((product?.price || 0) * 0.12 * 100) / 100); // 12% as safe start
 
     // Calculation Logic
-    const amazonFees = product.fbaFees || 0;
-    const taxAmount = (product.price || 0) * (taxRate / 100);
+    const amazonFees = product?.fbaFees || 0;
+    const taxAmount = (product?.price || 0) * (taxRate / 100);
     const totalExpenses = amazonFees + productCost + taxAmount + opExpenses + adsCost;
-    const netProfit = (product.price || 0) - totalExpenses;
-    const netMargin = product.price ? (netProfit / product.price) * 100 : 0;
+    const netProfit = (product?.price || 0) - totalExpenses;
+    const netMargin = product?.price ? (netProfit / product.price) * 100 : 0;
     const roi = productCost > 0 ? (netProfit / productCost) * 100 : 0;
 
     const getMarginStatus = () => {
