@@ -206,7 +206,7 @@ export const searchProducts = async (query: string, marketplaceId?: string, page
     return data;
 };
 
-export const getBatchOffers = async (asins: string[], marketplaceId?: string): Promise<Record<string, { price: number, activeSellers: number, currency: string } | null>> => {
+export const getBatchOffers = async (asins: string[], marketplaceId?: string): Promise<Record<string, { price: number, activeSellers: number, currency: string, fallbackUsed?: boolean } | null>> => {
     const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
     const region = getRegionFromMarketplaceId(targetMarketplace);
     const token = await getValidAccessToken(region);
@@ -234,20 +234,22 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
             return {};
         }
 
-        const results: Record<string, { price: number, activeSellers: number, currency: string } | null> = {};
+        const results: Record<string, { price: number, activeSellers: number, currency: string, fallbackUsed?: boolean } | null> = {};
 
         if (data.responses && Array.isArray(data.responses)) {
             data.responses.forEach((resp: any) => {
-                const asin = resp.request?.uri?.split('/')[4]; // Extract ASIN from URI
+                const asin = resp.request?.uri?.split('/')[4]?.split('?')[0]; // Extract ASIN safely
                 if (!asin) return;
 
                 const summary = resp.body?.payload?.Summary;
+                const offers = resp.body?.payload?.Offers;
+
                 if (!summary) {
                     results[asin] = null;
                     return;
                 }
 
-                const getAmount = (priceObj: any) => {
+                const getAmountFromPrice = (priceObj: any) => {
                     if (priceObj?.LandedPrice?.Amount > 0) return { amount: priceObj.LandedPrice.Amount, currency: priceObj.LandedPrice.CurrencyCode };
                     if (priceObj?.ListingPrice?.Amount > 0) return { amount: priceObj.ListingPrice.Amount, currency: priceObj.ListingPrice.CurrencyCode };
                     return null;
@@ -256,23 +258,43 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
                 const findNewCondition = (items: any[]) => {
                     if (!items || !Array.isArray(items)) return null;
                     return items.find((p: any) => {
-                        const condition = p.Condition || p.condition;
-                        return condition && condition.toLowerCase() === 'new';
+                        const condition = (p.Condition || p.condition || '').toLowerCase();
+                        return condition === 'new';
                     });
                 };
 
-                // Extract price
-                let buyBoxPriceObj = findNewCondition(summary.BuyBoxPrices);
-                let result = getAmount(buyBoxPriceObj);
-                if (!result) {
+                // 1. Primary: BuyBox
+                let priceResult = getAmountFromPrice(findNewCondition(summary.BuyBoxPrices));
+                let fallbackUsed = false;
+
+                // 2. Secondary: Lowest New Price among active Professional Sellers
+                if (!priceResult) {
                     const lowestNew = findNewCondition(summary.LowestPrices);
-                    result = getAmount(lowestNew);
+                    priceResult = getAmountFromPrice(lowestNew);
+                    if (priceResult) fallbackUsed = true;
+                }
+
+                // 3. Tertiary: Competitive Price / Offers Fallback
+                if (!priceResult && Array.isArray(offers)) {
+                    // Filter for Professional Sellers / New condition if available in offer list
+                    const bestOffer = offers.find((o: any) =>
+                        o.IsBuyBoxWinner === true ||
+                        (o.SubCondition === 'New' && o.SellerId)
+                    );
+                    if (bestOffer && bestOffer.ListingPrice) {
+                        priceResult = {
+                            amount: bestOffer.ListingPrice.Amount,
+                            currency: bestOffer.ListingPrice.CurrencyCode
+                        };
+                        fallbackUsed = true;
+                    }
                 }
 
                 results[asin] = {
-                    price: result ? result.amount : 0,
+                    price: priceResult ? priceResult.amount : 0,
                     activeSellers: summary.TotalOfferCount || 0,
-                    currency: result ? result.currency : 'USD'
+                    currency: priceResult ? priceResult.currency : (targetMarketplace === 'A2Q3Y263D00KWC' ? 'USD' : 'EUR'),
+                    fallbackUsed: fallbackUsed
                 };
             });
         }

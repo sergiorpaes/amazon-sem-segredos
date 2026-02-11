@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { searchProducts, getItemOffers, getBatchOffers } from '../../services/amazonAuthService';
@@ -14,6 +14,7 @@ interface ProductDisplay {
   brand?: string;
   price?: number;
   currency?: string; // Added currency field
+  fallbackUsed?: boolean; // Added for falling back to lowest offer
   sales: number | null;
   percentile?: string; // Added for Sales Badge
   categoryTotal?: number; // Added for Tooltip details
@@ -31,6 +32,7 @@ interface ProductDisplay {
   reviews?: number;
   score: number | null;
   category: string;
+  rawData?: any; // To store raw API data for cache updates
 }
 
 
@@ -56,6 +58,47 @@ const generateHistoricalData = (currentSales: number | null): number[] => {
     lastValue = newValue;
   }
   return data.reverse();
+};
+
+const calculateFBAFeesFrontend = (price: number, rawItem?: any) => {
+  const referral_rate = 0.15; // Standard 15%
+  const referral = price * referral_rate;
+
+  // Use dimensions if available in rawItem
+  const dim = rawItem?.attributes?.item_dimensions?.[0];
+  const weight = rawItem?.attributes?.item_weight?.[0];
+
+  let fulfillment = 0;
+  let isEstimate = false;
+
+  if (dim && weight) {
+    // Standard tiers (Simplified for Frontend, but follows SP-API logic)
+    // Small Standard: < 450g and small dims
+    // Large Standard: < 12kg
+    const ozToG = 28.35;
+    const lbToG = 453.59;
+    let weightG = 0;
+
+    if (weight.unit === 'ounces') weightG = weight.value * ozToG;
+    else if (weight.unit === 'pounds') weightG = weight.value * lbToG;
+    else if (weight.unit === 'grams') weightG = weight.value;
+    else if (weight.unit === 'kilograms') weightG = weight.value * 1000;
+
+    if (weightG < 450) fulfillment = price > 50 ? 6.50 : 4.50; // Simplified estimate
+    else if (weightG < 2000) fulfillment = 8.50;
+    else fulfillment = 12.50;
+  } else {
+    // 30% total cost estimate fallback
+    fulfillment = (price * 0.3) - referral;
+    isEstimate = true;
+  }
+
+  return {
+    total: Math.round((referral + fulfillment) * 100) / 100,
+    referral: Math.round(referral * 100) / 100,
+    fulfillment: Math.round(fulfillment * 100) / 100,
+    isEstimate
+  };
 };
 
 const mockProducts: ProductDisplay[] = [
@@ -277,7 +320,7 @@ export const ProductFinder: React.FC = () => {
 
       return {
         id: item.asin,
-        title: summary?.itemName ? (summary.itemName.length > 60 ? summary.itemName.substring(0, 60) + '...' : summary.itemName) : 'Título Indisponível',
+        title: summary?.itemName ? (summary.itemName.length > 300 ? summary.itemName.substring(0, 300) + '...' : summary.itemName) : 'Título Indisponível',
         image: mainImage,
         category: categoryKey !== 'category.Unknown' ? categoryKey : (rawCategory || 'category.Unknown'), // Store key or raw if no match
         brand: summary?.brand || summary?.brandName || '-',
@@ -294,7 +337,8 @@ export const ProductFinder: React.FC = () => {
         fbaFees: item.fba_fees || null,
         fbaBreakdown: item.fba_breakdown,
         activeSellers: null,
-        reviews: null
+        reviews: null,
+        rawData: item // Store raw data for cache sync
       };
     });
   }
@@ -344,12 +388,53 @@ export const ProductFinder: React.FC = () => {
             setProducts(currentProducts => {
               return currentProducts.map(p => {
                 const offers = batchResults[p.id];
-                if (offers) {
+                if (offers && offers.price > 0) {
+                  // Re-calculate fees and revenue if price changed (especially if it was 0)
+                  const newPrice = offers.price;
+                  const newFees = calculateFBAFeesFrontend(newPrice, p.rawData);
+                  const newRevenue = p.sales ? newPrice * p.sales : (p.revenue || null);
+
+                  // Trigger Cache Update in backend if this product was missing price
+                  if (!p.price || p.price === 0) {
+                    fetch('/.netlify/functions/amazon-proxy', {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        intent: 'update_cache',
+                        asin: p.id,
+                        price: Math.round(newPrice * 100),
+                        currency: offers.currency,
+                        title: p.title,
+                        image: p.image,
+                        category: p.category,
+                        brand: p.brand,
+                        bsr: p.bsr,
+                        estimated_sales: p.sales,
+                        estimated_revenue: newRevenue ? Math.round(newRevenue * 100) : 0,
+                        fba_fees: Math.round(newFees.total * 100),
+                        referral_fee: Math.round(newFees.referral * 100),
+                        fulfillment_fee: Math.round(newFees.fulfillment * 100),
+                        net_profit: Math.round((newPrice - newFees.total) * 100),
+                        sales_percentile: p.percentile,
+                        raw_data: p.rawData,
+                        access_token: 'internal', // Proxy will handle
+                        marketplaceId: selectedMarketplace
+                      })
+                    }).catch(err => console.error("Cache sync failed:", err));
+                  }
+
                   return {
                     ...p,
-                    price: (offers.price && offers.price > 0) ? offers.price : p.price,
+                    price: newPrice,
                     activeSellers: offers.activeSellers,
-                    currency: (offers.price && offers.price > 0) ? offers.currency : (p.currency || offers.currency)
+                    currency: offers.currency,
+                    fallbackUsed: offers.fallbackUsed,
+                    fbaFees: newFees.total,
+                    fbaBreakdown: {
+                      referral: newFees.referral,
+                      fulfillment: newFees.fulfillment,
+                      is_estimate: newFees.isEstimate
+                    },
+                    revenue: newRevenue
                   };
                 }
                 return p;
@@ -698,7 +783,19 @@ export const ProductFinder: React.FC = () => {
                       {product.brand || '-'}
                     </td>
                     <td className="px-5 py-4 text-right font-bold text-gray-900">
-                      {product.price ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.price) : '-'}
+                      <div className="flex items-center justify-end gap-1.5">
+                        {product.price ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), {
+                          style: 'currency',
+                          currency: product.currency || 'USD'
+                        }).format(product.price) : '-'}
+                        {product.fallbackUsed && (
+                          <Tag
+                            size={14}
+                            className="text-amber-500 cursor-help"
+                            title="Preço baseado na menor oferta disponível (Professional Seller)"
+                          />
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-col items-center gap-1.5">
@@ -749,9 +846,9 @@ export const ProductFinder: React.FC = () => {
                         <div className="flex flex-col items-end gap-0.5">
                           <span
                             className="cursor-help"
-                            title={`Referral: ${new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30%)' : ''}`}
+                            title={`Referral: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30%)' : ''}`}
                           >
-                            -{new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
+                            -{new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
                           </span>
                         </div>
                       ) : '-'}

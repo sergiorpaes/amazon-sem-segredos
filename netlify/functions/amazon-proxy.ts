@@ -137,6 +137,33 @@ export const handler: Handler = async (event, context) => {
         let method = "GET";
         let requestBody = null;
 
+        if (intent === 'update_cache' && asin && body.price) {
+            await cacheProduct({
+                asin: asin,
+                marketplace_id: targetMarketplace,
+                title: body.title,
+                image: body.image,
+                category: body.category,
+                brand: body.brand,
+                price: body.price,
+                currency: body.currency,
+                bsr: body.bsr,
+                estimated_sales: body.estimated_sales,
+                estimated_revenue: body.estimated_revenue,
+                fba_fees: body.fba_fees,
+                referral_fee: body.referral_fee,
+                fulfillment_fee: body.fulfillment_fee,
+                net_profit: body.net_profit,
+                sales_percentile: body.sales_percentile,
+                raw_data: body.raw_data
+            });
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ success: true, message: "Cache updated" }),
+            };
+        }
+
         if (intent === 'get_batch_offers' && body.asins) {
             url = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
             method = "POST";
