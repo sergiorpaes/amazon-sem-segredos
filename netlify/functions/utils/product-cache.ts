@@ -43,6 +43,10 @@ export async function cacheProduct(data: {
     bsr?: number;
     estimated_sales?: number;
     estimated_revenue?: number;
+    fba_fees?: number;
+    referral_fee?: number;
+    fulfillment_fee?: number;
+    net_profit?: number;
     sales_percentile?: string;
     raw_data?: any;
 }) {

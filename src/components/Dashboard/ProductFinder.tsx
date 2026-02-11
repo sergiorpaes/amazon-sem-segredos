@@ -22,6 +22,11 @@ interface ProductDisplay {
   revenue: number | null;
   bsr?: number;
   fbaFees?: number;
+  fbaBreakdown?: {
+    referral: number;
+    fulfillment: number;
+    is_estimate: boolean;
+  };
   activeSellers?: number;
   reviews?: number;
   score: number | null;
@@ -280,13 +285,14 @@ export const ProductFinder: React.FC = () => {
         currency: item.attributes?.list_price?.[0]?.currency || summary?.price?.currencyCode || 'USD',
 
         sales: item.estimated_sales || null, // Using backend estimated sales
-        percentile: item.sales_percentile, // Using backend percentile
+        percentile: item.sales_percentile, // Using backend percentile (including NEW_RISING)
         categoryTotal: item.category_total, // For Enterprise tooltips
         salesHistory: generateHistoricalData(item.estimated_sales || 10), // Generate Graph Data
         revenue: item.estimated_revenue || null, // Using backend automated revenue
         score: null,
         bsr: item.salesRanks?.[0]?.displayGroupRanks?.[0]?.rank || null,
-        fbaFees: null,
+        fbaFees: item.fba_fees || null,
+        fbaBreakdown: item.fba_breakdown,
         activeSellers: null,
         reviews: null
       };
@@ -700,19 +706,27 @@ export const ProductFinder: React.FC = () => {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-col items-center gap-1.5">
-                        {product.percentile && (
+                        {product.percentile && product.percentile !== 'NEW_RISING' && (
                           <span
                             className={`text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter shadow-sm border ${product.percentile === '1%' ? 'bg-green-800 text-white border-green-900' :
-                                product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
-                                  'bg-gray-100 text-gray-600 border-gray-200'
+                              product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
+                                'bg-gray-100 text-gray-600 border-gray-200'
                               }`}
                             title={`Este produto está entre os top ${product.categoryTotal?.toLocaleString()} itens da categoria ${t(product.category)} (Baseado no Censo 2025).`}
                           >
                             Top {product.percentile}
                           </span>
                         )}
-                        <span className="text-gray-900 font-bold text-base leading-none" title={`Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
-                          {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : '-'}
+                        {product.percentile === 'NEW_RISING' && (
+                          <span
+                            className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter bg-blue-100 text-blue-800 border border-blue-200 shadow-sm"
+                            title="BSR não disponível no momento. Interesse de mercado estimado via volume de busca mensal."
+                          >
+                            New/Rising
+                          </span>
+                        )}
+                        <span className="text-gray-900 font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? 'BSR indisponível. Vendas estimadas baseadas no interesse de mercado.' : `Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
+                          {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : (product.percentile === 'NEW_RISING' ? 'Emergente' : '-')}
                         </span>
                         {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
                       </div>
@@ -734,8 +748,17 @@ export const ProductFinder: React.FC = () => {
                     <td className="px-5 py-4 text-right text-gray-600 font-medium">
                       {product.bsr ? product.bsr.toLocaleString() : '-'}
                     </td>
-                    <td className="px-5 py-4 text-right text-gray-500">
-                      {product.fbaFees ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees) : '-'}
+                    <td className="px-5 py-4 text-right text-red-600 font-bold">
+                      {product.fbaFees ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span
+                            className="cursor-help"
+                            title={`Referral: ${new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30%)' : ''}`}
+                          >
+                            -{new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
+                          </span>
+                        </div>
+                      ) : '-'}
                     </td>
                     <td className="px-5 py-4 text-center text-gray-600">
                       {product.activeSellers || '-'}

@@ -4,6 +4,7 @@ import cookie from 'cookie';
 import { consumeCredits } from '../../src/lib/credits';
 import { getCachedProduct, cacheProduct } from './utils/product-cache';
 import { estimateSales } from './utils/sales-estimation';
+import { calculateFBAFees } from './utils/fba-calculator';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-dev-key';
 
@@ -178,11 +179,26 @@ export const handler: Handler = async (event, context) => {
                     estimated_sales = estimate.estimatedSales;
                     sales_percentile = estimate.percentile;
                     category_total = estimate.categoryTotal;
+                } else {
+                    // BSR Fallback: Marker for Frontend to use Search Volume logic
+                    sales_percentile = "NEW_RISING";
                 }
 
                 // Calculate Revenue
                 const priceValue = item.attributes?.list_price?.[0]?.value_with_tax || item.summaries?.[0]?.price?.amount || 0;
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0; // In cents for cache
+
+                // Calculate FBA Fees
+                const dimObj = item.attributes?.item_dimensions?.[0];
+                const weightObj = item.attributes?.item_weight?.[0];
+
+                const fbaResult = calculateFBAFees(
+                    priceValue,
+                    dimObj ? { height: dimObj.height?.value, width: dimObj.width?.value, length: dimObj.length?.value, unit: dimObj.height?.unit } : undefined,
+                    weightObj ? { value: weightObj.value, unit: weightObj.unit } : undefined
+                );
+
+                const net_profit = Math.round((priceValue - (fbaResult.totalFees / 100)) * 100);
 
                 // Async Cache Save (Don't await to keep response fast)
                 const summary = item.summaries?.[0];
@@ -200,6 +216,10 @@ export const handler: Handler = async (event, context) => {
                     bsr: mainRank?.rank,
                     estimated_sales: estimated_sales || undefined,
                     estimated_revenue: estimated_revenue || undefined,
+                    fba_fees: fbaResult.totalFees,
+                    referral_fee: fbaResult.referralFee,
+                    fulfillment_fee: fbaResult.fulfillmentFee,
+                    net_profit: net_profit,
                     sales_percentile: sales_percentile as string | undefined, // Type cast for compatibility
                     raw_data: item
                 }).catch(err => console.error("[Cache] Save error:", err));
@@ -208,6 +228,13 @@ export const handler: Handler = async (event, context) => {
                     ...item,
                     estimated_sales,
                     estimated_revenue: estimated_revenue / 100, // Return as float
+                    fba_fees: fbaResult.totalFees / 100,
+                    fba_breakdown: {
+                        referral: fbaResult.referralFee / 100,
+                        fulfillment: fbaResult.fulfillmentFee / 100,
+                        is_estimate: fbaResult.isEstimate
+                    },
+                    net_profit: net_profit / 100,
                     sales_percentile,
                     category_total
                 };
