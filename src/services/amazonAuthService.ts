@@ -238,7 +238,8 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
 
         if (data.responses && Array.isArray(data.responses)) {
             data.responses.forEach((resp: any) => {
-                const asin = resp.request?.uri?.split('/')[5]?.split('?')[0]; // Extract ASIN safely (Index 5 is the ASIN)
+                const asinMatch = resp.request?.uri?.match(/\/items\/([A-Z0-9]{10})/i);
+                const asin = asinMatch ? asinMatch[1] : null;
                 if (!asin) return;
 
                 const summary = resp.body?.payload?.Summary;
@@ -290,10 +291,22 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
                     }
                 }
 
+                // 4. Quaternary: CompetitivePricing (Summary level)
+                if (!priceResult && summary.CompetitivePricing?.CompetitivePrices) {
+                    const compPrice = summary.CompetitivePricing.CompetitivePrices.find((cp: any) => cp.CompetitivePriceId === '1' || cp.CompetitivePriceId === '2');
+                    if (compPrice?.Price) {
+                        priceResult = {
+                            amount: compPrice.Price.Amount,
+                            currency: compPrice.Price.CurrencyCode
+                        };
+                        fallbackUsed = true;
+                    }
+                }
+
                 results[asin] = {
                     price: priceResult ? priceResult.amount : 0,
                     activeSellers: summary.TotalOfferCount || 0,
-                    currency: priceResult ? priceResult.currency : (targetMarketplace === 'A2Q3Y263D00KWC' ? 'USD' : 'EUR'),
+                    currency: priceResult ? priceResult.currency : (targetMarketplace === 'A2Q3Y263D00KWC' ? 'BRL' : 'EUR'),
                     fallbackUsed: fallbackUsed
                 };
             });

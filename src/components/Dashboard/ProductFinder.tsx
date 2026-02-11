@@ -445,14 +445,14 @@ export const ProductFinder: React.FC = () => {
             setProducts(currentProducts => {
               return currentProducts.map(p => {
                 const offers = batchResults[p.id];
-                if (offers && offers.price > 0) {
+                if (offers) {
                   // Re-calculate fees and revenue if price changed (especially if it was 0)
-                  const newPrice = offers.price;
-                  const newFees = calculateFBAFeesFrontend(newPrice, p.rawData);
-                  const newRevenue = p.sales ? newPrice * p.sales : (p.revenue || null);
+                  const newPrice = offers.price > 0 ? offers.price : p.price;
+                  const newFees = calculateFBAFeesFrontend(newPrice || 0, p.rawData);
+                  const newRevenue = (p.sales && newPrice) ? newPrice * p.sales : (p.revenue || null);
 
                   // Trigger Cache Update in backend if price changed from initial search
-                  if (p.price !== newPrice || !p.price) {
+                  if (offers.price > 0 && (p.price !== newPrice || !p.price)) {
                     fetch('/.netlify/functions/amazon-proxy', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -487,7 +487,7 @@ export const ProductFinder: React.FC = () => {
                     activeSellers: offers.activeSellers,
                     currency: offers.currency,
                     fallbackUsed: offers.fallbackUsed,
-                    isListPrice: false,
+                    isListPrice: offers.price > 0 ? false : p.isListPrice,
                     fbaFees: newFees.total,
                     fbaBreakdown: {
                       referral: newFees.referral,
