@@ -26,17 +26,16 @@ export interface FBAResult {
  * Calculates FBA Fees based on price and physical attributes.
  */
 export function calculateFBAFees(price: number, dimensions?: Dimensions, weight?: Weight): FBAResult {
-    // 1. Referral Fee (Standard 15%)
-    const referralFee = Math.round(price * 0.15);
+    // 1. Referral Fee (Standard 15%) - Convert price to cents first
+    const referralFee = Math.round(price * 100 * 0.15);
 
     // 2. Fulfillment Fee (Simplified Tiered Logic for Spain)
     // Prices in EUR cents
     let fulfillmentFee = 0;
-    let isEstimate = false;
 
     if (!dimensions || !weight) {
         // Fallback: 30% of price total if dimensions are missing
-        const totalEstimate = Math.round(price * 0.30);
+        const totalEstimate = Math.round(price * 100 * 0.30);
         return {
             totalFees: totalEstimate,
             referralFee: referralFee,
