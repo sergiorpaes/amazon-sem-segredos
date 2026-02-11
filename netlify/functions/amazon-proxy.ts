@@ -260,15 +260,21 @@ export const handler: Handler = async (event, context) => {
                 // --- Buy Box Price Supremacy ---
                 // Force Current Offer Price (summaries) as primary, ignore MSRP (list_price)
                 // In Brazil, 'price' in summaries often reflects the actual selling price
-                const sellingPrice = item.summaries?.[0]?.price?.amount;
-                const buyBoxPrice = item.summaries?.[0]?.buyBoxPrice?.amount; // Some API versions include this
+                const summary = item.summaries?.[0];
+                const sellingPrice = summary?.price?.amount;
+                const buyBoxPrice = summary?.buyBoxPrice?.amount; // Some API versions include this
 
-                const msrp = item.attributes?.list_price?.[0]?.value_with_tax;
+                // Fallbacks from Catalog Attributes
+                const attrListPrice = item.attributes?.list_price?.[0]?.value_with_tax;
+                const attrStandardPrice = item.attributes?.standard_price?.[0]?.value_with_tax;
+                const attrPurchasablePrice = item.attributes?.purchasable_offer?.[0]?.our_price?.[0]?.value_with_tax;
 
-                // If sellingPrice matches MSRP, it might be the non-discounted one, 
+                // If sellingPrice matches attrListPrice, it might be the non-discounted one, 
                 // but usually summaries.price is the most current price Amazon has.
-                const priceValue = buyBoxPrice || sellingPrice || msrp || 0;
-                const isListPrice = !buyBoxPrice && !sellingPrice && !!msrp;
+                const priceValue = buyBoxPrice || sellingPrice || attrStandardPrice || attrPurchasablePrice || attrListPrice || 0;
+
+                // It's a "List Price" fallback only if we didn't find ANY sellable price and had to use attrListPrice
+                const isListPrice = !buyBoxPrice && !sellingPrice && !attrStandardPrice && !attrPurchasablePrice && !!attrListPrice;
 
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0;
 

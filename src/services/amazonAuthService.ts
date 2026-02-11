@@ -238,12 +238,18 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
 
         if (data.responses && Array.isArray(data.responses)) {
             data.responses.forEach((resp: any) => {
+                // Robust sub-response body parsing
+                let body = resp.body;
+                if (typeof body === 'string') {
+                    try { body = JSON.parse(body); } catch (e) { console.error("Failed to parse sub-response body", e); }
+                }
+
                 const asinMatch = resp.request?.uri?.match(/\/items\/([A-Z0-9]{10})/i);
-                const asin = (asinMatch ? asinMatch[1] : (resp.body?.payload?.ASIN || resp.body?.payload?.asin))?.toUpperCase();
+                const asin = (asinMatch ? asinMatch[1] : (body?.payload?.ASIN || body?.payload?.asin))?.toUpperCase();
                 if (!asin) return;
 
-                const summary = resp.body?.payload?.Summary;
-                const offers = resp.body?.payload?.Offers;
+                const summary = body?.payload?.Summary || body?.Summary || body?.payload?.summary;
+                const offers = body?.payload?.Offers || body?.Offers || body?.payload?.offers;
 
                 if (!summary) {
                     results[asin] = null;
