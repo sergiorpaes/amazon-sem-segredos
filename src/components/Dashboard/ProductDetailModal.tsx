@@ -243,6 +243,22 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                 <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 text-xs text-gray-500 italic">
                                     {analysisResult.summary}
                                 </div>
+
+                                {analysisResult.rawReviews && analysisResult.rawReviews.length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <h4 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
+                                            <MessageSquare className="w-4 h-4 text-gray-400" />
+                                            {t('analyze.recent_reviews')}
+                                        </h4>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                            {analysisResult.rawReviews.map((review: string, i: number) => (
+                                                <div key={i} className="bg-white border border-gray-100 rounded-lg p-3 text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">
+                                                    "{review}"
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

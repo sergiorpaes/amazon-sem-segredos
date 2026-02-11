@@ -121,7 +121,10 @@ export const handler: Handler = async (event, context) => {
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(analysis)
+            body: JSON.stringify({
+                ...analysis,
+                rawReviews: reviews.slice(0, 5)
+            })
         };
 
     } catch (error: any) {
