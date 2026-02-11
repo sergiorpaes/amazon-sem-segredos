@@ -225,9 +225,10 @@ export const handler: Handler = async (event, context) => {
                 }
 
                 // Calculate Revenue
-                // Calculate Revenue (Prioritize discounted price from summaries)
+                // --- Buy Box Price Supremacy ---
+                // Force Current Offer Price (summaries) as primary, ignore MSRP (list_price)
                 const priceValue = item.summaries?.[0]?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0;
-                const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0; // In cents for cache
+                const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0;
 
                 // Calculate FBA Fees (Pass category for dynamic referral fees)
                 const dimObj = item.attributes?.item_dimensions?.[0];

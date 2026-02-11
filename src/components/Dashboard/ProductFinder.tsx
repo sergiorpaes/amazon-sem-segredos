@@ -60,44 +60,60 @@ const generateHistoricalData = (currentSales: number | null): number[] => {
   return data.reverse();
 };
 
-const calculateFBAFeesFrontend = (price: number, rawItem?: any) => {
-  const referral_rate = 0.15; // Standard 15%
-  const referral = price * referral_rate;
+const calculateFBAFeesFrontend = (price: number, rawData?: any): { total: number, referral: number, fulfillment: number, isEstimate: boolean } => {
+  // 1. Referral (Dynamic: 12% tech caps or 15% standard)
+  const category = rawData?.summaries?.[0]?.websiteDisplayGroupName || '';
+  const isHighValueTech = category && (
+    category.includes('Electrónica') ||
+    category.includes('Electronics') ||
+    category.includes('Grandes electrodomésticos') ||
+    category.includes('Major Appliances')
+  );
 
-  // Use dimensions if available in rawItem
-  const dim = rawItem?.attributes?.item_dimensions?.[0];
-  const weight = rawItem?.attributes?.item_weight?.[0];
+  const rate = (isHighValueTech && price > 150) ? 0.12 : 0.15;
+  const referral = price * rate;
 
+  // 2. Fulfillment (Simplified tiered logic)
+  const dimensions = rawData?.attributes?.item_dimensions?.[0];
+  const weight = rawData?.attributes?.item_weight?.[0];
   let fulfillment = 0;
-  let isEstimate = false;
 
-  if (dim && weight) {
-    // Standard tiers (Simplified for Frontend, but follows SP-API logic)
-    // Small Standard: < 450g and small dims
-    // Large Standard: < 12kg
-    const ozToG = 28.35;
-    const lbToG = 453.59;
-    let weightG = 0;
-
-    if (weight.unit === 'ounces') weightG = weight.value * ozToG;
-    else if (weight.unit === 'pounds') weightG = weight.value * lbToG;
-    else if (weight.unit === 'grams') weightG = weight.value;
-    else if (weight.unit === 'kilograms') weightG = weight.value * 1000;
-
-    if (weightG < 450) fulfillment = price > 50 ? 6.50 : 4.50; // Simplified estimate
-    else if (weightG < 2000) fulfillment = 8.50;
-    else fulfillment = 12.50;
+  if (!dimensions || !weight) {
+    fulfillment = price * 0.15; // Rough estimate for total being 30%
   } else {
-    // 30% total cost estimate fallback
-    fulfillment = (price * 0.3) - referral;
-    isEstimate = true;
+    const unitUpper = dimensions.unit?.toUpperCase() || '';
+    const cm_l = unitUpper === 'INCHES' ? dimensions.length * 2.54 : dimensions.length;
+    const cm_w = unitUpper === 'INCHES' ? dimensions.width * 2.54 : dimensions.width;
+    const cm_h = unitUpper === 'INCHES' ? dimensions.height * 2.54 : dimensions.height;
+
+    const weightUnitUpper = weight.unit?.toUpperCase() || '';
+    const kg = weightUnitUpper === 'POUNDS' ? weight.value * 0.453592 : weight.value;
+
+    if (cm_l <= 35 && cm_w <= 25 && cm_h <= 2 && kg <= 0.1) {
+      fulfillment = 2.50;
+    } else if (cm_l <= 45 && cm_w <= 34 && cm_h <= 26 && kg <= 1) {
+      fulfillment = 4.50;
+    } else if (kg <= 2) {
+      fulfillment = 6.50;
+    } else {
+      fulfillment = 7.50 + (kg * 0.50);
+    }
+
+    // --- FBA Sanity Check (Toys Logic) ---
+    const isToys = category && (category.includes('Brinquedos') || category.includes('Toys'));
+    if (isToys && kg < 2) {
+      const cap = price * 0.40;
+      if (fulfillment > cap) {
+        fulfillment = cap;
+      }
+    }
   }
 
   return {
     total: Math.round((referral + fulfillment) * 100) / 100,
     referral: Math.round(referral * 100) / 100,
     fulfillment: Math.round(fulfillment * 100) / 100,
-    isEstimate
+    isEstimate: !dimensions || !weight
   };
 };
 
