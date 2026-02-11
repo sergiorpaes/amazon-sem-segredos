@@ -392,81 +392,81 @@ export const ListingOptimizer: React.FC = () => {
                   <h3 className="font-bold text-gray-800 dark:text-gray-200">Amazon Espanha (ES)</h3>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.es.title, 'es-title')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'es-title' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Título</label>
-                  <p className="text-sm text-gray-800 font-medium leading-relaxed">{listingResult.es.title}</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed">{listingResult.es.title}</p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.es.bullets.join('\n'), 'es-bullets')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'es-bullets' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Bullet Points</label>
                   <ul className="space-y-2">
                     {listingResult.es.bullets.map((bp, i) => (
-                      <li key={i} className="text-sm text-gray-700 flex gap-2">
+                      <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
                         <span className="text-brand-500 font-bold">•</span> {bp}
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.es.description, 'es-desc')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'es-desc' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Descrição</label>
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.es.description}</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.es.description}</div>
                 </div>
 
                 {/* Keywords ES */}
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.es.keywords, 'es-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'es-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (ES)</label>
-                  <p className="text-sm text-gray-600 font-mono bg-white p-3 rounded border border-gray-200">{listingResult.es.keywords}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white dark:bg-dark-800 p-3 rounded border border-gray-200 dark:border-dark-700">{listingResult.es.keywords}</p>
                 </div>
               </div>
 
               {/* Portuguese Listing */}
               <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-2 border-b pb-2">
+                <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
                   <img src="https://flagcdn.com/w20/pt.png" alt="PT" className="w-5" />
-                  <h3 className="font-bold text-gray-800">Tradução (PT-PT)</h3>
+                  <h3 className="font-bold text-gray-800 dark:text-gray-200">Tradução (PT-PT)</h3>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.pt.title, 'pt-title')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'pt-title' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Título</label>
-                  <p className="text-sm text-gray-800 font-medium leading-relaxed">{listingResult.pt.title}</p>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed">{listingResult.pt.title}</p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.pt.bullets.join('\n'), 'pt-bullets')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'pt-bullets' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Bullet Points</label>
                   <ul className="space-y-2">
                     {listingResult.pt.bullets.map((bp, i) => (
-                      <li key={i} className="text-sm text-gray-700 flex gap-2">
+                      <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
                         <span className="text-brand-500 font-bold">•</span> {bp}
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.pt.description, 'pt-desc')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'pt-desc' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Descrição</label>
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.pt.description}</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.pt.description}</div>
                 </div>
 
                 {/* Keywords PT */}
