@@ -60,31 +60,36 @@ export const handler: Handler = async (event, context) => {
 
         const response = await fetch(reviewsUrl, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7'
+                'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'Referer': `https://www.${domain}/dp/${asin}`
             }
         });
 
         const html = await response.text();
+        const isBlocked = html.includes('captcha') || html.includes('Robot Check') || html.includes('api-services-support@amazon.com');
 
-        // Basic Regex Extraction for Top 10 negative reviews
-        // Amazon reviews are usually inside <span data-hook="review-body">
-        const reviewRegex = /<span data-hook="review-body"[^>]*>([\s\S]*?)<\/span>/g;
+        // Resilient Extraction: Try multiple common selectors
+        const selectors = [
+            /<span data-hook="review-body"[^>]*>([\s\S]*?)<\/span>/g,
+            /<div data-hook="review-collapsed"[^>]*>([\s\S]*?)<\/div>/g,
+            /<span class="a-size-base review-text review-text-content"[^>]*>([\s\S]*?)<\/span>/g
+        ];
+
         const reviews: string[] = [];
-        let match;
-        while ((match = reviewRegex.exec(html)) !== null && reviews.length < 10) {
-            const cleanText = match[1].replace(/<[^>]*>?/gm, '').trim();
-            if (cleanText) reviews.push(cleanText);
+        for (const selector of selectors) {
+            let match;
+            while ((match = selector.exec(html)) !== null && reviews.length < 10) {
+                const cleanText = match[1].replace(/<[^>]*>?/gm, '').trim();
+                if (cleanText && !reviews.includes(cleanText)) reviews.push(cleanText);
+            }
+            if (reviews.length > 0) break;
         }
 
-        console.log(`[AI Analysis] Extracted ${reviews.length} recent reviews for ASIN: ${asin}`);
-
-        if (reviews.length === 0) {
-            // Fallback: If no specific critical reviews found, or scraping blocked, inform AI
-            // AI can still provide general competition analysis based on item type if we had title, 
-            // but let's try to be honest.
-        }
+        console.log(`[AI Analysis] Extracted ${reviews.length} reviews for ASIN: ${asin}. Blocked: ${isBlocked}`);
 
         // 3. AI Analysis with Gemini
         const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
@@ -93,23 +98,39 @@ export const handler: Handler = async (event, context) => {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
-        const prompt = `Analyze these ${reviews.length} recent reviews for Amazon product ASIN ${asin}:
-        
-        REVIEWS:
-        ${reviews.join('\n---\n')}
-        
-        IDENTIFY:
-        1. Top 3 recurring complaints (Fraquezas da Concorrência).
-        2. Suggest how a new seller can improve this product or listing to beat this competitor (Sua Oportunidade de Melhoria).
-        
-        RESPONSE FORMAT (JSON):
-        {
-            "weaknesses": ["Complaint 1", "Complaint 2", "Complaint 3"],
-            "improvements": ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
-            "summary": "Short overview"
-        }
-        
-        Language: Use the language of the user (assume Portuguese BR based on context).`;
+        const prompt = reviews.length > 0
+            ? `Analyze these ${reviews.length} recent customer reviews for Amazon product ASIN ${asin}:
+            
+            REVIEWS:
+            ${reviews.join('\n---\n')}
+            
+            IDENTIFY:
+            1. Top 3 recurring complaints (Fraquezas da Concorrência).
+            2. Suggest how a new seller can improve this product or listing to beat this competitor (Sua Oportunidade de Melhoria).
+            
+            RESPONSE FORMAT (JSON):
+            {
+                "weaknesses": ["Complaint 1", "Complaint 2", "Complaint 3"],
+                "improvements": ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
+                "summary": "Short overview based on real feedback."
+            }
+            
+            Language: Portuguese BR.`
+            : `I have no current customer reviews for Amazon product ASIN ${asin} (it might be new or scraping was unavailable).
+            
+            TASK: 
+            Based on the fact that this is an Amazon product, provide a general competitive analysis for a listing in this category:
+            1. Common weaknesses for similar items (Fraquezas típicas da categoria).
+            2. Standard improvement opportunities (Melhorias sugeridas).
+            
+            RESPONSE FORMAT (JSON):
+            {
+                "weaknesses": ["General Weakness 1", "General Weakness 2", "General Weakness 3"],
+                "improvements": ["Standard Improvement 1", "Standard Improvement 2", "Standard Improvement 3"],
+                "summary": "Nenhuma avaliação real foi encontrada para este ASIN no momento. Esta análise é baseada em tendências gerais da categoria."
+            }
+            
+            Language: Portuguese BR.`;
 
         const result = await model.generateContent(prompt);
         const aiText = result.response.text();

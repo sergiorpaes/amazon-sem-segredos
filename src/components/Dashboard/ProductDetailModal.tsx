@@ -259,6 +259,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                         </div>
                                     </div>
                                 )}
+
+                                {(!analysisResult.rawReviews || analysisResult.rawReviews.length === 0) && (
+                                    <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                                        <p className="text-[10px] text-gray-400 italic">
+                                            Nenhum review recente pôde ser extraído para este produto no momento.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
