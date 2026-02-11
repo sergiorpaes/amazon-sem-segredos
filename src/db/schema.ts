@@ -103,3 +103,19 @@ export const usageHistory = pgTable('amz_usage_history', {
     metadata: jsonb('metadata'), // Optional: store details about the usage (e.g. search term)
     created_at: timestamp('created_at').defaultNow(),
 });
+
+export const productsCache = pgTable('amz_products_cache', {
+    asin: text('asin').primaryKey(),
+    marketplace_id: text('marketplace_id').notNull(),
+    title: text('title'),
+    image: text('image'),
+    category: text('category'),
+    brand: text('brand'),
+    price: integer('price'), // In cents or lowest currency unit
+    currency: text('currency'),
+    bsr: integer('bsr'),
+    estimated_sales: integer('estimated_sales'),
+    sales_percentile: text('sales_percentile'),
+    raw_data: jsonb('raw_data'),
+    updated_at: timestamp('updated_at').defaultNow().notNull(),
+});

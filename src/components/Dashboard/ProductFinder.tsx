@@ -15,6 +15,7 @@ interface ProductDisplay {
   price?: number;
   currency?: string; // Added currency field
   sales: number | null;
+  percentile?: string; // Added for Sales Badge
   salesGraph?: string;
   salesHistory?: number[]; // Added for Graph Data
   revenue: number | null;
@@ -277,11 +278,12 @@ export const ProductFinder: React.FC = () => {
         price: item.attributes?.list_price?.[0]?.value_with_tax || summary?.price?.amount || 0,
         currency: item.attributes?.list_price?.[0]?.currency || summary?.price?.currencyCode || 'USD',
 
-        sales: Math.floor(Math.random() * 1000) + 100, // ESTIMATED SALES (Mocked for now as API returns null)
-        salesHistory: generateHistoricalData(Math.floor(Math.random() * 1000) + 100), // Generate Graph Data
+        sales: item.estimated_sales || null, // Using backend estimated sales
+        percentile: item.sales_percentile, // Using backend percentile
+        salesHistory: generateHistoricalData(item.estimated_sales || 10), // Generate Graph Data
         revenue: null,
         score: null,
-        bsr: null,
+        bsr: item.salesRanks?.[0]?.displayGroupRanks?.[0]?.rank || null,
         fbaFees: null,
         activeSellers: null,
         reviews: null
@@ -694,8 +696,26 @@ export const ProductFinder: React.FC = () => {
                     <td className="px-5 py-4 text-right font-bold text-gray-900">
                       {product.price ? new Intl.NumberFormat(undefined, { style: 'currency', currency: product.currency || 'USD' }).format(product.price) : '-'}
                     </td>
-                    <td className="px-5 py-4 text-right text-gray-600 font-medium">
-                      {product.sales ? product.sales.toLocaleString() : '-'}
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
+                          {product.percentile && (
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${product.percentile === '1%' ? 'bg-green-800 text-white' :
+                                  product.percentile === '3%' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-600'
+                                }`}
+                              title={`Top ${product.percentile} nesta categoria`}
+                            >
+                              Top {product.percentile}
+                            </span>
+                          )}
+                          <span className="text-gray-900 font-bold text-base" title={`Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
+                            {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : '-'}
+                          </span>
+                        </div>
+                        {product.sales && <span className="text-[10px] text-gray-400 font-medium">unidades/mês</span>}
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-center">
                       <SalesGraph
