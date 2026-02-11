@@ -25,9 +25,23 @@ export interface FBAResult {
 /**
  * Calculates FBA Fees based on price and physical attributes.
  */
-export function calculateFBAFees(price: number, dimensions?: Dimensions, weight?: Weight): FBAResult {
-    // 1. Referral Fee (Standard 15%) - Convert price to cents first
-    const referralFee = Math.round(price * 100 * 0.15);
+export function calculateFBAFees(price: number, dimensions?: Dimensions, weight?: Weight, category?: string): FBAResult {
+    // 1. Referral Fee (Dynamic based on Category and Price)
+    // 12% for Major Appliances and Electronics (> R$ 1000 or > 150 EUR)
+    // 15% for general categories
+    let rate = 0.15;
+    const isHighValueTech = category && (
+        category.includes('Electrónica') ||
+        category.includes('Electronics') ||
+        category.includes('Grandes electrodomésticos') ||
+        category.includes('Major Appliances')
+    );
+
+    if (isHighValueTech && price > 150) {
+        rate = 0.12;
+    }
+
+    const referralFee = Math.round(price * 100 * rate);
 
     // 2. Fulfillment Fee (Simplified Tiered Logic for Spain)
     // Prices in EUR cents

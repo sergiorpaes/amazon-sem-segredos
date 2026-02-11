@@ -287,11 +287,15 @@ export const ProductFinder: React.FC = () => {
   };
 
   // Summary Metrics Calculation (based on current products)
-  const totalRevenue = products.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
-  const avgRevenue = products.length > 0 ? totalRevenue / products.length : 0;
-  const avgPrice = products.length > 0 ? products.reduce((acc, curr) => acc + (curr.price || 0), 0) / products.length : 0;
-  const avgBSR = products.length > 0 ? products.reduce((acc, curr) => acc + (curr.bsr || 0), 0) / products.length : 0;
-  const avgReviews = products.length > 0 ? products.reduce((acc, curr) => acc + (curr.reviews || 0), 0) / products.length : 0;
+  const totalNicheSales = products.reduce((acc, curr) => acc + (curr.sales || 0), 0);
+  const avgNetMargin = products.length > 0
+    ? products.reduce((acc, curr) => acc + ((curr.price || 0) - (curr.fbaFees || 0)), 0) / products.length
+    : 0;
+  const avgCompetition = products.length > 0
+    ? products.reduce((acc, curr) => acc + (curr.activeSellers || 0), 0) / products.length
+    : 0;
+  const topPerformers = products.filter(p => p.percentile === '1%' || p.percentile === '3%').length;
+  const opportunityScore = products.length > 0 ? (topPerformers / products.length) * 100 : 0;
 
 
   /* Helper to map API items to display items */
@@ -560,53 +564,50 @@ export const ProductFinder: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Search Volume */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Niche Sales */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.search_volume')}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Vendas Totais do Nicho</div>
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-gray-900">283</span>
-            <BarChart2 className="w-5 h-5 text-gray-300 mb-1.5" />
+            <span className="text-3xl font-bold text-gray-900">{totalNicheSales.toLocaleString()}</span>
+            <BarChart2 className="w-5 h-5 text-brand-500 mb-1.5" />
+          </div>
+          <div className="text-[10px] text-gray-500 mt-1">unidades estimadas / mês</div>
+        </div>
+
+        {/* Avg Net Margin */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Margem Líquida Média</div>
+          <div className="text-2xl font-bold text-gray-900 tracking-tight">
+            {new Intl.NumberFormat(undefined, { style: 'currency', currency: products[0]?.currency || 'USD' }).format(avgNetMargin)}
+          </div>
+          <div className="h-1.5 w-full bg-green-50 mt-2 rounded-full overflow-hidden">
+            <div className="h-full bg-green-500 w-[65%]"></div>
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1">Preço - Taxas FBA</div>
+        </div>
+
+        {/* Competition Level */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nível de Competição</div>
+          <div className="text-2xl font-bold text-gray-900 tracking-tight">{avgCompetition.toFixed(1)}</div>
+          <div className="flex items-center gap-1 mt-2">
+            <Activity className={`w-4 h-4 ${avgCompetition > 10 ? 'text-red-500' : 'text-green-500'}`} />
+            <span className="text-[10px] text-gray-500 font-medium">sellers ativos por listing</span>
           </div>
         </div>
 
-        {/* Total Revenue */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.total_revenue')}</div>
-          <div className="text-2xl font-bold text-gray-900 tracking-tight">US${totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-          <div className="h-1 w-full bg-brand-100 mt-2 rounded-full overflow-hidden">
-            <div className="h-full bg-brand-500 w-[70%]"></div>
-          </div>
-        </div>
-
-        {/* Average Revenue */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.avg_revenue')}</div>
-          <div className="text-2xl font-bold text-gray-900 tracking-tight">US${avgRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-          <Activity className="w-4 h-4 text-green-500 mt-2" />
-        </div>
-
-        {/* Average Price */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('summary.avg_price')}</div>
-          <div className="text-2xl font-bold text-gray-900 tracking-tight">US${avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-        </div>
-
-        {/* Success Score */}
-        <div className="bg-gradient-to-br from-brand-500 to-brand-600 p-5 rounded-2xl shadow-lg shadow-brand-200 text-white flex items-center justify-between">
+        {/* Opportunity Score */}
+        <div className="bg-gradient-to-br from-brand-600 to-brand-700 p-5 rounded-2xl shadow-lg shadow-brand-200 text-white flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold text-brand-100 uppercase tracking-widest mb-2">{t('summary.success_score')}</div>
-            <div className="flex gap-1.5">
-              <div className="w-6 h-1.5 rounded-full bg-white/40"></div>
-              <div className="w-6 h-1.5 rounded-full bg-white/40"></div>
-              <div className="w-6 h-1.5 rounded-full bg-white"></div>
-            </div>
+            <div className="text-[10px] font-bold text-brand-100 uppercase tracking-widest mb-2">Opportunity Score</div>
+            <div className="text-3xl font-bold mb-1">{opportunityScore.toFixed(0)}%</div>
+            <div className="text-[10px] text-brand-100 font-medium">% de produtos Top 1% ou 3%</div>
           </div>
           <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl font-bold border border-white/30">
-            10
+            {Math.min(10, Math.floor(opportunityScore / 10))}
           </div>
         </div>
-
       </div>
 
       {error && (
@@ -846,7 +847,7 @@ export const ProductFinder: React.FC = () => {
                         <div className="flex flex-col items-end gap-0.5">
                           <span
                             className="cursor-help"
-                            title={`Referral: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30%)' : ''}`}
+                            title={`Referral (${Math.round((product.fbaBreakdown?.referral || 0) / (product.price || 1) * 100)}%): ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30% Fallback)' : ''}`}
                           >
                             -{new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
                           </span>

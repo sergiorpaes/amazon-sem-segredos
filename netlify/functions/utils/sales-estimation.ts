@@ -55,20 +55,20 @@ export function estimateSales(bsr: number, category: string): { estimatedSales: 
     else if (category.includes("Jardín") || category.includes("Garden")) normalizedCategory = "Jardín";
     else if (category.includes("Iluminación") || category.includes("Lighting")) normalizedCategory = "Iluminación";
     else if (category.includes("Oficina") || category.includes("Office")) normalizedCategory = "Oficina y papelería";
+    else if (category.includes("Grandes electrodomésticos") || category.includes("Major Appliances")) normalizedCategory = "Grandes electrodomésticos";
 
     const census = bsrTable2025[normalizedCategory] || bsrTable2025["Otros Productos"];
 
     // 2. Determine Percentile and Estimate Units
     // Ranges based on user logic:
-    // Top 1%: 300 - 2500
-    // Top 3%: 100 - 299
-    // Top 10%: 10 - 45
-    // > 10%: < 10
+    // Top 1%: 300 - 2500 (Standard)
+    // Major Appliances: Conservative curve (Top 1% capped at 800)
+    const top1Max = normalizedCategory === "Grandes electrodomésticos" ? 800 : 2500;
 
     if (bsr <= census.top1) {
-        // Top 1% - Interpolate between 300 and 2500
+        // Top 1% - Interpolate between 300 and Max
         const ratio = (census.top1 - bsr) / census.top1;
-        const estimated = Math.floor(300 + (ratio * 2200));
+        const estimated = Math.floor(300 + (ratio * (top1Max - 300)));
         return { estimatedSales: estimated, percentile: "1%", categoryTotal: census.top10 };
     }
 

@@ -225,17 +225,19 @@ export const handler: Handler = async (event, context) => {
                 }
 
                 // Calculate Revenue
-                const priceValue = item.attributes?.list_price?.[0]?.value_with_tax || item.summaries?.[0]?.price?.amount || 0;
+                // Calculate Revenue (Prioritize discounted price from summaries)
+                const priceValue = item.summaries?.[0]?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0;
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0; // In cents for cache
 
-                // Calculate FBA Fees
+                // Calculate FBA Fees (Pass category for dynamic referral fees)
                 const dimObj = item.attributes?.item_dimensions?.[0];
                 const weightObj = item.attributes?.item_weight?.[0];
 
                 const fbaResult = calculateFBAFees(
                     priceValue,
                     dimObj ? { height: dimObj.height?.value, width: dimObj.width?.value, length: dimObj.length?.value, unit: dimObj.height?.unit } : undefined,
-                    weightObj ? { value: weightObj.value, unit: weightObj.unit } : undefined
+                    weightObj ? { value: weightObj.value, unit: weightObj.unit } : undefined,
+                    item.summaries?.[0]?.websiteDisplayGroupName || ''
                 );
 
                 const net_profit = Math.round((priceValue - (fbaResult.totalFees / 100)) * 100);
