@@ -239,7 +239,7 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
         if (data.responses && Array.isArray(data.responses)) {
             data.responses.forEach((resp: any) => {
                 const asinMatch = resp.request?.uri?.match(/\/items\/([A-Z0-9]{10})/i);
-                const asin = asinMatch ? asinMatch[1] : null;
+                const asin = (asinMatch ? asinMatch[1] : (resp.body?.payload?.ASIN || resp.body?.payload?.asin))?.toUpperCase();
                 if (!asin) return;
 
                 const summary = resp.body?.payload?.Summary;

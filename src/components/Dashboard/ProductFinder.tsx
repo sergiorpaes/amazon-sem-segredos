@@ -929,7 +929,7 @@ export const ProductFinder: React.FC = () => {
                       ) : '-'}
                     </td>
                     <td className="px-5 py-4 text-center text-gray-600">
-                      {product.activeSellers || '-'}
+                      {(product.activeSellers !== undefined && product.activeSellers !== null) ? product.activeSellers : '-'}
                     </td>
                   </tr>
                 ))
