@@ -292,7 +292,6 @@ export const handler: Handler = async (event, context) => {
                 const net_profit = Math.round((priceValue - (fbaResult.totalFees / 100)) * 100);
 
                 // Async Cache Save (Don't await to keep response fast)
-                const summary = item.summaries?.[0];
                 const mainImage = item.images?.[0]?.images?.find((img: any) => img.variant === 'MAIN')?.link;
 
                 cacheProduct({
