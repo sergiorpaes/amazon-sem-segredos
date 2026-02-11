@@ -1,5 +1,5 @@
-import { db } from '../../src/db';
-import { productsCache } from '../../src/db/schema';
+import { db } from '../../../src/db';
+import { productsCache } from '../../../src/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 
 /**
