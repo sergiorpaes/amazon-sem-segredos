@@ -186,6 +186,7 @@ export const handler: Handler = async (event, context) => {
                 fulfillment_fee: body.fulfillment_fee,
                 net_profit: body.net_profit,
                 sales_percentile: body.sales_percentile,
+                is_list_price: body.is_list_price === undefined ? false : body.is_list_price,
                 raw_data: body.raw_data
             });
             return {

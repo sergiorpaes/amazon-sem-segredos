@@ -81,7 +81,13 @@ const calculateFBAFeesFrontend = (price: number, rawData?: any): { total: number
   let fulfillment = 0;
 
   if (!dimensions || !weight) {
-    fulfillment = price * 0.15; // Rough estimate for total being 30%
+    // Fallback: 30% total estimated fees (15% fulfillment + 15% referral)
+    // For high-ticket items (> 1000), we cap total estimate at 15%
+    let fallbackRate = 0.15; // fulfillment part
+    if (price > 1000) {
+      fallbackRate = 0.05; // Cap fulfillment at 5% if price is high, since referral is always 12-15%
+    }
+    fulfillment = price * fallbackRate;
   } else {
     // --- Robust Unit Conversion ---
     const unitUpper = dimensions.unit?.toUpperCase() || 'CM';
@@ -467,6 +473,7 @@ export const ProductFinder: React.FC = () => {
                         fulfillment_fee: Math.round(newFees.fulfillment * 100),
                         net_profit: Math.round((newPrice - newFees.total) * 100),
                         sales_percentile: p.percentile,
+                        is_list_price: false,
                         raw_data: p.rawData,
                         access_token: 'internal',
                         marketplaceId: selectedMarketplace

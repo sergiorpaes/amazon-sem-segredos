@@ -238,7 +238,7 @@ export const getBatchOffers = async (asins: string[], marketplaceId?: string): P
 
         if (data.responses && Array.isArray(data.responses)) {
             data.responses.forEach((resp: any) => {
-                const asin = resp.request?.uri?.split('/')[4]?.split('?')[0]; // Extract ASIN safely
+                const asin = resp.request?.uri?.split('/')[5]?.split('?')[0]; // Extract ASIN safely (Index 5 is the ASIN)
                 if (!asin) return;
 
                 const summary = resp.body?.payload?.Summary;
