@@ -258,7 +258,11 @@ export const handler: Handler = async (event, context) => {
                 // Calculate Revenue
                 // --- Buy Box Price Supremacy ---
                 // Force Current Offer Price (summaries) as primary, ignore MSRP (list_price)
-                const priceValue = item.summaries?.[0]?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0;
+                const sellingPrice = item.summaries?.[0]?.price?.amount;
+                const msrp = item.attributes?.list_price?.[0]?.value_with_tax;
+                const isListPrice = !sellingPrice && !!msrp;
+                const priceValue = sellingPrice || msrp || 0;
+
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0;
 
                 // Calculate FBA Fees (Pass category for dynamic referral fees)
@@ -295,6 +299,7 @@ export const handler: Handler = async (event, context) => {
                     fulfillment_fee: fbaResult.fulfillmentFee,
                     net_profit: net_profit,
                     sales_percentile: sales_percentile as string | undefined, // Type cast for compatibility
+                    is_list_price: isListPrice,
                     raw_data: item
                 }).catch(err => console.error("[Cache] Save error:", err));
 
@@ -310,7 +315,8 @@ export const handler: Handler = async (event, context) => {
                     },
                     net_profit: net_profit / 100,
                     sales_percentile,
-                    category_total
+                    category_total,
+                    is_list_price: isListPrice
                 };
             }));
 

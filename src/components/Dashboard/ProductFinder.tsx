@@ -15,6 +15,7 @@ interface ProductDisplay {
   price?: number;
   currency?: string; // Added currency field
   fallbackUsed?: boolean; // Added for falling back to lowest offer
+  isListPrice?: boolean; // Added for MSRP detection
   sales: number | null;
   percentile?: string; // Added for Sales Badge
   categoryTotal?: number; // Added for Tooltip details
@@ -375,6 +376,7 @@ export const ProductFinder: React.FC = () => {
         brand: summary?.brand || summary?.brandName || '-',
         price: summary?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0,
         currency: summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency || 'USD',
+        isListPrice: item.is_list_price,
 
         sales: item.estimated_sales || null, // Using backend estimated sales
         percentile: item.sales_percentile, // Using backend percentile (including NEW_RISING)
@@ -478,6 +480,7 @@ export const ProductFinder: React.FC = () => {
                     activeSellers: offers.activeSellers,
                     currency: offers.currency,
                     fallbackUsed: offers.fallbackUsed,
+                    isListPrice: false,
                     fbaFees: newFees.total,
                     fbaBreakdown: {
                       referral: newFees.referral,
@@ -851,6 +854,13 @@ export const ProductFinder: React.FC = () => {
                             size={14}
                             className="text-amber-500 cursor-help"
                             title="Preço baseado na menor oferta disponível (Professional Seller)"
+                          />
+                        )}
+                        {product.isListPrice && (
+                          <Tag
+                            size={14}
+                            className="text-red-500 cursor-help"
+                            title="Preço de Tabela (MSRP). O preço real de venda pode ser menor."
                           />
                         )}
                       </div>

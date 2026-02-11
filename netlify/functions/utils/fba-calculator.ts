@@ -48,8 +48,12 @@ export function calculateFBAFees(price: number, dimensions?: Dimensions, weight?
     let fulfillmentFee = 0;
 
     if (!dimensions || !weight) {
-        // Fallback: 30% of price total if dimensions are missing
-        const totalEstimate = Math.round(price * 100 * 0.30);
+        // Fallback: 30% of price total if dimensions are missing, 
+        // but for high-ticket items (> 1000) we use 15% as 30% is usually too aggressive
+        let fallbackRate = 0.30;
+        if (price > 1000) fallbackRate = 0.15;
+
+        const totalEstimate = Math.round(price * 100 * fallbackRate);
         return {
             totalFees: totalEstimate,
             referralFee: referralFee,

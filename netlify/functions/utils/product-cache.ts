@@ -48,6 +48,7 @@ export async function cacheProduct(data: {
     fulfillment_fee?: number;
     net_profit?: number;
     sales_percentile?: string;
+    is_list_price?: boolean;
     raw_data?: any;
 }) {
     try {
