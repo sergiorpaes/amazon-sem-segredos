@@ -168,7 +168,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className={`bg-white rounded-2xl shadow-2xl w-full ${step === 3 ? 'max-w-4xl' : 'max-w-md'} overflow-hidden relative animate-in fade-in zoom-in duration-300`}>
+            <div className={`bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full ${step === 3 ? 'max-w-4xl' : 'max-w-md'} overflow-hidden relative animate-in fade-in zoom-in duration-300`}>
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
@@ -178,7 +178,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="p-8">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                             {step === 3 ? t('plans.select') : isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}
                         </h2>
                         <p className="text-gray-500 mt-2">
@@ -218,19 +218,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 const isPremium = plan.name === 'Premium';
 
                                 return (
-                                    <div key={plan.id} className={`border ${isPro ? 'border-2 border-brand-500 shadow-xl bg-brand-50/20' : 'border-gray-100 hover:border-brand-500 bg-gray-50/50'} rounded-2xl p-6 transition-all hover:shadow-lg flex flex-col relative group`}>
+                                    <div key={plan.id} className={`border ${isPro ? 'border-2 border-brand-500 shadow-xl bg-brand-50/20 dark:bg-brand-900/10' : 'border-gray-100 dark:border-dark-700 hover:border-brand-500 bg-gray-50/50 dark:bg-dark-900/50'} rounded-2xl p-6 transition-all hover:shadow-lg flex flex-col relative group`}>
                                         {isPro && (
                                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                                 Mais Popular
                                             </div>
                                         )}
-                                        <h3 className="text-lg font-bold text-gray-900 mb-1">{t(`plans.${plan.name.toLowerCase()}`)}</h3>
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t(`plans.${plan.name.toLowerCase()}`)}</h3>
                                         <div className="text-3xl font-black text-brand-600 mb-6">
                                             {plan.monthly_price_eur === 0 ? t('plans.free') : `€${(plan.monthly_price_eur / 100).toFixed(2)}`}<span className="text-sm font-normal text-gray-500">/mês</span>
                                         </div>
                                         <ul className="space-y-3 mb-8 flex-1">
                                             {features.map((feature: string, idx: number) => (
-                                                <li key={idx} className="text-sm text-gray-600 flex items-center gap-2">
+                                                <li key={idx} className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                                     <CheckCircle className={`w-4 h-4 ${isPro || isPremium ? 'text-brand-500' : 'text-green-500'}`} />
                                                     {feature}
                                                 </li>
@@ -263,7 +263,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                             required
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                         />
                                     </div>
                                     {!isForgotPassword && (
@@ -277,7 +277,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     required
                                                     value={formData.password}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
                                             <div className="text-right">
@@ -310,7 +310,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     required
                                                     value={formData.email}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
                                             <div className="relative">
@@ -322,7 +322,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     required
                                                     value={formData.password}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
                                             <div className="relative">
@@ -334,7 +334,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     required
                                                     value={formData.phone}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
                                         </div>
@@ -350,7 +350,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     placeholder="Nome da Empresa (Opcional)"
                                                     value={formData.company_name}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
                                             <div className="relative">
@@ -362,7 +362,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     required
                                                     value={formData.address_street}
                                                     onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">

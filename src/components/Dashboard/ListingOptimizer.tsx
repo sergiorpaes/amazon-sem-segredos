@@ -226,9 +226,9 @@ export const ListingOptimizer: React.FC = () => {
     <div className="flex h-full gap-6 relative">
       {/* History Sidebar */}
       {showHistory && (
-        <div className="absolute inset-y-0 left-0 z-50 w-80 bg-white shadow-xl border-r transform transition-transform duration-300">
-          <div className="p-4 border-b flex items-center justify-between bg-gray-50">
-            <h3 className="font-bold text-gray-700 flex items-center gap-2">
+        <div className="absolute inset-y-0 left-0 z-50 w-80 bg-white dark:bg-dark-800 shadow-xl border-r dark:border-dark-700 transform transition-transform duration-300">
+          <div className="p-4 border-b dark:border-dark-700 flex items-center justify-between bg-gray-50 dark:bg-dark-900">
+            <h3 className="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
               <History className="w-5 h-5 text-brand-600" /> {t('lo.ui.history')}
             </h3>
             <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600">
@@ -243,7 +243,7 @@ export const ListingOptimizer: React.FC = () => {
               <div
                 key={item.id}
                 onClick={() => handleLoadListing(item)}
-                className="bg-white border hover:border-brand-300 p-3 rounded-lg shadow-sm cursor-pointer group transition-all"
+                className="bg-white dark:bg-dark-700 border dark:border-dark-600 hover:border-brand-300 p-3 rounded-lg shadow-sm cursor-pointer group transition-all"
               >
                 <div className="flex justify-between items-start mb-1">
                   <span className="font-bold text-gray-800 text-sm line-clamp-1">{item.productName}</span>
@@ -269,11 +269,11 @@ export const ListingOptimizer: React.FC = () => {
       )}
 
       {/* Chat Column */}
-      <div className="w-1/3 flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+      <div className="w-1/3 flex flex-col bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b dark:border-dark-700 bg-gray-50 dark:bg-dark-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bot className="w-5 h-5 text-brand-600" />
-            <span className="font-bold text-gray-700">{t('lo.ui.assistant')}</span>
+            <span className="font-bold text-gray-700 dark:text-gray-200">{t('lo.ui.assistant')}</span>
           </div>
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -287,14 +287,14 @@ export const ListingOptimizer: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-brand-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-700 rounded-bl-none shadow-sm'}`}>
+              <div className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-brand-600 text-white rounded-br-none' : 'bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 text-gray-700 dark:text-gray-200 rounded-bl-none shadow-sm'}`}>
                 {msg.content}
               </div>
             </div>
           ))}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 p-3 rounded-lg rounded-bl-none shadow-sm flex gap-1">
+              <div className="bg-white dark:bg-dark-700 border border-gray-200 dark:border-dark-600 p-3 rounded-lg rounded-bl-none shadow-sm flex gap-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -322,7 +322,7 @@ export const ListingOptimizer: React.FC = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder={t('lo.ui.input_placeholder')}
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                className="flex-1 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none"
                 disabled={isTyping || generatingImages || (listingResult !== null && !waitingForImage && generatedImages.length > 0)}
               />
               <button
@@ -338,7 +338,7 @@ export const ListingOptimizer: React.FC = () => {
       </div>
 
       {/* Result Column */}
-      <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl shadow-sm overflow-hidden flex flex-col">
         {!listingResult ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400 p-8 text-center">
             <Sparkles className="w-16 h-16 mb-4 text-gray-200" />
@@ -349,8 +349,8 @@ export const ListingOptimizer: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
             <div className="mb-8 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">{listingResult.es.title.substring(0, 50)}...</h2>
-                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block mt-1">{inputs.category}</span>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{listingResult.es.title.substring(0, 50)}...</h2>
+                <span className="text-sm text-gray-500 bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded inline-block mt-1">{inputs.category}</span>
               </div>
               <div className="flex items-center gap-2">
                 {generatingImages && (
@@ -387,9 +387,9 @@ export const ListingOptimizer: React.FC = () => {
 
               {/* Spanish Listing */}
               <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-2 border-b pb-2">
+                <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
                   <img src="https://flagcdn.com/w20/es.png" alt="ES" className="w-5" />
-                  <h3 className="font-bold text-gray-800">Amazon Espanha (ES)</h3>
+                  <h3 className="font-bold text-gray-800 dark:text-gray-200">Amazon Espanha (ES)</h3>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
@@ -470,12 +470,12 @@ export const ListingOptimizer: React.FC = () => {
                 </div>
 
                 {/* Keywords PT */}
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 group relative">
+                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
                   <button onClick={() => copyToClipboard(listingResult.pt.keywords, 'pt-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
                     {copiedField === 'pt-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (PT)</label>
-                  <p className="text-sm text-gray-600 font-mono bg-white p-3 rounded border border-gray-200">{listingResult.pt.keywords}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white dark:bg-dark-800 p-3 rounded border border-gray-200 dark:border-dark-700">{listingResult.pt.keywords}</p>
                 </div>
               </div>
             </div>

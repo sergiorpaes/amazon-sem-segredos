@@ -114,18 +114,18 @@ export const Settings: React.FC = () => {
                         <ShieldCheck className="w-6 h-6 text-brand-600" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800">Configurações</h1>
-                        <p className="text-gray-500 text-sm">Gerencie sua conta e as APIs de conexão.</p>
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Configurações</h1>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Gerencie sua conta e as APIs de conexão.</p>
                     </div>
                 </div>
 
                 {user?.role === 'ADMIN' && (
-                    <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex bg-gray-100 dark:bg-dark-900 p-1 rounded-xl border border-gray-200 dark:border-dark-700 shadow-sm">
                         <button
                             onClick={() => setActiveTab('AMAZON_API')}
                             className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'AMAZON_API'
-                                ? 'bg-white text-brand-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
                                 }`}
                         >
                             <Globe size={18} />
@@ -134,8 +134,8 @@ export const Settings: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('ADMIN_STATS')}
                             className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'ADMIN_STATS'
-                                ? 'bg-white text-brand-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
                                 }`}
                         >
                             <BarChart size={18} />
@@ -144,8 +144,8 @@ export const Settings: React.FC = () => {
                         <button
                             onClick={() => setActiveTab('ADMIN_USERS')}
                             className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'ADMIN_USERS'
-                                ? 'bg-white text-brand-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
                                 }`}
                         >
                             <Users size={18} />
@@ -163,8 +163,8 @@ export const Settings: React.FC = () => {
                                 key={region.id}
                                 onClick={() => setActiveRegion(region.id)}
                                 className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeRegion === region.id
-                                    ? 'bg-brand-50 text-brand-700 border-b-2 border-brand-600'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 border-b-2 border-brand-600'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-dark-900'
                                     }`}
                             >
                                 <span className="mr-2">{region.flag}</span>
@@ -173,20 +173,20 @@ export const Settings: React.FC = () => {
                         ))}
                     </div>
 
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                    <div className="bg-white dark:bg-dark-800 rounded-xl border border-gray-100 dark:border-dark-700 shadow-sm p-8">
                         <div className={`rounded-xl p-6 border mb-8 flex items-center justify-between ${isServerSecured
-                            ? 'bg-green-50 border-green-200'
-                            : 'bg-gray-50 border-gray-200'
+                            ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                            : 'bg-gray-50 dark:bg-dark-900 border-gray-200 dark:border-dark-700'
                             }`}>
                             <div className="flex items-center gap-4">
                                 <div className={`p-3 rounded-full ${isServerSecured ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
                                     {isServerSecured ? <Lock className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className={`font-semibold ${isServerSecured ? 'text-green-800' : 'text-gray-700'}`}>
+                                    <h3 className={`font-semibold ${isServerSecured ? 'text-green-800 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>
                                         {isServerSecured ? 'Ambiente Seguro Ativo' : 'Configuração de Servidor Ausente'}
                                     </h3>
-                                    <p className={`text-sm ${isServerSecured ? 'text-green-700' : 'text-gray-500'}`}>
+                                    <p className={`text-sm ${isServerSecured ? 'text-green-700 dark:text-green-500' : 'text-gray-500 dark:text-gray-400'}`}>
                                         {isServerSecured
                                             ? 'Suas credenciais estão protegidas no servidor. O navegador não possui acesso aos segredos.'
                                             : 'Defina as variáveis de ambiente no servidor para máxima segurança.'}
@@ -217,13 +217,10 @@ export const Settings: React.FC = () => {
                                     </p>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label Placeholder</label>
                                         <input
                                             type="text"
-                                            name="clientId"
-                                            value={credentials.clientId}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                            className="w-full px-4 py-2 border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none rounded-lg"
                                         />
                                     </div>
                                     <div>
