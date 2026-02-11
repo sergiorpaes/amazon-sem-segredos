@@ -416,12 +416,16 @@ export const ProductFinder: React.FC = () => {
       refreshUser();
 
       if (result && result.items && result.items.length > 0) {
-        const mappedProducts = mapItemsToDisplay(result.items);
+        const mappedProducts = mapItemsToDisplay(result.items).filter(p => p.price && p.price > 0);
 
         if (isLoadMore) {
           setProducts(prev => [...prev, ...mappedProducts]);
         } else {
           setProducts(mappedProducts);
+        }
+
+        if (mappedProducts.length === 0 && !isLoadMore) {
+          setError(t('error.no_products'));
         }
 
         // Handle Pagination
