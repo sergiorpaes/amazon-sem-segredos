@@ -136,7 +136,7 @@ export const translations = {
         'analyze.processing': 'Extraindo reviews e analisando com IA...',
         'analyze.error': 'Erro ao analisar concorrência.',
         'analyze.credits_info': 'Consome 5 créditos premium',
-        'analyze.recent_reviews': 'Últimos Reviews Críticos',
+        'analyze.recent_reviews': 'Últimos Reviews',
         'summary.feb_2026': 'Fev 2026',
         'lock.title': 'Limite de Créditos Atingido',
     },
@@ -239,7 +239,7 @@ export const translations = {
         'analyze.processing': 'Extrayendo reseñas y analizando con IA...',
         'analyze.error': 'Error al analizar la competencia.',
         'analyze.credits_info': 'Consume 5 créditos premium',
-        'analyze.recent_reviews': 'Últimas Reseñas Críticas',
+        'analyze.recent_reviews': 'Últimas Reseñas',
         'summary.feb_2026': 'Feb 2026',
 
         // Plans
@@ -354,7 +354,7 @@ export const translations = {
         'analyze.processing': 'Scraping reviews and analyzing with AI...',
         'analyze.error': 'Error analyzing competition.',
         'analyze.credits_info': 'Consumes 5 premium credits',
-        'analyze.recent_reviews': 'Latest Critical Reviews',
+        'analyze.recent_reviews': 'Latest Reviews',
         'summary.feb_2026': 'Feb 2026',
 
         // Profile & Billing

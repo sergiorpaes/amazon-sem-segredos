@@ -54,7 +54,7 @@ export const handler: Handler = async (event, context) => {
         // 2. Fetch Reviews (Scraping)
         // Marketplace detection (default BR if not specified)
         const domain = marketplaceId === 'A1RKKUPIHCS9HS' ? 'amazon.com.br' : 'amazon.com';
-        const reviewsUrl = `https://www.${domain}/product-reviews/${asin}/ref=cm_cr_arp_d_viewopt_sr?filterByStar=critical&sortBy=recent`;
+        const reviewsUrl = `https://www.${domain}/product-reviews/${asin}/ref=cm_cr_arp_d_viewopt_sr?sortBy=recent`;
 
         console.log(`[AI Analysis] Scraping reviews from: ${reviewsUrl}`);
 
@@ -78,7 +78,7 @@ export const handler: Handler = async (event, context) => {
             if (cleanText) reviews.push(cleanText);
         }
 
-        console.log(`[AI Analysis] Extracted ${reviews.length} critical reviews for ASIN: ${asin}`);
+        console.log(`[AI Analysis] Extracted ${reviews.length} recent reviews for ASIN: ${asin}`);
 
         if (reviews.length === 0) {
             // Fallback: If no specific critical reviews found, or scraping blocked, inform AI
@@ -93,7 +93,7 @@ export const handler: Handler = async (event, context) => {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
-        const prompt = `Analyze these ${reviews.length} negative reviews for Amazon product ASIN ${asin}:
+        const prompt = `Analyze these ${reviews.length} recent reviews for Amazon product ASIN ${asin}:
         
         REVIEWS:
         ${reviews.join('\n---\n')}
