@@ -142,10 +142,8 @@ export const handler: Handler = async (event, context) => {
             method = "POST";
             requestBody = JSON.stringify({
                 requests: body.asins.map((asin: string) => ({
-                    uri: `/products/pricing/v0/items/${asin}/offers`,
-                    method: 'GET',
-                    MarketplaceId: targetMarketplace,
-                    ItemCondition: 'New'
+                    uri: `/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`,
+                    method: 'GET'
                 }))
             });
         } else if (intent === 'get_offers' && asin) {
