@@ -255,101 +255,85 @@ export const handler: Handler = async (event, context) => {
             console.log(`[Proxy] Catalog Search Response (No Items):`, JSON.stringify(catalogData));
         }
 
-        // --- BATCH PRICING CALL (NEW) ---
-        // If we have items, fetch their prices specifically
-        let pricingMap: Record<string, any> = {};
+        // --- INDIVIDUAL PRICING CALLS (REPLACED BATCH) ---
+        // Calling individual Get Item Offers API instead of Batch to ensure maximum data accuracy
+        let pricingMap: Record<string, { price: number, currency: string, offerCount: number }> = {};
 
         if (intent !== 'get_offers' && catalogData.items && Array.isArray(catalogData.items) && catalogData.items.length > 0) {
             try {
-                const uniqueAsins = [...new Set(catalogData.items.map((i: any) => i.asin))].slice(0, 20); // Unique & Max 20
+                const uniqueAsins: string[] = Array.from(new Set(catalogData.items.map((i: any) => i.asin as string)));
 
-                const priceUrl = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
-                const priceBody = JSON.stringify({
-                    requests: uniqueAsins.map((asin: unknown) => ({
-                        uri: `/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`,
-                        method: 'GET'
-                    }))
-                });
+                console.log(`[Proxy] Fetching Individual Prices for ${uniqueAsins.length} items`);
 
-                console.log(`[Proxy] Fetching Batch Prices for ${uniqueAsins.length} items`);
-                // console.log(`[Proxy] Batch Request Body: ${priceBody}`); // DEBUG
-
-                const priceResponse = await fetch(priceUrl, {
-                    method: 'POST',
-                    headers: {
-                        "x-amz-access-token": access_token,
-                        "Content-Type": "application/json",
-                    },
-                    body: priceBody
-                });
-
-                console.log(`[Proxy] Batch Price Status: ${priceResponse.status} ${priceResponse.statusText}`);
-
-                if (priceResponse.ok) {
-                    const priceData = await priceResponse.json();
-                    // console.log(`[Proxy] Batch Price Response (Slice):`, JSON.stringify(priceData).substring(0, 500)); // DEBUG
-
-                    // Process responses
-                    priceData.responses?.forEach((res: any) => {
-                        // Parse success response
-                        if (res.status?.statusCode === 200 && res.body?.payload) {
-                            const payload = res.body.payload;
-                            const asin = payload.ASIN;
-
-                            // DEBUG: Specific ASIN check
-                            if (asin === 'B084S6BCJN') {
-                                console.log(`[Proxy] DEBUG B084S6BCJN Payload:`, JSON.stringify(payload));
+                const pricingPromises = uniqueAsins.map(async (asin: string) => {
+                    const priceUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+                    try {
+                        const priceResponse = await fetch(priceUrl, {
+                            method: 'GET',
+                            headers: {
+                                "x-amz-access-token": access_token,
+                                "Content-Type": "application/json",
                             }
+                        });
 
-                            // 1. Get Buy Box Price
-                            // Priority: BuyBox LandedPrice > BuyBox ListingPrice > LowestPrice LandedPrice
-                            const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
-
-                            let price = 0;
-                            let currency = 'BRL';
-
-                            if (buyBox) {
+                        if (priceResponse.ok) {
+                            const priceData = await priceResponse.json();
+                            const payload = priceData.payload;
+                            if (payload) {
+                                // 1. Get Buy Box Price
                                 // Priority: BuyBox LandedPrice > BuyBox ListingPrice (User Request)
-                                price = buyBox.LandedPrice?.Amount || buyBox.ListingPrice?.Amount || 0;
-                                currency = buyBox.LandedPrice?.CurrencyCode || buyBox.ListingPrice?.CurrencyCode || 'BRL';
-                            } else {
-                                // Fallback to Lowest Prices (New) if no Buy Box
-                                const lowestNew = payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new');
-                                price = lowestNew?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
-                                currency = lowestNew?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
-                            }
+                                const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
 
-                            // 2. Get Active Sellers (Sum of OfferCounts)
-                            let offerCount = 0;
-                            if (payload.Summary?.NumberOfOffers) {
-                                payload.Summary.NumberOfOffers.forEach((o: any) => {
-                                    const cond = o.condition?.toLowerCase();
-                                    if (cond === 'new') {
-                                        offerCount += (o.OfferCount || 0);
-                                    }
-                                });
-                            }
+                                let price = 0;
+                                let currency = 'BRL';
 
-                            pricingMap[asin] = {
-                                price: price,
-                                currency: currency,
-                                offerCount: offerCount
-                            };
+                                if (buyBox) {
+                                    price = buyBox.LandedPrice?.Amount || buyBox.ListingPrice?.Amount || 0;
+                                    currency = buyBox.LandedPrice?.CurrencyCode || buyBox.ListingPrice?.CurrencyCode || 'BRL';
+                                } else {
+                                    // Fallback to Lowest Prices (New) if no Buy Box
+                                    const lowestNew = payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new');
+                                    price = lowestNew?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
+                                    currency = lowestNew?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
+                                }
 
-                            if (asin === 'B084S6BCJN') {
-                                console.log(`[Proxy] DEBUG B084S6BCJN Mapped:`, pricingMap[asin]);
+                                // 2. Get Active Sellers (Sum of OfferCounts)
+                                let offerCount = 0;
+                                if (payload.Summary?.NumberOfOffers) {
+                                    payload.Summary.NumberOfOffers.forEach((o: any) => {
+                                        const cond = o.condition?.toLowerCase();
+                                        if (cond === 'new') {
+                                            offerCount += (o.OfferCount || 0);
+                                        }
+                                    });
+                                }
+
+                                return { asin, price, currency, offerCount };
                             }
                         } else {
-                            console.warn(`[Proxy] Batch Item Failed for an ASIN:`, res.status);
+                            const errText = await priceResponse.text();
+                            console.warn(`[Proxy] Individual Price Failed for ${asin}: ${priceResponse.status}`, errText);
                         }
-                    });
-                } else {
-                    const errText = await priceResponse.text();
-                    console.warn(`[Proxy] Batch Price Failed: ${priceResponse.status}`, errText);
-                }
+                    } catch (err) {
+                        console.error(`[Proxy] Individual Price Error for ${asin}:`, err);
+                    }
+                    return null;
+                });
+
+                const pricingResults = await Promise.all(pricingPromises);
+
+                pricingResults.forEach(res => {
+                    if (res) {
+                        pricingMap[res.asin] = {
+                            price: res.price,
+                            currency: res.currency,
+                            offerCount: res.offerCount
+                        };
+                    }
+                });
 
             } catch (err) {
-                console.error("[Proxy] Batch Price Error:", err);
+                console.error("[Proxy] Pricing Loop Error:", err);
             }
         }
 
