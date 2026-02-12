@@ -394,7 +394,7 @@ export const ProductFinder: React.FC = () => {
         bsr: item.salesRanks?.[0]?.displayGroupRanks?.[0]?.rank || null,
         fbaFees: item.fba_fees || null,
         fbaBreakdown: item.fba_breakdown,
-        activeSellers: item.active_sellers || null,
+        activeSellers: (item.active_sellers !== undefined && item.active_sellers !== null) ? item.active_sellers : null,
         reviews: null,
         salesRanks: item.salesRanks || [], // Pass full salesRanks data
         rawData: item // Store raw data for cache sync
@@ -751,7 +751,7 @@ export const ProductFinder: React.FC = () => {
                   </div>
                 </th>
 
-                <th className="py-4 pr-5 pl-1 border-b border-gray-100 text-left min-w-[300px]">{t('col.ranking_bsr') || "Ranking (BSR)"}</th>
+                <th className="py-4 pr-5 pl-0 border-b border-gray-100 text-left min-w-[300px]">{t('col.ranking_bsr') || "Ranking (BSR)"}</th>
 
                 <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('revenue')}>
                   <div className="flex items-center justify-end gap-1">
@@ -898,7 +898,7 @@ export const ProductFinder: React.FC = () => {
                         {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
                       </div>
                     </td>
-                    <td className="py-4 pr-5 pl-1 text-left align-top min-w-[300px]">
+                    <td className="py-4 pr-5 pl-0 text-left align-top min-w-[300px]">
                       <div className="flex flex-col gap-2 text-xs">
                         {product.salesRanks && product.salesRanks.length > 0 ? (
                           product.salesRanks.map((sr: any, idx: number) => (
