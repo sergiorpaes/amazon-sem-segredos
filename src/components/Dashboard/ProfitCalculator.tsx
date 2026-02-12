@@ -247,8 +247,30 @@ export const ProfitCalculator: React.FC = () => {
                 )}
             </div>
 
+            {/* Global Settings Bar */}
+            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-4 flex flex-wrap gap-6 items-center justify-center shadow-sm">
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">{t('sim.cogs')}</span>
+                    <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1">
+                        <span className="text-xs text-gray-400 text-emerald-600">€</span>
+                        <input type="number" value={cogs} onChange={(e) => setCogs(Number(e.target.value))} className="w-16 bg-transparent outline-none text-sm font-bold text-center" />
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">{t('sim.vat')} (%)</span>
+                    <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-14 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1 text-sm font-bold text-center" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Lote</span>
+                    <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1">
+                        <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="w-14 bg-transparent outline-none text-sm font-bold text-center" />
+                        <span className="text-[10px] text-gray-400 font-bold uppercase">Unid.</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Side-by-Side Comparison */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* LOGÍSTICA DA AMAZON (FBA) */}
                 <div className="bg-white dark:bg-dark-900 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
@@ -257,10 +279,10 @@ export const ProfitCalculator: React.FC = () => {
                             <Box className="w-4 h-4 text-[#007185]" />
                             Logística da Amazon (FBA)
                         </h4>
-                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <X className="w-4 h-4 text-gray-400 cursor-pointer" />
                     </div>
 
-                    <div className="p-5 flex-1 space-y-4">
+                    <div className="p-5 flex-1 flex flex-col space-y-4">
                         <InputRow label={t('sim.item_price')} value={fbaPrice} onChange={setFbaPrice} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
 
                         <div className="border-t border-gray-100 pt-3">
@@ -336,9 +358,9 @@ export const ProfitCalculator: React.FC = () => {
                                             <Lightbulb className="w-3.5 h-3.5" />
                                             <span className="text-[11px] font-bold uppercase tracking-wider">{t('sim.ai_advice')}</span>
                                         </div>
-                                        <ul className="space-y-1.5">
-                                            {fbaRecommendations.map((rec, i) => (
-                                                <li key={i} className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed flex gap-2">
+                                        <ul className="space-y-1">
+                                            {fbaRecommendations.slice(0, 2).map((rec, i) => (
+                                                <li key={i} className="text-[11px] text-amber-800 dark:text-amber-300 leading-tight flex gap-2">
                                                     <span className="text-amber-400">•</span> {rec}
                                                 </li>
                                             ))}
@@ -348,26 +370,21 @@ export const ProfitCalculator: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Global Costs (Cogs, Tax, Misc) */}
+                        {/* Spacer to push result to bottom */}
+                        <div className="flex-1 min-h-[1.5rem]" />
+
                         <div className="border-t border-[#d5dbdb] dashed pt-4 space-y-2">
                             <InputRow label={t('sim.misc_cost')} value={fbaMiscCost} onChange={setFbaMiscCost} />
-                            <InputRow label={t('sim.cogs')} value={cogs} onChange={setCogs} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
-                            <div className="flex justify-between items-center text-sm py-1">
-                                <span className="text-gray-600">{t('sim.vat')} (%)</span>
-                                <div className="flex items-center gap-2">
-                                    <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-12 text-center border rounded font-bold" />
-                                    <span className="font-bold text-[#333]">{formatCurrency(fbaResults.taxAmount)}</span>
-                                </div>
-                            </div>
+                            <DataRow label="IVA / Impostos" value={formatCurrency(fbaResults.taxAmount)} />
                         </div>
                     </div>
 
                     {/* FBA Results Overlay Footer */}
-                    <div className="bg-[#f0f2f2] p-4 border-t border-[#d5dbdb] grid grid-cols-4 gap-2 text-center">
+                    <div className="bg-[#f0f2f2] p-4 border-t border-[#d5dbdb] grid grid-cols-4 gap-2 text-center mt-auto">
                         <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Cost/Unit</p><p className="font-bold text-[13px]">{formatCurrency(fbaResults.totalExpenses)}</p></div>
                         <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Batch ({batchSize})</p><p className="font-bold text-[13px]">{formatCurrency(fbaResults.netProfit * batchSize)}</p></div>
                         <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Net Profit</p><p className={`font-bold text-[13px] ${fbaResults.netProfit >= 0 ? 'text-[#007185]' : 'text-red-600'}`}>{formatCurrency(fbaResults.netProfit)}</p></div>
-                        <div><p className="text-[9px] text-gray-400 font-bold uppercase">Net Margin</p><p className={`font-bold text-[13px] ${fbaResults.netMargin > 15 ? 'text-emerald-600' : 'text-[#333]'}`}>{fbaResults.netMargin.toFixed(2)}%</p></div>
+                        <div><p className="text-[9px] text-gray-400 font-bold uppercase">Net Margin</p><p className={`font-bold text-[13px] ${fbaResults.netMargin > 15 ? 'text-emerald-600' : 'text-[#333]'}`}>{fbaResults.netMargin.toFixed(1)}%</p></div>
                     </div>
                 </div>
 
@@ -378,10 +395,10 @@ export const ProfitCalculator: React.FC = () => {
                             <Package className="w-4 h-4 text-[#007185]" />
                             Logística do Vendedor (FBM)
                         </h4>
-                        <Activity className="w-4 h-4 text-emerald-500" />
+                        <X className="w-4 h-4 text-gray-400 cursor-pointer" />
                     </div>
 
-                    <div className="p-5 flex-1 space-y-4">
+                    <div className="p-5 flex-1 flex flex-col space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <InputRow label={t('sim.item_price')} value={fbmPrice} onChange={setFbmPrice} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
                             <InputRow label={t('sim.shipping_out')} value={fbmShippingOut} onChange={setFbmShippingOut} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
@@ -422,6 +439,7 @@ export const ProfitCalculator: React.FC = () => {
                             </button>
                             {fbmStorageExpanded && (
                                 <div className="space-y-2 animate-in slide-in-from-top-1">
+                                    <p className="text-[11px] text-[#c45500] font-bold">Insira os seus custos de armazenamento</p>
                                     <InputRow label={t('sim.storage_per_unit')} value={fbmMonthlyStoragePrice} onChange={setFbmMonthlyStoragePrice} />
                                     <InputRow label={t('sim.avg_inventory')} value={fbmAvgInventory} onChange={setFbmAvgInventory} />
                                     <DataRow label={t('sim.storage_per_sold')} value={formatCurrency(fbmUnitStorage)} isBold />
@@ -451,11 +469,11 @@ export const ProfitCalculator: React.FC = () => {
                                     <div className="bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
                                         <div className="flex items-center gap-1.5 mb-2 text-blue-700 dark:text-blue-400">
                                             <Sparkles className="w-3.5 h-3.5" />
-                                            <span className="text-[11px] font-bold uppercase tracking-wider">Estratégia de Logística</span>
+                                            <span className="text-[11px] font-bold uppercase tracking-wider">Estratégia FBM</span>
                                         </div>
-                                        <ul className="space-y-1.5">
-                                            {fbmRecommendations.map((rec, i) => (
-                                                <li key={i} className="text-[11px] text-blue-800 dark:text-blue-300 leading-relaxed flex gap-2">
+                                        <ul className="space-y-1">
+                                            {fbmRecommendations.slice(0, 2).map((rec, i) => (
+                                                <li key={i} className="text-[11px] text-blue-800 dark:text-blue-300 leading-tight flex gap-2">
                                                     <span className="text-blue-400">•</span> {rec}
                                                 </li>
                                             ))}
@@ -465,14 +483,17 @@ export const ProfitCalculator: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Global Costs shared row */}
-                        <div className="border-t border-[#d5dbdb] dashed pt-4 mt-auto">
-                            <InputRow label="Lote para Projeção" value={batchSize} onChange={setBatchSize} suffix="unid." />
+                        {/* Spacer to push result to bottom */}
+                        <div className="flex-1 min-h-[1.5rem]" />
+
+                        <div className="border-t border-[#d5dbdb] dashed pt-4">
+                            <InputRow label={t('sim.misc_cost')} value={fbmMiscCost} onChange={setFbmMiscCost} />
+                            <DataRow label="IVA / Impostos" value={formatCurrency(fbmResults.taxAmount)} />
                         </div>
                     </div>
 
                     {/* FBM Results Footer Results */}
-                    <div className="bg-[#f0f2f2] p-4 border-t border-[#d5dbdb] grid grid-cols-4 gap-2 text-center">
+                    <div className="bg-[#f0f2f2] p-4 border-t border-[#d5dbdb] grid grid-cols-4 gap-2 text-center mt-auto">
                         <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Cost/Unit</p><p className="font-bold text-[13px]">{formatCurrency(fbmResults.totalExpenses)}</p></div>
                         <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Batch ({batchSize})</p><p className="font-bold text-[13px]">{formatCurrency(fbmResults.netProfit * batchSize)}</p></div>
                         <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Net Proceeds</p><p className={`font-bold text-[13px] ${fbmResults.netProfit >= 0 ? 'text-[#007185]' : 'text-red-600'}`}>{formatCurrency(fbmResults.netProfit)}</p></div>
