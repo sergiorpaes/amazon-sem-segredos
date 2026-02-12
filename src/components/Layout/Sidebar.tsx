@@ -40,10 +40,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
-    { id: DashboardModule.PROFIT_ANALYTICS, label: t('module.dashboard'), icon: LayoutDashboard },
-    { id: DashboardModule.MENTOR, label: t('module.mentor'), icon: Bot },
     { id: DashboardModule.PRODUCT_FINDER, label: t('module.product_finder'), icon: Search },
+    { id: DashboardModule.PROFIT_CALCULATOR, label: t('module.profit_calculator'), icon: LayoutDashboard },
     { id: DashboardModule.LISTING_OPTIMIZER, label: t('module.listing_optimizer'), icon: Sparkles },
+    { id: DashboardModule.MENTOR, label: t('module.mentor'), icon: Bot },
     { id: DashboardModule.ADS_MANAGER, label: t('module.ads_manager'), icon: Megaphone },
   ];
 

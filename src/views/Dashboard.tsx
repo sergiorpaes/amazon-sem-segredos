@@ -7,6 +7,7 @@ import { ProfitAnalytics } from '../components/Dashboard/ProfitAnalytics';
 import { ProductFinder } from '../components/Dashboard/ProductFinder';
 import { Settings } from '../components/Dashboard/Settings';
 import { AccountDashboard } from '../components/Dashboard/AccountDashboard';
+import { ProfitCalculator } from '../components/Dashboard/ProfitCalculator';
 import { DashboardModule } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../services/languageService';
@@ -56,6 +57,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <ProfitAnalytics />
           </div>
         );
+      case DashboardModule.PROFIT_CALCULATOR:
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <ProfitCalculator />
+          </CreditGuard>
+        );
       case DashboardModule.SETTINGS:
         return <Settings />;
       case DashboardModule.ADS_MANAGER:
@@ -96,10 +103,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.LISTING_OPTIMIZER: return t('module.listing_optimizer');
       case DashboardModule.PRODUCT_FINDER: return t('module.product_finder');
       case DashboardModule.PROFIT_ANALYTICS: return t('module.dashboard');
+      case DashboardModule.PROFIT_CALCULATOR: return t('module.profit_calculator');
       case DashboardModule.ADS_MANAGER: return t('module.ads_manager');
       case DashboardModule.SETTINGS: return t('module.settings');
       case DashboardModule.ACCOUNT: return "Minha Conta";
-      default: return "Dashboard";
+      default: return t('module.product_finder');
     }
   };
 
