@@ -2,6 +2,8 @@ import { Handler } from '@netlify/functions';
 import { neon } from '@neondatabase/serverless';
 import jwt from 'jsonwebtoken';
 
+import cookie from 'cookie';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-dev-key';
 
 export const handler: Handler = async (event) => {
@@ -10,16 +12,21 @@ export const handler: Handler = async (event) => {
     }
 
     try {
-        // Verify JWT and check admin role
-        const authHeader = event.headers.authorization;
-        if (!authHeader?.startsWith('Bearer ')) {
+        // Verify JWT (Header OR Cookie)
+        let token = event.headers.authorization?.replace('Bearer ', '');
+
+        if (!token) {
+            const cookies = cookie.parse(event.headers.cookie || '');
+            token = cookies.auth_token;
+        }
+
+        if (!token) {
             return {
                 statusCode: 401,
                 body: JSON.stringify({ error: 'Unauthorized' })
             };
         }
 
-        const token = authHeader.substring(7);
         const decoded = jwt.verify(token, JWT_SECRET) as any;
 
         if (decoded.role !== 'ADMIN') {
