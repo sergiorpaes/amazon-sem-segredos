@@ -34,8 +34,12 @@ export const handler: Handler = async (event) => {
         const limit = parseInt(event.queryStringParameters?.limit || '50');
         const offset = parseInt(event.queryStringParameters?.offset || '0');
 
+        if (!process.env.NETLIFY_DATABASE_URL) {
+            throw new Error('NETLIFY_DATABASE_URL is not defined');
+        }
+
         // Connect to database
-        const sql = neon(process.env.NETLIFY_DATABASE_URL!);
+        const sql = neon(process.env.NETLIFY_DATABASE_URL);
 
         // Build query with optional search
         let users;
@@ -99,6 +103,14 @@ export const handler: Handler = async (event) => {
         };
     } catch (error: any) {
         console.error('Error fetching admin users:', error);
+
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return {
+                statusCode: 401,
+                body: JSON.stringify({ error: 'Invalid or expired token', details: error.message })
+            };
+        }
+
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Internal server error', details: error.message })
