@@ -185,6 +185,13 @@ export const translations = {
         'sim.search_placeholder': 'Buscar ASIN ou Palavra-chave...',
         'sim.search_button': 'Buscar Produto',
         'sim.search_another': 'Buscar outro produto',
+        'sim.break_even': 'Preço de Break-even (Ponto de Equilíbrio)',
+        'sim.ads_impact': 'Impacto de Anúncios (PPC)',
+        'sim.ads_cost_unit': 'Custo de Ads por Unidade',
+        'sim.acos_sim': 'Simulação de ACOS (%)',
+        'sim.ai_advice': 'Dicas Estratégicas da IA',
+        'sim.target_margin': 'Margem Alvo (%)',
+        'sim.profit_per_lot': 'Lucro Estimado por Lote',
     },
     es: {
         // General
@@ -333,6 +340,13 @@ export const translations = {
         'sim.search_placeholder': 'Buscar ASIN o Palabra clave...',
         'sim.search_button': 'Buscar Producto',
         'sim.search_another': 'Buscar otro producto',
+        'sim.break_even': 'Precio de Break-even (Punto de Equilibrio)',
+        'sim.ads_impact': 'Impacto de Anuncios (PPC)',
+        'sim.ads_cost_unit': 'Coste de Ads por Unidad',
+        'sim.acos_sim': 'Simulación de ACOS (%)',
+        'sim.ai_advice': 'Consejos Estratégicos de IA',
+        'sim.target_margin': 'Margen Objetivo (%)',
+        'sim.profit_per_lot': 'Beneficio Estimado por Lote',
 
         // Plans
         'plans.starter': 'Starter',
@@ -493,6 +507,13 @@ export const translations = {
         'sim.search_placeholder': 'Search ASIN or Keyword...',
         'sim.search_button': 'Search Product',
         'sim.search_another': 'Search another product',
+        'sim.break_even': 'Break-even Price (Balance Point)',
+        'sim.ads_impact': 'Ads Impact (PPC)',
+        'sim.ads_cost_unit': 'Ads Cost per Unit',
+        'sim.acos_sim': 'ACOS Simulation (%)',
+        'sim.ai_advice': 'AI Strategic Advice',
+        'sim.target_margin': 'Target Margin (%)',
+        'sim.profit_per_lot': 'Estimated Profit per Batch',
         'sim.export_pdf': 'Export PDF Report',
 
         // Profile & Billing
