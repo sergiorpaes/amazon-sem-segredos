@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions';
 import { neon } from '@neondatabase/serverless';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'secret-dev-key';
 
 export const handler: Handler = async (event) => {
     if (event.httpMethod !== 'GET') {
