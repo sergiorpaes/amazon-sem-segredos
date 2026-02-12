@@ -302,19 +302,21 @@ export const handler: Handler = async (event, context) => {
                             }
 
                             // 1. Get Buy Box Price
-                            // Priority: BuyBox ListingPrice > BuyBox LandedPrice > LowestPrice LandedPrice
+                            // Priority: BuyBox LandedPrice > BuyBox ListingPrice > LowestPrice LandedPrice
                             const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
 
                             let price = 0;
                             let currency = 'BRL';
 
                             if (buyBox) {
-                                price = buyBox.ListingPrice?.Amount || buyBox.LandedPrice?.Amount || 0;
-                                currency = buyBox.ListingPrice?.CurrencyCode || buyBox.LandedPrice?.CurrencyCode || 'BRL';
+                                // Priority: BuyBox LandedPrice > BuyBox ListingPrice (User Request)
+                                price = buyBox.LandedPrice?.Amount || buyBox.ListingPrice?.Amount || 0;
+                                currency = buyBox.LandedPrice?.CurrencyCode || buyBox.ListingPrice?.CurrencyCode || 'BRL';
                             } else {
-                                // Fallback to Lowest Prices if no Buy Box
-                                price = payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
-                                currency = payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
+                                // Fallback to Lowest Prices (New) if no Buy Box
+                                const lowestNew = payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new');
+                                price = lowestNew?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
+                                currency = lowestNew?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
                             }
 
                             // 2. Get Active Sellers (Sum of OfferCounts)
