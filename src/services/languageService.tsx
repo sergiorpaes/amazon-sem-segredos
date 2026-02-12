@@ -192,6 +192,13 @@ export const translations = {
         'sim.ai_advice': 'Dicas Estratégicas da IA',
         'sim.target_margin': 'Margem Alvo (%)',
         'sim.profit_per_lot': 'Lucro Estimado por Lote',
+        'sourcing.title': 'Buscar Fornecedores',
+        'sourcing.alibaba': 'Buscar no Alibaba (Atacado)',
+        'sourcing.aliexpress': 'Buscar no AliExpress',
+        'sourcing.1688': 'Buscar no 1688 (Fábricas)',
+        'sourcing.google_lens': 'Pesquisa Visual (Google)',
+        'sourcing.find_suppliers': 'Encontrar Fornecedores',
+        'sourcing.estimated_cost': 'Custo Sugerido por IA',
     },
     es: {
         // General
@@ -347,6 +354,13 @@ export const translations = {
         'sim.ai_advice': 'Consejos Estratégicos de IA',
         'sim.target_margin': 'Margen Objetivo (%)',
         'sim.profit_per_lot': 'Beneficio Estimado por Lote',
+        'sourcing.title': 'Buscar Proveedores',
+        'sourcing.alibaba': 'Buscar en Alibaba (Mayorista)',
+        'sourcing.aliexpress': 'Buscar en AliExpress',
+        'sourcing.1688': 'Buscar en 1688 (Fábricas)',
+        'sourcing.google_lens': 'Búsqueda Visual (Google)',
+        'sourcing.find_suppliers': 'Encontrar Proveedores',
+        'sourcing.estimated_cost': 'Coste Sugerido por IA',
 
         // Plans
         'plans.starter': 'Starter',
@@ -514,6 +528,13 @@ export const translations = {
         'sim.ai_advice': 'AI Strategic Advice',
         'sim.target_margin': 'Target Margin (%)',
         'sim.profit_per_lot': 'Estimated Profit per Batch',
+        'sourcing.title': 'Find Suppliers',
+        'sourcing.alibaba': 'Search Alibaba (Wholesale)',
+        'sourcing.aliexpress': 'Search AliExpress',
+        'sourcing.1688': 'Search 1688 (Factories)',
+        'sourcing.google_lens': 'Visual Search (Google)',
+        'sourcing.find_suppliers': 'Find Suppliers',
+        'sourcing.estimated_cost': 'AI Suggested Cost',
         'sim.export_pdf': 'Export PDF Report',
 
         // Profile & Billing

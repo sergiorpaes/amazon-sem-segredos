@@ -10,6 +10,7 @@ import { getRecommendations } from '../../lib/strategicRecommendations';
 import { searchProducts } from '../../services/amazonAuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { ProductMetadata } from '../../types';
+import { getSupplierLinks } from '../../lib/sourcingUtils';
 
 export const ProfitCalculator: React.FC = () => {
     const { t, language } = useLanguage();
@@ -240,7 +241,23 @@ export const ProfitCalculator: React.FC = () => {
                                 <div><span className="text-gray-400">ASIN:</span> <span className="font-bold">{product.id}</span></div>
                                 <div><span className="text-gray-400">Weight:</span> <span className="font-bold">{product.weight ? `${product.weight.value} ${product.weight.unit}` : 'N/A'}</span></div>
                                 <div><span className="text-gray-400">Sales Rank:</span> <span className="font-bold">#{product.bsr?.toLocaleString()}</span></div>
-                                <div><button onClick={() => setProduct(null)} className="text-[#007185] hover:underline font-bold">{t('sim.search_another')}</button></div>
+                                <div className="flex gap-4">
+                                    <button onClick={() => setProduct(null)} className="text-[#007185] hover:underline font-bold text-[11px]">{t('sim.search_another')}</button>
+                                    <div className="flex gap-2">
+                                        {Object.entries(getSupplierLinks(product.title, product.brand)).map(([key, url]) => (
+                                            <a
+                                                key={key}
+                                                href={url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 dark:bg-dark-800 dark:hover:bg-dark-700 rounded text-[10px] font-bold text-gray-700 dark:text-gray-300 transition-colors border border-gray-200 dark:border-dark-700"
+                                            >
+                                                <Search className="w-2.5 h-2.5" />
+                                                {t(`sourcing.${key}`)}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

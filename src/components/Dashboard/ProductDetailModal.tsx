@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { X, ExternalLink, Package, Trophy, DollarSign, BarChart3, Users, MessageSquare, Tag, Sparkles, Info, RefreshCw, Download } from 'lucide-react';
+import { X, ExternalLink, Package, Trophy, DollarSign, BarChart3, Users, MessageSquare, Tag, Sparkles, Info, RefreshCw, Download, Search, Truck } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { translations } from '../../services/languageService';
 import { jsPDF } from 'jspdf';
 import { getRecommendations } from '../../lib/strategicRecommendations';
+import { getSupplierLinks } from '../../lib/sourcingUtils';
 
 interface ProductDetailModalProps {
     isOpen: boolean;
@@ -19,6 +20,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
         return translations[language][key] || key;
     };
 
+    const [activeTab, setActiveTab] = useState<'details' | 'sourcing'>('details');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<any>(null);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -49,11 +51,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     };
 
     const getAmazonLink = () => {
-        console.log(`[Modal] Generating link for Marketplace ID: ${product.marketplace_id}`);
         const domain = MARKETPLACE_DOMAINS[product.marketplace_id] || 'amazon.com';
         return `https://www.${domain}/dp/${product.id}`;
     };
-
 
     const handleAnalyzeCompetition = async () => {
         setIsAnalyzing(true);
@@ -77,7 +77,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
         }
     };
 
-
     if (!isOpen || !product) return null;
 
     const formatCurrency = (amount: number | undefined) => {
@@ -89,6 +88,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
         return num ? num.toLocaleString() : '-';
     };
 
+    const supplierLinks = getSupplierLinks(product.title, product.brand);
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div
@@ -98,7 +99,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
 
                 {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b border-gray-100 bg-gray-50/50">
-                    <div className="pr-4">
+                    <div className="pr-4 flex-1">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-brand-100 text-brand-800 uppercase tracking-wide">
                                 {t(product.category) || product.category || 'Product'}
@@ -110,7 +111,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                 </span>
                             )}
                         </div>
-                        <h2 className="text-xl font-bold text-gray-900 line-clamp-3 leading-snug">{product.title}</h2>
+                        <h2 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug">{product.title}</h2>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
                                 <Tag className="w-3 h-3" />
@@ -129,176 +130,183 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                     </button>
                 </div>
 
+                {/* Tabs */}
+                <div className="flex px-6 border-b border-gray-100">
+                    <button
+                        onClick={() => setActiveTab('details')}
+                        className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'details' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                    >
+                        {t('modal.details')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('sourcing')}
+                        className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'sourcing' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'} flex items-center gap-2`}
+                    >
+                        <Search className="w-4 h-4" />
+                        {t('sourcing.title')}
+                    </button>
+                </div>
+
                 {/* Scrollable Content */}
                 <div className="overflow-y-auto p-6 flex-1">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Image Section */}
-                        <div className="w-full md:w-1/3 flex flex-col gap-4">
-                            <div className="aspect-square bg-white border border-gray-100 rounded-xl p-2 flex items-center justify-center shadow-sm">
-                                {product.image ? (
-                                    <img
-                                        src={product.image}
-                                        alt={product.title}
-                                        className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
-                                    />
-                                ) : (
-                                    <Package className="w-12 h-12 text-gray-300" />
+                    {activeTab === 'details' ? (
+                        <div className="space-y-6">
+                            <div className="flex flex-col md:flex-row gap-6">
+                                {/* Image Section */}
+                                <div className="w-full md:w-1/3 flex flex-col gap-4">
+                                    <div className="aspect-square bg-white border border-gray-100 rounded-xl p-2 flex items-center justify-center shadow-sm">
+                                        {product.image ? (
+                                            <img
+                                                src={product.image}
+                                                alt={product.title}
+                                                className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
+                                            />
+                                        ) : (
+                                            <Package className="w-12 h-12 text-gray-300" />
+                                        )}
+                                    </div>
+
+                                    <a
+                                        href={getAmazonLink()}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full flex items-center justify-center gap-2 bg-[#FF9900] hover:bg-[#ffad33] text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-orange-100 text-sm"
+                                    >
+                                        {t('modal.view_amazon')}
+                                        <ExternalLink className="w-4 h-4" />
+                                    </a>
+                                </div>
+
+                                {/* Details Grid */}
+                                <div className="w-full md:w-2/3 grid grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
+                                            <DollarSign className="w-3 h-3" /> {t('modal.price')}
+                                        </div>
+                                        <div className="text-2xl font-bold text-gray-900">{formatCurrency(product.price)}</div>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                                        <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold uppercase mb-1">
+                                            <BarChart3 className="w-3 h-3" /> {t('modal.est_sales')}
+                                        </div>
+                                        <div className="text-2xl font-bold text-emerald-900">{formatNumber(product.sales)}</div>
+                                        <div className="text-xs text-emerald-600 font-medium mt-1">{t('modal.units_month')}</div>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 col-span-2">
+                                        <div className="flex items-center gap-2 text-blue-700 text-xs font-bold uppercase mb-1">
+                                            <DollarSign className="w-3 h-3" /> {t('modal.est_revenue')}
+                                        </div>
+                                        <div className="text-3xl font-bold text-blue-900">{formatCurrency(product.revenue)}</div>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
+                                            <Users className="w-3 h-3" /> {t('modal.sellers')}
+                                        </div>
+                                        <div className="text-xl font-bold text-gray-900">{formatNumber(product.activeSellers)}</div>
+                                    </div>
+
+                                    <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                        <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
+                                            <Tag className="w-3 h-3" /> {t('modal.fba_fees')}
+                                        </div>
+                                        <div className="text-xl font-bold text-gray-900">{formatCurrency(product.fbaFees)}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* AI Analysis */}
+                            <div className="pt-6 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <Sparkles className="w-5 h-5 text-brand-500" />
+                                        {t('analyze.modal_title')}
+                                    </h3>
+                                    {!analysisResult && !isAnalyzing && (
+                                        <button onClick={handleAnalyzeCompetition} className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                                            <BarChart3 className="w-4 h-4" />
+                                            {t('analyze.button')}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {isAnalyzing && (
+                                    <div className="bg-brand-50 border border-brand-100 rounded-xl p-6 text-center animate-pulse">
+                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand-600 border-t-transparent mb-3"></div>
+                                        <p className="text-brand-800 font-medium">{t('analyze.processing')}</p>
+                                    </div>
                                 )}
-                            </div>
 
-                            <a
-                                href={getAmazonLink()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full flex items-center justify-center gap-2 bg-[#FF9900] hover:bg-[#ffad33] text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-orange-100"
-                            >
-                                {t('modal.view_amazon')}
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-
-                        {/* Details Grid */}
-                        <div className="w-full md:w-2/3 grid grid-cols-2 gap-4">
-
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                                <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
-                                    <DollarSign className="w-3 h-3" /> {t('modal.price')}
-                                </div>
-                                <div className="text-2xl font-bold text-gray-900">{formatCurrency(product.price)}</div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
-                                <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold uppercase mb-1">
-                                    <BarChart3 className="w-3 h-3" /> {t('modal.est_sales')}
-                                </div>
-                                <div className="text-2xl font-bold text-emerald-900">{formatNumber(product.sales)}</div>
-                                <div className="text-xs text-emerald-600 font-medium mt-1">{t('modal.units_month')}</div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 col-span-2">
-                                <div className="flex items-center gap-2 text-blue-700 text-xs font-bold uppercase mb-1">
-                                    <DollarSign className="w-3 h-3" /> {t('modal.est_revenue')}
-                                </div>
-                                <div className="text-3xl font-bold text-blue-900">{formatCurrency(product.revenue)}</div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                                <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
-                                    <Users className="w-3 h-3" /> {t('modal.sellers')}
-                                </div>
-                                <div className="text-xl font-bold text-gray-900">{formatNumber(product.activeSellers)}</div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                                <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
-                                    <Tag className="w-3 h-3" /> {t('modal.fba_fees')}
-                                </div>
-                                <div className="text-xl font-bold text-gray-900">{formatCurrency(product.fbaFees)}</div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                                <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
-                                    <Trophy className="w-3 h-3" /> {t('modal.score')}
-                                </div>
-                                <div className="text-xl font-bold text-gray-900">{product.bsr ? `#${product.bsr.toLocaleString()}` : '-'}</div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    {/* AI Competition Analysis Section */}
-                    <div className="mt-8 border-t border-gray-100 pt-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-brand-500" />
-                                {t('analyze.modal_title')}
-                            </h3>
-                            {!analysisResult && !isAnalyzing && (
-                                <button
-                                    onClick={handleAnalyzeCompetition}
-                                    className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm"
-                                >
-                                    <BarChart3 className="w-4 h-4" />
-                                    {t('analyze.button')}
-                                </button>
-                            )}
-                        </div>
-
-                        {isAnalyzing && (
-                            <div className="bg-brand-50 border border-brand-100 rounded-xl p-6 text-center animate-pulse">
-                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand-600 border-t-transparent mb-3"></div>
-                                <p className="text-brand-800 font-medium">{t('analyze.processing')}</p>
-                                <p className="text-xs text-brand-600 mt-1">{t('analyze.credits_info')}</p>
-                            </div>
-                        )}
-
-                        {analysisError && (
-                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-red-700 text-sm flex items-center gap-2">
-                                <span className="p-1 bg-red-100 rounded-full">⚠️</span>
-                                {analysisError}
-                            </div>
-                        )}
-
-                        {analysisResult && (
-                            <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="bg-red-50 border border-red-100 rounded-xl p-5">
-                                        <h4 className="text-red-800 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <X className="w-4 h-4" /> {t('analyze.weaknesses')}
-                                        </h4>
-                                        <ul className="space-y-2">
-                                            {analysisResult.weaknesses.map((w: string, i: number) => (
-                                                <li key={i} className="text-sm text-red-700 flex gap-2">
-                                                    <span className="shrink-0 font-bold">•</span>
-                                                    {w}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
-                                        <h4 className="text-emerald-800 font-bold text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <Sparkles className="w-4 h-4" /> {t('analyze.improvements')}
-                                        </h4>
-                                        <ul className="space-y-2">
-                                            {analysisResult.improvements.map((m: string, i: number) => (
-                                                <li key={i} className="text-sm text-emerald-700 flex gap-2">
-                                                    <span className="shrink-0 font-bold">✓</span>
-                                                    {m}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 text-xs text-gray-500 italic">
-                                    {analysisResult.summary}
-                                </div>
-
-                                {analysisResult.rawReviews && analysisResult.rawReviews.length > 0 && (
-                                    <div className="mt-4 pt-4 border-t border-gray-100">
-                                        <h4 className="text-gray-900 font-bold text-sm mb-3 flex items-center gap-2">
-                                            <MessageSquare className="w-4 h-4 text-gray-400" />
-                                            {t('analyze.recent_reviews')}
-                                        </h4>
-                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                                            {analysisResult.rawReviews.map((review: string, i: number) => (
-                                                <div key={i} className="bg-white border border-gray-100 rounded-lg p-3 text-xs text-gray-600 line-clamp-3 hover:line-clamp-none transition-all">
-                                                    "{review}"
-                                                </div>
-                                            ))}
+                                {analysisResult && (
+                                    <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-300">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="bg-red-50 border border-red-100 rounded-xl p-5">
+                                                <h4 className="text-red-800 font-bold text-sm uppercase mb-3 flex items-center gap-2"><X className="w-4 h-4" /> {t('analyze.weaknesses')}</h4>
+                                                <ul className="space-y-2">
+                                                    {analysisResult.weaknesses.map((w: string, i: number) => <li key={i} className="text-sm text-red-700 flex gap-2"><span className="shrink-0">•</span>{w}</li>)}
+                                                </ul>
+                                            </div>
+                                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+                                                <h4 className="text-emerald-800 font-bold text-sm uppercase mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4" /> {t('analyze.improvements')}</h4>
+                                                <ul className="space-y-2">
+                                                    {analysisResult.improvements.map((m: string, i: number) => <li key={i} className="text-sm text-emerald-700 flex gap-2"><span className="shrink-0">✓</span>{m}</li>)}
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
-
-                                {(!analysisResult.rawReviews || analysisResult.rawReviews.length === 0) && (
-                                    <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-                                        <p className="text-[10px] text-gray-400 italic">
-                                            Nenhum review recente pôde ser extraído para este produto no momento.
-                                        </p>
-                                    </div>
-                                )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-4 items-center">
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                                    <Truck className="w-6 h-6 text-blue-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-blue-900">{t('sourcing.find_suppliers')}</h4>
+                                    <p className="text-sm text-blue-800 leading-tight">Pesquisamos automaticamente fornecedores de atacado para este produto.</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                {Object.entries(supplierLinks).map(([key, url]) => (
+                                    <a
+                                        key={key}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-brand-300 hover:shadow-md transition-all group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-brand-600 group-hover:bg-brand-50 transition-colors capitalize">
+                                                {key[0]}
+                                            </div>
+                                            <div>
+                                                <h5 className="font-bold text-gray-900">{t(`sourcing.${key}`)}</h5>
+                                                <p className="text-xs text-gray-500">{url.split('/')[2]}</p>
+                                            </div>
+                                        </div>
+                                        <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-600" />
+                                    </a>
+                                ))}
+                            </div>
+
+                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-5">
+                                <h4 className="text-amber-800 font-bold text-sm uppercase mb-3 flex items-center gap-2">
+                                    <Info className="w-4 h-4" /> {t('sourcing.estimated_cost')}
+                                </h4>
+                                <div className="text-3xl font-black text-amber-900 mb-2">
+                                    ~ {formatCurrency((product.price || 100) * 0.3)} <span className="text-sm font-normal text-amber-700">/ unidade</span>
+                                </div>
+                                <p className="text-xs text-amber-800 leading-relaxed italic">
+                                    * Estimativa baseada na regra de ouro de 30% do preço de venda para produtos private label. Verifique sempre com fornecedores reais.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
