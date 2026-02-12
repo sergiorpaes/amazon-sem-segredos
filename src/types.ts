@@ -69,3 +69,17 @@ export interface SavedListing extends ListingGeneratorResult {
   createdAt: string; // ISO Date string
   generatedImages: string[]; // Base64 strings
 }
+
+export interface ProductMetadata {
+  id: string;
+  title: string;
+  image?: string;
+  brand?: string;
+  category?: string;
+  weight?: { value: number; unit: string };
+  dimensions?: { length: number; width: number; height: number; unit: string };
+  price?: number;
+  currency?: string;
+  bsr?: number;
+  offers?: number;
+}
