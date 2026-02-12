@@ -241,17 +241,18 @@ export const handler: Handler = async (event, context) => {
 
         if (intent !== 'get_offers' && data.items && Array.isArray(data.items) && data.items.length > 0) {
             try {
-                const asins = data.items.map((i: any) => i.asin);
-                // Chunk into 20s (though search is usually 20)
+                const uniqueAsins = [...new Set(data.items.map((i: any) => i.asin))].slice(0, 20); // Unique & Max 20
+
                 const priceUrl = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
                 const priceBody = JSON.stringify({
-                    requests: asins.map((asin: string) => ({
+                    requests: uniqueAsins.map((asin: unknown) => ({
                         uri: `/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`,
-                        method: 'GET' // Batch Item Operation
+                        method: 'GET'
                     }))
                 });
 
-                console.log(`[Proxy] Fetching Batch Prices for ${asins.length} items`);
+                console.log(`[Proxy] Fetching Batch Prices for ${uniqueAsins.length} items`);
+                // console.log(`[Proxy] Batch Request Body: ${priceBody}`); // DEBUG
 
                 const priceResponse = await fetch(priceUrl, {
                     method: 'POST',
@@ -262,8 +263,12 @@ export const handler: Handler = async (event, context) => {
                     body: priceBody
                 });
 
+                console.log(`[Proxy] Batch Price Status: ${priceResponse.status} ${priceResponse.statusText}`);
+
                 if (priceResponse.ok) {
                     const priceData = await priceResponse.json();
+                    // console.log(`[Proxy] Batch Price Response (Slice):`, JSON.stringify(priceData).substring(0, 500)); // DEBUG
+
                     // Process responses
                     priceData.responses?.forEach((res: any) => {
                         // Parse success response
@@ -271,8 +276,13 @@ export const handler: Handler = async (event, context) => {
                             const payload = res.body.payload;
                             const asin = payload.ASIN;
 
+                            // DEBUG: Specific ASIN check
+                            if (asin === 'B084S6BCJN') {
+                                console.log(`[Proxy] DEBUG B084S6BCJN Payload:`, JSON.stringify(payload));
+                            }
+
                             // 1. Get Buy Box Price
-                            const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition === 'New');
+                            const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
                             const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
                             const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode;
 
@@ -280,7 +290,8 @@ export const handler: Handler = async (event, context) => {
                             let offerCount = 0;
                             if (payload.Summary?.NumberOfOffers) {
                                 payload.Summary.NumberOfOffers.forEach((o: any) => {
-                                    if (o.condition === 'new' || o.condition === 'New') {
+                                    const cond = o.condition?.toLowerCase();
+                                    if (cond === 'new') {
                                         offerCount += (o.OfferCount || 0);
                                     }
                                 });
@@ -291,10 +302,17 @@ export const handler: Handler = async (event, context) => {
                                 currency: currency,
                                 offerCount: offerCount
                             };
+
+                            if (asin === 'B084S6BCJN') {
+                                console.log(`[Proxy] DEBUG B084S6BCJN Mapped:`, pricingMap[asin]);
+                            }
+                        } else {
+                            console.warn(`[Proxy] Batch Item Failed for an ASIN:`, res.status);
                         }
                     });
                 } else {
-                    console.warn(`[Proxy] Batch Price Failed: ${priceResponse.status}`);
+                    const errText = await priceResponse.text();
+                    console.warn(`[Proxy] Batch Price Failed: ${priceResponse.status}`, errText);
                 }
 
             } catch (err) {
