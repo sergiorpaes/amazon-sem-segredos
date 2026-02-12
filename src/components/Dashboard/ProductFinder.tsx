@@ -284,7 +284,7 @@ export const ProductFinder: React.FC = () => {
         try {
           const analysis = await analyzeImage(base64Image);
           if (analysis) {
-            const term = analysis.searchKeywords || analysis.description;
+            const term = analysis.amazon_optimized_query || analysis.searchKeywords || analysis.description;
             if (term) {
               setSearchTerm(term);
               // Trigger search with the new term

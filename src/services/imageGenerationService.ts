@@ -2,6 +2,11 @@
 
 export interface AnalysisResponse {
     description: string;
+    amazon_optimized_query?: string;
+    detected_brand?: string;
+    product_category?: string;
+    technical_details?: string[];
+    confidence_score?: string;
     prompts: {
         lifestyle: string;
         creative: string;

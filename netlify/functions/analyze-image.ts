@@ -51,31 +51,34 @@ export const handler = async (event: any) => {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const prompt = `
-        Analyze this product image in detail for e-commerce purposes.
+        Atue como um Especialista em Catalogação de E-commerce da Amazon. Sua tarefa é analisar a imagem enviada por um vendedor e gerar os termos de busca técnicos que retornarão o produto exato ou seus concorrentes diretos na Amazon.
+
+        DIRETRIZES DE ANÁLISE:
+        1. IDENTIFICAÇÃO DE TEXTO (OCR): Extraia prioritariamente nomes de marcas, logotipos, códigos de modelo (ex: WH-1000XM4), números de peça (MPN) ou voltagem/capacidade.
+        2. ATRIBUTOS COMERCIAIS: Identifique cor oficial, material, público-alvo (masculino/feminino/infantil) e quantidade (ex: Pack de 2).
+        3. FILTRAGEM DE RUÍDO: Ignore elementos de fundo, mãos do vendedor ou objetos irrelevantes na cena. Foque 100% no item principal.
+        4. CATEGORIZAÇÃO: Determine a qual departamento da Amazon o item pertence (Eletrônicos, Cozinha, Ferramentas, etc).
+
+        ${additionalPrompt ? `Contexto adicional do usuário: ${additionalPrompt}` : ''}
         
-        Identify the primary product, its category, brand (if visible), material, and key physical features.
-        
-        Generate a "searchKeywords" field:
-        - This should be a concise 3-5 word phrase optimized for searching this EXACT product on Amazon or Alibaba.
-        - IGNORE transient details like the content of a screen (e.g., wallpapers, time, UI icons), the background environment, or artistic lighting.
-        - FOCUS on the physical object (e.g., "iPhone 15 Pro matte blue case", "leather ergonomic office chair").
-        
-        Then, generate 3 distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product, maintaining its core identity but placing it in different professional contexts:
+        Generate 3 distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product, maintaining its core identity but placing it in different professional contexts:
         1. A "Lifestyle" shot (e.g., in use, home setting).
         2. A "Creative" shot (e.g., studio lighting, artistic background).
         3. An "Application" shot (e.g., showing the benefit/result).
-        
-        ${additionalPrompt ? `User additional context: ${additionalPrompt}` : ''}
-        
+
         Return the result as a STRICT JSON object with these keys:
         {
-            "description": "Brief literal description of the product",
-            "searchKeywords": "Optimized search phrase for Amazon/Alibaba",
-            "prompts": {
+          "amazon_optimized_query": "[MARCA] + [MODELO EXATO] + [PRINCIPAL CARACTERÍSTICA] + [COR/TAMANHO]",
+          "detected_brand": "Nome da Marca",
+          "product_category": "Categoria sugerida para o SearchIndex",
+          "technical_details": ["detalhe 1", "detalhe 2"],
+          "confidence_score": "0-100",
+          "description": "Brief literal description in Portuguese",
+          "prompts": {
                 "lifestyle": "Full prompt...",
                 "creative": "Full prompt...",
                 "application": "Full prompt..."
-            }
+          }
         }
         Do not use markdown formatting.
         `;
