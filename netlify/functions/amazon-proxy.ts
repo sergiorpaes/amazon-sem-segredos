@@ -257,7 +257,7 @@ export const handler: Handler = async (event, context) => {
                 }
 
                 // Get Active Sellers Count
-                const active_sellers = item.summaries?.[0]?.offerCount || 0;
+                const active_sellers = item.summaries?.[0]?.offerCount || 1;
 
                 // Calculate Revenue
                 // --- Buy Box Price Supremacy ---
