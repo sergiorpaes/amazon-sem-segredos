@@ -154,4 +154,3 @@ export const analyzeImage = async (base64Image: string, additionalPrompt?: strin
     throw error;
   }
 };
-```
