@@ -235,6 +235,18 @@ export const handler: Handler = async (event, context) => {
             };
         }
 
+        const data = await amazonResponse.json();
+
+        console.log(`[Proxy] Catalog Search Status: ${amazonResponse.status}`);
+        if (data.items) {
+            console.log(`[Proxy] Catalog Search Items Found: ${data.items.length}`);
+            if (data.items.length === 0) {
+                console.log(`[Proxy] WARNING: 0 items found for keywords: ${keywords}`);
+            }
+        } else {
+            console.log(`[Proxy] Catalog Search Response (No Items):`, JSON.stringify(data));
+        }
+
         // --- BATCH PRICING CALL (NEW) ---
         // If we have items, fetch their prices specifically
         let pricingMap: Record<string, any> = {};
