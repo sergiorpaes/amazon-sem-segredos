@@ -256,6 +256,9 @@ export const handler: Handler = async (event, context) => {
                     sales_percentile = "NEW_RISING";
                 }
 
+                // Get Active Sellers Count
+                const active_sellers = item.summaries?.[0]?.offerCount || 0;
+
                 // Calculate Revenue
                 // --- Buy Box Price Supremacy ---
                 // Force Current Offer Price (summaries) as primary, ignore MSRP (list_price)
@@ -313,11 +316,13 @@ export const handler: Handler = async (event, context) => {
                     net_profit: net_profit,
                     sales_percentile: sales_percentile as string | undefined, // Type cast for compatibility
                     is_list_price: isListPrice,
+                    active_sellers: active_sellers,
                     raw_data: item
                 }).catch(err => console.error("[Cache] Save error:", err));
 
                 return {
                     ...item,
+                    active_sellers,
                     estimated_sales,
                     estimated_revenue: estimated_revenue / 100, // Return as float
                     fba_fees: fbaResult.totalFees / 100,

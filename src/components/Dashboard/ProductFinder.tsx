@@ -394,7 +394,7 @@ export const ProductFinder: React.FC = () => {
         bsr: item.salesRanks?.[0]?.displayGroupRanks?.[0]?.rank || null,
         fbaFees: item.fba_fees || null,
         fbaBreakdown: item.fba_breakdown,
-        activeSellers: null,
+        activeSellers: item.active_sellers || null,
         reviews: null,
         salesRanks: item.salesRanks || [], // Pass full salesRanks data
         rawData: item // Store raw data for cache sync
