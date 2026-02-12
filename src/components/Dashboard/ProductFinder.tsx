@@ -33,6 +33,7 @@ interface ProductDisplay {
   reviews?: number;
   score: number | null;
   category: string;
+  marketplace_id: string; // Added marketplace_id
   salesRanks?: any[]; // Added for detailed BSR display
   rawData?: any; // To store raw API data for cache updates
 }
@@ -168,7 +169,8 @@ const mockProducts: ProductDisplay[] = [
     bsr: 2929,
     fbaFees: 8.84,
     activeSellers: 1,
-    reviews: 450
+    reviews: 450,
+    marketplace_id: 'ATVPDKIKX0DER'
   },
   {
     id: 'B093C2B8ZP',
@@ -183,7 +185,8 @@ const mockProducts: ProductDisplay[] = [
     bsr: 21217,
     fbaFees: 8.36,
     activeSellers: 1,
-    reviews: 120
+    reviews: 120,
+    marketplace_id: 'ATVPDKIKX0DER'
   },
   {
     id: 'B09JB8XP4M',
@@ -198,7 +201,8 @@ const mockProducts: ProductDisplay[] = [
     bsr: 57318,
     fbaFees: 9.02,
     activeSellers: 1,
-    reviews: 85
+    reviews: 85,
+    marketplace_id: 'ATVPDKIKX0DER'
   },
   {
     id: 'B001MA0QY2',
@@ -396,6 +400,7 @@ export const ProductFinder: React.FC = () => {
         fbaBreakdown: item.fba_breakdown,
         activeSellers: (item.active_sellers !== undefined && item.active_sellers !== null) ? item.active_sellers : null,
         reviews: null,
+        marketplace_id: item.marketplace_id || selectedMarketplace, // Include marketplace_id
         salesRanks: item.salesRanks || [], // Pass full salesRanks data
         rawData: item // Store raw data for cache sync
       };

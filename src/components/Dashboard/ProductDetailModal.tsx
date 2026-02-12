@@ -49,6 +49,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     };
 
     const getAmazonLink = () => {
+        console.log(`[Modal] Generating link for Marketplace ID: ${product.marketplace_id}`);
         const domain = MARKETPLACE_DOMAINS[product.marketplace_id] || 'amazon.com';
         return `https://www.${domain}/dp/${product.id}`;
     };
