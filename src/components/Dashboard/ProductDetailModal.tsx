@@ -23,6 +23,36 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     const [analysisResult, setAnalysisResult] = useState<any>(null);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+    const MARKETPLACE_DOMAINS: Record<string, string> = {
+        'ATVPDKIKX0DER': 'amazon.com',
+        'A2EUQ1WTGCTBG2': 'amazon.ca',
+        'A1AM78C64UM0Y8': 'amazon.com.mx',
+        'A2Q3Y263D00KWC': 'amazon.com.br',
+        'A1RKKUPIHCS9HS': 'amazon.es',
+        'A1F83G8C2ARO7P': 'amazon.co.uk',
+        'A13V1IB3VIYZZH': 'amazon.fr',
+        'AMEN7PMS3EDWL': 'amazon.com.be',
+        'A1805IZSGTT6HS': 'amazon.nl',
+        'A1PA6795UKMFR9': 'amazon.de',
+        'APJ6JRA9NG5V4': 'amazon.it',
+        'A2NODRKZP88ZB9': 'amazon.se',
+        'A1C3SOZRARQ6R3': 'amazon.pl',
+        'A33AVAJ2PDY3EV': 'amazon.com.tr',
+        'AE08WJ6YKNBMC': 'amazon.co.za',
+        'ARBP9OOSHTCHU': 'amazon.eg',
+        'A17E79C6D8DWNP': 'amazon.sa',
+        'A2VIGQ35RCS4UG': 'amazon.ae',
+        'A21TJRUUN4KGV': 'amazon.in',
+        'A19VAU5U5O7RUS': 'amazon.sg',
+        'A39IBJ37TRP1C6': 'amazon.com.au',
+        'A1VC38T7YXB528': 'amazon.co.jp',
+    };
+
+    const getAmazonLink = () => {
+        const domain = MARKETPLACE_DOMAINS[product.marketplace_id] || 'amazon.com';
+        return `https://www.${domain}/dp/${product.id}`;
+    };
+
     // Profit Simulator State
     const [productCost, setProductCost] = useState<number>(0);
     const [taxRate, setTaxRate] = useState<number>(10); // Standard starting point in Brazil (Simples Nacional)
@@ -208,7 +238,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                             </div>
 
                             <a
-                                href={`https://www.amazon.com/dp/${product.id}`}
+                                href={getAmazonLink()}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-full flex items-center justify-center gap-2 bg-[#FF9900] hover:bg-[#ffad33] text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-orange-100"
@@ -252,13 +282,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
 
                             <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
                                 <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
-                                    <MessageSquare className="w-3 h-3" /> {t('modal.reviews')}
-                                </div>
-                                <div className="text-xl font-bold text-gray-900">{formatNumber(product.reviews)}</div>
-                            </div>
-
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                                <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
                                     <Tag className="w-3 h-3" /> {t('modal.fba_fees')}
                                 </div>
                                 <div className="text-xl font-bold text-gray-900">{formatCurrency(product.fbaFees)}</div>
@@ -268,7 +291,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                 <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase mb-1">
                                     <Trophy className="w-3 h-3" /> {t('modal.score')}
                                 </div>
-                                <div className="text-xl font-bold text-gray-900">{product.score || '-'}</div>
+                                <div className="text-xl font-bold text-gray-900">{product.bsr ? `#${product.bsr.toLocaleString()}` : '-'}</div>
                             </div>
                         </div>
                     </div>
