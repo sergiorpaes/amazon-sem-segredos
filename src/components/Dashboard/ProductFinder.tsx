@@ -907,12 +907,12 @@ export const ProductFinder: React.FC = () => {
                             <div key={idx} className="flex flex-col gap-1.5">
                               {sr.displayGroupRanks?.map((dgr: any, i: number) => (
                                 <div key={`dgr-${i}`} className="text-gray-900 leading-snug">
-                                  <span className="font-bold">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline font-medium">{dgr.title}</a>
+                                  <span className="font-bold">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline font-medium">{dgr.title}</a>
                                 </div>
                               ))}
                               {sr.classificationRanks?.map((cr: any, i: number) => (
                                 <div key={`cr-${i}`} className="text-gray-900 leading-snug">
-                                  <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="hover:text-brand-600 hover:underline">{cr.title}</a>
+                                  <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-800 hover:underline">{cr.title}</a>
                                 </div>
                               ))}
                             </div>
