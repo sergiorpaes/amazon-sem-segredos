@@ -33,6 +33,7 @@ interface ProductDisplay {
   reviews?: number;
   score: number | null;
   category: string;
+  salesRanks?: any[]; // Added for detailed BSR display
   rawData?: any; // To store raw API data for cache updates
 }
 
@@ -395,6 +396,7 @@ export const ProductFinder: React.FC = () => {
         fbaBreakdown: item.fba_breakdown,
         activeSellers: null,
         reviews: null,
+        salesRanks: item.salesRanks || [], // Pass full salesRanks data
         rawData: item // Store raw data for cache sync
       };
     });
@@ -749,7 +751,7 @@ export const ProductFinder: React.FC = () => {
                   </div>
                 </th>
 
-                <th className="px-5 py-4 border-b border-gray-100 text-center">{t('col.sales_graph') || "Sales Graph"}</th>
+                <th className="px-5 py-4 border-b border-gray-100 text-left min-w-[300px]">{t('col.ranking_bsr') || "Ranking (BSR)"}</th>
 
                 <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('revenue')}>
                   <div className="flex items-center justify-end gap-1">
@@ -760,14 +762,7 @@ export const ProductFinder: React.FC = () => {
                   </div>
                 </th>
 
-                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('bsr')}>
-                  <div className="flex items-center justify-end gap-1">
-                    {t('col.bsr')}
-                    {sortConfig?.key === 'bsr' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
+
 
                 <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('fbaFees')}>
                   <div className="flex items-center justify-end gap-1">
@@ -903,11 +898,27 @@ export const ProductFinder: React.FC = () => {
                         {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-center">
-                      <SalesGraph
-                        data={product.salesHistory || []}
-                        onClick={() => setSelectedProductForGraph(product)}
-                      />
+                    <td className="px-5 py-4 text-left align-top min-w-[300px]">
+                      <div className="flex flex-col gap-2 text-xs">
+                        {product.salesRanks && product.salesRanks.length > 0 ? (
+                          product.salesRanks.map((sr: any, idx: number) => (
+                            <div key={idx} className="flex flex-col gap-1.5">
+                              {sr.displayGroupRanks?.map((dgr: any, i: number) => (
+                                <div key={`dgr-${i}`} className="text-gray-900 leading-snug">
+                                  <span className="font-bold">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline font-medium">{dgr.title}</a>
+                                </div>
+                              ))}
+                              {sr.classificationRanks?.map((cr: any, i: number) => (
+                                <div key={`cr-${i}`} className="text-gray-500 pl-2.5 border-l-2 border-gray-100 leading-snug">
+                                  <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="hover:text-brand-600 hover:underline">{cr.title}</a>
+                                </div>
+                              ))}
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-right font-bold text-gray-900 tabular-nums">
                       {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'de-DE', {
@@ -917,9 +928,7 @@ export const ProductFinder: React.FC = () => {
                         maximumFractionDigits: 2
                       }).format(product.revenue) : '-'}
                     </td>
-                    <td className="px-5 py-4 text-right text-gray-600 font-medium">
-                      {product.bsr ? product.bsr.toLocaleString() : '-'}
-                    </td>
+
                     <td className="px-5 py-4 text-right text-red-600 font-bold">
                       {product.fbaFees ? (
                         <div className="flex flex-col items-end gap-0.5">
