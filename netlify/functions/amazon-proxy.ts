@@ -208,14 +208,43 @@ export const handler: Handler = async (event, context) => {
         }
 
         if (intent === 'get_batch_offers' && body.asins) {
-            url = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
-            method = "POST";
-            requestBody = JSON.stringify({
-                requests: body.asins.map((asin: string) => ({
-                    uri: `/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`,
-                    method: 'GET'
-                }))
+            console.log(`[Proxy] Handling get_batch_offers using INDIVIDUAL calls for ${body.asins.length} ASINs`);
+
+            const fetchPromises = (body.asins as string[]).map(async (asin) => {
+                const itemUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+                try {
+                    const itemResponse = await fetch(itemUrl, {
+                        method: 'GET',
+                        headers: {
+                            "x-amz-access-token": access_token,
+                            "Content-Type": "application/json",
+                        }
+                    });
+
+                    const itemData = await itemResponse.json();
+
+                    return {
+                        status: { statusCode: itemResponse.status },
+                        body: itemData,
+                        request: { uri: `/products/pricing/v0/items/${asin}/offers` }
+                    };
+                } catch (err) {
+                    console.error(`[Proxy] Individual fetch failed for ${asin} in batch simulation:`, err);
+                    return {
+                        status: { statusCode: 500 },
+                        body: { error: "Fetch failed" },
+                        request: { uri: `/products/pricing/v0/items/${asin}/offers` }
+                    };
+                }
             });
+
+            const allResponses = await Promise.all(fetchPromises);
+
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ responses: allResponses }),
+            };
         } else if (intent === 'get_offers' && finalAsin) {
             url = `${apiBaseUrl}/products/pricing/v0/items/${finalAsin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
         } else if (finalAsin) {
