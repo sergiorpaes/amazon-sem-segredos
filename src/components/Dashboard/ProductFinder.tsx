@@ -911,7 +911,7 @@ export const ProductFinder: React.FC = () => {
                                 </div>
                               ))}
                               {sr.classificationRanks?.map((cr: any, i: number) => (
-                                <div key={`cr-${i}`} className="text-gray-500 pl-2.5 border-l-2 border-gray-100 leading-snug">
+                                <div key={`cr-${i}`} className="text-gray-900 leading-snug">
                                   <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="hover:text-brand-600 hover:underline">{cr.title}</a>
                                 </div>
                               ))}
