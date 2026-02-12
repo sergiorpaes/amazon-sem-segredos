@@ -235,6 +235,73 @@ export const handler: Handler = async (event, context) => {
             };
         }
 
+        // --- BATCH PRICING CALL (NEW) ---
+        // If we have items, fetch their prices specifically
+        let pricingMap: Record<string, any> = {};
+
+        if (intent !== 'get_offers' && data.items && Array.isArray(data.items) && data.items.length > 0) {
+            try {
+                const asins = data.items.map((i: any) => i.asin);
+                // Chunk into 20s (though search is usually 20)
+                const priceUrl = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
+                const priceBody = JSON.stringify({
+                    requests: asins.map((asin: string) => ({
+                        uri: `/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`,
+                        method: 'GET' // Batch Item Operation
+                    }))
+                });
+
+                console.log(`[Proxy] Fetching Batch Prices for ${asins.length} items`);
+
+                const priceResponse = await fetch(priceUrl, {
+                    method: 'POST',
+                    headers: {
+                        "x-amz-access-token": access_token,
+                        "Content-Type": "application/json",
+                    },
+                    body: priceBody
+                });
+
+                if (priceResponse.ok) {
+                    const priceData = await priceResponse.json();
+                    // Process responses
+                    priceData.responses?.forEach((res: any) => {
+                        // Parse success response
+                        if (res.status?.statusCode === 200 && res.body?.payload) {
+                            const payload = res.body.payload;
+                            const asin = payload.ASIN;
+
+                            // 1. Get Buy Box Price
+                            const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition === 'New');
+                            const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
+                            const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode;
+
+                            // 2. Get Active Sellers (Sum of OfferCounts)
+                            let offerCount = 0;
+                            if (payload.Summary?.NumberOfOffers) {
+                                payload.Summary.NumberOfOffers.forEach((o: any) => {
+                                    if (o.condition === 'new' || o.condition === 'New') {
+                                        offerCount += (o.OfferCount || 0);
+                                    }
+                                });
+                            }
+
+                            pricingMap[asin] = {
+                                price: price,
+                                currency: currency,
+                                offerCount: offerCount
+                            };
+                        }
+                    });
+                } else {
+                    console.warn(`[Proxy] Batch Price Failed: ${priceResponse.status}`);
+                }
+
+            } catch (err) {
+                console.error("[Proxy] Batch Price Error:", err);
+            }
+        }
+
         // --- PROCESS & INJECT SALES DATA ---
         if (intent !== 'get_offers' && data.items && Array.isArray(data.items)) {
             const processedItems = await Promise.all(data.items.map(async (item: any) => {
@@ -256,9 +323,6 @@ export const handler: Handler = async (event, context) => {
                     sales_percentile = "NEW_RISING";
                 }
 
-                // Get Active Sellers Count
-                const active_sellers = item.summaries?.[0]?.offerCount || 1;
-
                 // Calculate Revenue
                 // --- Buy Box Price Supremacy ---
                 // Force Current Offer Price (summaries) as primary, ignore MSRP (list_price)
@@ -273,12 +337,23 @@ export const handler: Handler = async (event, context) => {
                 const attrPurchasablePrice = item.attributes?.purchasable_offer?.[0]?.our_price?.[0]?.value_with_tax || item.attributes?.purchasable_offer?.[0]?.our_price?.[0]?.amount;
                 const attrMapPrice = item.attributes?.map_price?.[0]?.value_with_tax || item.attributes?.map_price?.[0]?.amount;
 
-                // If sellingPrice matches attrListPrice, it might be the non-discounted one, 
-                // but usually summaries.price is the most current price Amazon has.
-                const priceValue = buyBoxPrice || sellingPrice || attrStandardPrice || attrPurchasablePrice || attrMapPrice || attrListPrice || 0;
+                // --- PRICE PRIORITY ---
+                // 1. Batch API BuyBox/Lowest (Best)
+                // 2. Summaries BuyBox (Good)
+                // 3. Summaries Selling Price (Okay)
+                // 4. Attribute List Price (Fallback)
+
+                const batchPrice = pricingMap[item.asin]?.price;
+                const batchCurrency = pricingMap[item.asin]?.currency;
+
+                let priceValue = batchPrice || buyBoxPrice || sellingPrice || attrStandardPrice || attrPurchasablePrice || attrMapPrice || attrListPrice || 0;
+                let currencyCode = batchCurrency || summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency || 'BRL';
+
+                // Get Active Sellers Count (Priority: Batch > Summaries > Default 1)
+                const active_sellers = pricingMap[item.asin]?.offerCount || item.summaries?.[0]?.offerCount || 1;
 
                 // It's a "List Price" fallback only if we didn't find ANY sellable price and had to use attrListPrice
-                const isListPrice = !buyBoxPrice && !sellingPrice && !attrStandardPrice && !attrPurchasablePrice && !attrMapPrice && !!attrListPrice;
+                const isListPrice = !batchPrice && !buyBoxPrice && !sellingPrice && !attrStandardPrice && !attrPurchasablePrice && !attrMapPrice && !!attrListPrice;
 
                 const estimated_revenue = estimated_sales ? Math.round(priceValue * estimated_sales * 100) : 0;
 
@@ -306,7 +381,7 @@ export const handler: Handler = async (event, context) => {
                     category: summary?.websiteDisplayGroupName,
                     brand: summary?.brandName || summary?.brand,
                     price: Math.round(priceValue * 100),
-                    currency: summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency,
+                    currency: currencyCode,
                     bsr: mainRank?.rank,
                     estimated_sales: estimated_sales || undefined,
                     estimated_revenue: estimated_revenue || undefined,
@@ -318,7 +393,7 @@ export const handler: Handler = async (event, context) => {
                     is_list_price: isListPrice,
                     active_sellers: active_sellers,
                     raw_data: item
-                }).catch(err => console.error("[Cache] Save error:", err));
+                } as any).catch(err => console.error("[Cache] Save error:", err));
 
                 return {
                     ...item,
