@@ -282,9 +282,20 @@ export const handler: Handler = async (event, context) => {
                             }
 
                             // 1. Get Buy Box Price
+                            // Priority: BuyBox ListingPrice > BuyBox LandedPrice > LowestPrice LandedPrice
                             const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
-                            const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
-                            const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode;
+
+                            let price = 0;
+                            let currency = 'BRL';
+
+                            if (buyBox) {
+                                price = buyBox.ListingPrice?.Amount || buyBox.LandedPrice?.Amount || 0;
+                                currency = buyBox.ListingPrice?.CurrencyCode || buyBox.LandedPrice?.CurrencyCode || 'BRL';
+                            } else {
+                                // Fallback to Lowest Prices if no Buy Box
+                                price = payload.Summary?.LowestPrices?.[0]?.LandedPrice?.Amount || 0;
+                                currency = payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
+                            }
 
                             // 2. Get Active Sellers (Sum of OfferCounts)
                             let offerCount = 0;
