@@ -129,3 +129,29 @@ export const analyzeProductOpportunity = async (category: string) => {
     return "Não foi possível analisar oportunidades no momento.";
   }
 }
+
+export const analyzeImage = async (base64Image: string, additionalPrompt?: string) => {
+  try {
+    const response = await fetch('/.netlify/functions/analyze-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        additionalPrompt
+      })
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || data.error || 'Failed to analyze image');
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error("Analyze Image Error:", error);
+    throw error;
+  }
+};
+```

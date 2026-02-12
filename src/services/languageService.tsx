@@ -18,6 +18,8 @@ export const translations = {
         'suppliers.link': 'Encontrar Fornecedores no Alibaba',
         'rows.selected': 'Linhas Selecionadas',
         'filter.results': 'Filtrar Resultados',
+        'search.image_tooltip': 'Busca por Imagem',
+        'search.sources_title': 'Busca Rápida em Fontes',
 
         // Product Finder Headers
         'col.product_details': 'Detalhes do Produto',
@@ -209,6 +211,8 @@ export const translations = {
         'suppliers.link': 'Encontrar Proveedores en Alibaba',
         'rows.selected': 'Filas Seleccionadas',
         'filter.results': 'Filtrar Resultados',
+        'search.image_tooltip': 'Buscar por Imagen',
+        'search.sources_title': 'Búsqueda Rápida en Fuentes',
 
         // Product Finder Headers
         'col.product_details': 'Detalles del Producto',
@@ -384,6 +388,8 @@ export const translations = {
         'suppliers.link': 'Find Suppliers on Alibaba',
         'rows.selected': 'Rows Selected',
         'filter.results': 'Filter Results',
+        'search.image_tooltip': 'Search by Image',
+        'search.sources_title': 'Quick Source Search',
 
         // Product Finder Headers
         'col.product_details': 'Product Details',
