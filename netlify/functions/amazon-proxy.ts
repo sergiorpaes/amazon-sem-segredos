@@ -168,6 +168,16 @@ export const handler: Handler = async (event, context) => {
         let method = "GET";
         let requestBody = null;
 
+        // Auto-detect ASIN in keywords (e.g., B01I3A16DI or 123456789X)
+        let finalKeywords = keywords;
+        let finalAsin = asin;
+
+        if (!finalAsin && finalKeywords && /^(B\w{9}|\d{9}[0-9X])$/.test(finalKeywords)) {
+            console.log(`[Proxy] Detected ASIN in keywords: ${finalKeywords}. Switching to identifiers search.`);
+            finalAsin = finalKeywords;
+            finalKeywords = undefined;
+        }
+
         if (intent === 'update_cache' && asin && body.price) {
             await cacheProduct({
                 asin: asin,
@@ -205,12 +215,12 @@ export const handler: Handler = async (event, context) => {
                     method: 'GET'
                 }))
             });
-        } else if (intent === 'get_offers' && asin) {
-            url = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
-        } else if (asin) {
-            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${asin}&identifiersType=ASIN&includedData=salesRanks,summaries,images,attributes`;
-        } else if (keywords) {
-            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(keywords)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
+        } else if (intent === 'get_offers' && finalAsin) {
+            url = `${apiBaseUrl}/products/pricing/v0/items/${finalAsin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+        } else if (finalAsin) {
+            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${finalAsin}&identifiersType=ASIN&includedData=salesRanks,summaries,images,attributes`;
+        } else if (finalKeywords) {
+            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(finalKeywords)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
             if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
         }
 
@@ -225,35 +235,33 @@ export const handler: Handler = async (event, context) => {
             body: requestBody
         });
 
-        const data = await amazonResponse.json();
+        const catalogData = await amazonResponse.json();
 
         if (!amazonResponse.ok) {
             return {
                 statusCode: amazonResponse.status,
                 headers,
-                body: JSON.stringify(data),
+                body: JSON.stringify(catalogData),
             };
         }
 
-        const data = await amazonResponse.json();
-
         console.log(`[Proxy] Catalog Search Status: ${amazonResponse.status}`);
-        if (data.items) {
-            console.log(`[Proxy] Catalog Search Items Found: ${data.items.length}`);
-            if (data.items.length === 0) {
+        if (catalogData.items) {
+            console.log(`[Proxy] Catalog Search Items Found: ${catalogData.items.length}`);
+            if (catalogData.items.length === 0) {
                 console.log(`[Proxy] WARNING: 0 items found for keywords: ${keywords}`);
             }
         } else {
-            console.log(`[Proxy] Catalog Search Response (No Items):`, JSON.stringify(data));
+            console.log(`[Proxy] Catalog Search Response (No Items):`, JSON.stringify(catalogData));
         }
 
         // --- BATCH PRICING CALL (NEW) ---
         // If we have items, fetch their prices specifically
         let pricingMap: Record<string, any> = {};
 
-        if (intent !== 'get_offers' && data.items && Array.isArray(data.items) && data.items.length > 0) {
+        if (intent !== 'get_offers' && catalogData.items && Array.isArray(catalogData.items) && catalogData.items.length > 0) {
             try {
-                const uniqueAsins = [...new Set(data.items.map((i: any) => i.asin))].slice(0, 20); // Unique & Max 20
+                const uniqueAsins = [...new Set(catalogData.items.map((i: any) => i.asin))].slice(0, 20); // Unique & Max 20
 
                 const priceUrl = `${apiBaseUrl}/batches/products/pricing/v0/itemOffers`;
                 const priceBody = JSON.stringify({
@@ -344,8 +352,8 @@ export const handler: Handler = async (event, context) => {
         }
 
         // --- PROCESS & INJECT SALES DATA ---
-        if (intent !== 'get_offers' && data.items && Array.isArray(data.items)) {
-            const processedItems = await Promise.all(data.items.map(async (item: any) => {
+        if (intent !== 'get_offers' && catalogData.items && Array.isArray(catalogData.items)) {
+            const processedItems = await Promise.all(catalogData.items.map(async (item: any) => {
                 // Get BSR
                 const salesRanks = item.salesRanks?.[0]?.displayGroupRanks || [];
                 const mainRank = salesRanks[0]; // Primary BSR
@@ -457,14 +465,14 @@ export const handler: Handler = async (event, context) => {
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({ ...data, items: processedItems }),
+                body: JSON.stringify({ ...catalogData, items: processedItems }),
             };
         }
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(data),
+            body: JSON.stringify(catalogData),
         };
 
     } catch (error: any) {
