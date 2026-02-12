@@ -7,6 +7,7 @@ import { analyzeImage } from '../../services/geminiService';
 import { SalesGraph } from "./SalesGraph";
 import { SalesDetailModal } from "./SalesDetailModal";
 import { ProductDetailModal } from "./ProductDetailModal";
+import { CameraModal } from "./CameraModal";
 
 interface ProductDisplay {
   id: string; // ASIN
@@ -256,6 +257,7 @@ export const ProductFinder: React.FC = () => {
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>('A2Q3Y263D00KWC');
   const [isSearching, setIsSearching] = useState(false);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [products, setProducts] = useState<ProductDisplay[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [nextToken, setNextToken] = useState<string | undefined>(undefined);
@@ -625,6 +627,17 @@ export const ProductFinder: React.FC = () => {
                   onChange={handleImageUpload}
                 />
                 <button
+                  onClick={() => setIsCameraModalOpen(true)}
+                  disabled={isAnalyzingImage}
+                  className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all relative group/tooltip"
+                  title={t('search.camera_tooltip')}
+                >
+                  <Camera className="w-5 h-5" />
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    {t('search.camera_tooltip')}
+                  </span>
+                </button>
+                <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isAnalyzingImage}
                   className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all relative group/tooltip"
@@ -633,7 +646,7 @@ export const ProductFinder: React.FC = () => {
                   {isAnalyzingImage ? (
                     <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <Camera className="w-5 h-5" />
+                    <Upload className="w-5 h-5" />
                   )}
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                     {t('search.image_tooltip')}
@@ -1063,6 +1076,25 @@ export const ProductFinder: React.FC = () => {
 
         </div>
       </div>
+      {/* Camera Capture Modal */}
+      <CameraModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        onCapture={async (base64Image) => {
+          setIsAnalyzingImage(true);
+          try {
+            const analysis = await analyzeImage(base64Image);
+            if (analysis && analysis.description) {
+              setSearchTerm(analysis.description);
+              handleSearch(false, analysis.description);
+            }
+          } catch (err: any) {
+            setError(err.message || "Erro ao analisar imagem");
+          } finally {
+            setIsAnalyzingImage(false);
+          }
+        }}
+      />
     </div>
   );
 };
