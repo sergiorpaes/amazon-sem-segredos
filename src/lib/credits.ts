@@ -15,8 +15,15 @@ export async function consumeCredits(
         // ... (rest of logic)
 
         // 1. Get user to check total balance first (optimization)
+        // 1. Get user to check total balance first (optimization)
         const [user] = await tx.select().from(users).where(eq(users.id, userId)).limit(1);
         if (!user) throw new Error('User not found');
+
+        // ADMIN BYPASS: Admins have unlimited credits
+        if (user.role === 'ADMIN') {
+            console.log(`[Credits] ADMIN Bypass for User ${userId}. Skipping deduction.`);
+            return { success: true, remainingBalance: user.credits_balance };
+        }
 
         if (user.credits_balance < cost) {
             throw new Error('Insufficient credits');
