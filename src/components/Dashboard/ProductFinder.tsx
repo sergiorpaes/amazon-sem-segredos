@@ -283,10 +283,13 @@ export const ProductFinder: React.FC = () => {
         const base64Image = reader.result as string;
         try {
           const analysis = await analyzeImage(base64Image);
-          if (analysis && analysis.description) {
-            setSearchTerm(analysis.description);
-            // Trigger search with the new term
-            handleSearch(false, analysis.description);
+          if (analysis) {
+            const term = analysis.searchKeywords || analysis.description;
+            if (term) {
+              setSearchTerm(term);
+              // Trigger search with the new term
+              handleSearch(false, term);
+            }
           }
         } catch (err: any) {
           setError(err.message || "Erro ao analisar imagem");

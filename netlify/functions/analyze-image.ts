@@ -51,8 +51,14 @@ export const handler = async (event: any) => {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const prompt = `
-        Analyze this product image in detail.
-        Identify the key features, materials, colors, and style.
+        Analyze this product image in detail for e-commerce purposes.
+        
+        Identify the primary product, its category, brand (if visible), material, and key physical features.
+        
+        Generate a "searchKeywords" field:
+        - This should be a concise 3-5 word phrase optimized for searching this EXACT product on Amazon or Alibaba.
+        - IGNORE transient details like the content of a screen (e.g., wallpapers, time, UI icons), the background environment, or artistic lighting.
+        - FOCUS on the physical object (e.g., "iPhone 15 Pro matte blue case", "leather ergonomic office chair").
         
         Then, generate 3 distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product, maintaining its core identity but placing it in different professional contexts:
         1. A "Lifestyle" shot (e.g., in use, home setting).
@@ -63,7 +69,8 @@ export const handler = async (event: any) => {
         
         Return the result as a STRICT JSON object with these keys:
         {
-            "description": "Brief description of the product",
+            "description": "Brief literal description of the product",
+            "searchKeywords": "Optimized search phrase for Amazon/Alibaba",
             "prompts": {
                 "lifestyle": "Full prompt...",
                 "creative": "Full prompt...",
