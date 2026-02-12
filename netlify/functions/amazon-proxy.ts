@@ -280,6 +280,12 @@ export const handler: Handler = async (event, context) => {
                         if (priceResponse.ok) {
                             const priceData = await priceResponse.json();
                             const payload = priceData.payload;
+
+                            // DEBUG: Log full payload for the requested ASIN
+                            if (asin === 'B092HMD4Q7') {
+                                console.log(`[Proxy] FULL DEBUG PAYLOAD for B092HMD4Q7:`, JSON.stringify(priceData, null, 2));
+                            }
+
                             if (payload) {
                                 // 1. Get Buy Box Price
                                 // Priority: BuyBox LandedPrice > BuyBox ListingPrice (User Request)
