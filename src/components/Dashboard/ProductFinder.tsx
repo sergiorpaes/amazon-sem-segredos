@@ -418,7 +418,9 @@ export const ProductFinder: React.FC = () => {
       refreshUser();
 
       if (result && result.items && result.items.length > 0) {
-        const mappedProducts = mapItemsToDisplay(result.items).filter(p => p.price && p.price > 0);
+        // Map items but DO NOT filter by price > 0 immediately. 
+        // The detailed Batch Pricing call will fill the price next.
+        const mappedProducts = mapItemsToDisplay(result.items); // removed .filter(p => p.price && p.price > 0)
 
         if (isLoadMore) {
           setProducts(prev => [...prev, ...mappedProducts]);
