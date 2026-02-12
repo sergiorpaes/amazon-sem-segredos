@@ -1,3 +1,4 @@
+// Version: 1.0.1 - Individual Pricing API Switch
 import { Handler } from "@netlify/functions";
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
