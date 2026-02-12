@@ -14,7 +14,7 @@ export const getSupplierLinks = (title: string, brand?: string) => {
         aliexpress: `https://www.aliexpress.com/wholesale?SearchText=${searchQuery}`,
         1688: `https://s.1688.com/youyuan/index.htm?tab=imageSearch&imageAddress=&searchText=${searchQuery}`,
         googleLens: `https://www.google.com/search?q=${searchQuery}&tbm=shop`,
-        zentrada: `https://www.zentrada.eu/search?q=${searchQuery}`,
+        zentrada: `https://www.zentrada.com/es/search/${searchQuery}?thesaurus=true`,
         bigbuy: `https://www.bigbuy.eu/en/search/results?q=${searchQuery}`
     };
 };

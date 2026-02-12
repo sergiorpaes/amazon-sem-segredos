@@ -704,7 +704,7 @@ export const ProductFinder: React.FC = () => {
             {Object.entries({
               'Alibaba': `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(searchTerm)}`,
               '1688': `https://s.1688.com/youyuan/index.htm?tab=imageSearch&searchText=${encodeURIComponent(searchTerm)}`,
-              'Zentrada': `https://www.zentrada.eu/search?q=${encodeURIComponent(searchTerm)}`,
+              'Zentrada': `https://www.zentrada.com/es/search/${encodeURIComponent(searchTerm)}?thesaurus=true`,
               'BigBuy': `https://www.bigbuy.eu/en/search/results?q=${encodeURIComponent(searchTerm)}`,
               'Google Lens': `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}&tbm=shop`
             }).map(([name, url]) => (
