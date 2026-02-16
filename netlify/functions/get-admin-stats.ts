@@ -1,112 +1,118 @@
 import { Handler } from '@netlify/functions';
-import { neon } from '@neondatabase/serverless';
+import { db } from '../../src/db';
+import { users, userSubscriptions, plans, usageHistory, systemConfig } from '../../src/db/schema';
+import { eq, sql, and, gte, desc, count, countDistinct, sum } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
-
 import cookie from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-dev-key';
 
 export const handler: Handler = async (event) => {
+    console.log('[get-admin-stats] Starting request');
     if (event.httpMethod !== 'GET') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
-        // Verify JWT (Header OR Cookie)
+        // 1. Auth check
         let token = event.headers.authorization?.replace('Bearer ', '');
-
         if (!token || token === 'null' || token === 'undefined') {
             const cookies = cookie.parse(event.headers.cookie || '');
             token = cookies.auth_token;
         }
-
         if (!token) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({ error: 'Unauthorized' })
-            };
+            console.log('[get-admin-stats] No token found');
+            return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
         }
 
         const decoded = jwt.verify(token, JWT_SECRET) as any;
-
         if (decoded.role !== 'ADMIN') {
-            return {
-                statusCode: 403,
-                body: JSON.stringify({ error: 'Forbidden - Admin access required' })
-            };
+            console.log('[get-admin-stats] User is not ADMIN');
+            return { statusCode: 403, body: JSON.stringify({ error: 'Forbidden' }) };
         }
 
-        if (!process.env.NETLIFY_DATABASE_URL) {
-            throw new Error('NETLIFY_DATABASE_URL is not defined');
-        }
+        // 2. Fetch Stats using Drizzle
+        console.log('[get-admin-stats] Fetching general stats...');
 
-        // Connect to database
-        const sql = neon(process.env.NETLIFY_DATABASE_URL);
+        // Total Users
+        const [totalUsersRes] = await db.select({ count: count() }).from(users);
+        const totalUsers = Number(totalUsersRes?.count || 0);
 
-        // Get total users count
-        const totalUsersResult = await sql`
-            SELECT COUNT(*) as count FROM amz_users
-        `;
-        const totalUsers = parseInt(totalUsersResult[0].count);
+        // Active Subscriptions (Distinct Users)
+        const [activeSubsRes] = await db
+            .select({ count: countDistinct(userSubscriptions.user_id) })
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.status, 'active'));
+        const activeSubs = Number(activeSubsRes?.count || 0);
 
-        // Get active subscriptions count (distinct users)
-        const activeSubsResult = await sql`
-            SELECT COUNT(DISTINCT user_id) as count 
-            FROM amz_user_subscriptions 
-            WHERE status = 'active'
-        `;
-        const activeSubs = parseInt(activeSubsResult[0].count);
+        // Monthly Revenue (sum of distinct active sub prices)
+        console.log('[get-admin-stats] Calculating revenue...');
+        const revenueSubquery = db
+            .select({
+                revenue: plans.monthly_price_eur,
+                rn: sql<number>`ROW_NUMBER() OVER(PARTITION BY ${userSubscriptions.user_id} ORDER BY ${userSubscriptions.updated_at} DESC)`.as('rn')
+            })
+            .from(userSubscriptions)
+            .innerJoin(plans, eq(userSubscriptions.plan_id, plans.id))
+            .where(eq(userSubscriptions.status, 'active'))
+            .as('rev_sq');
 
-        // Calculate monthly revenue (sum of active subscription prices for unique users)
-        const revenueResult = await sql`
-            SELECT COALESCE(SUM(revenue), 0) as revenue FROM (
-                SELECT DISTINCT ON (user_id) p.monthly_price_eur as revenue
-                FROM amz_user_subscriptions us
-                JOIN amz_plans p ON us.plan_id = p.id
-                WHERE us.status = 'active'
-                ORDER BY user_id, us.updated_at DESC
-            ) sub
-        `;
-        const monthlyRevenue = parseFloat(revenueResult[0].revenue) / 100; // Convert cents to euros
+        const [revenueRes] = await db
+            .select({ total: sum(revenueSubquery.revenue) })
+            .from(revenueSubquery)
+            .where(eq(revenueSubquery.rn, 1));
+        const monthlyRevenue = (Number(revenueRes?.total || 0)) / 100;
 
-        // Get total platform credit usage
-        const creditUsageResult = await sql`
-            SELECT COALESCE(SUM(credits_spent), 0) as total_spent
-            FROM amz_usage_history
-        `;
-        const totalCreditUsage = parseInt(creditUsageResult[0].total_spent);
+        // Total Credit Usage
+        const [creditUsageRes] = await db
+            .select({ total: sum(usageHistory.credits_spent) })
+            .from(usageHistory);
+        const totalCreditUsage = Number(creditUsageRes?.total || 0);
 
-        // Get cancellations in the last 30 days (Churn)
-        // Only count the most recent status change per user to avoided overcounting
-        const cancellationsResult = await sql`
-            SELECT COUNT(DISTINCT user_id) as count
-            FROM amz_user_subscriptions
-            WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days'
-        `;
-        const cancellationsLast30d = parseInt(cancellationsResult[0].count);
+        // Churn calculation (cancellations in last 30 days)
+        console.log('[get-admin-stats] Calculating churn...');
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const [cancellationsRes] = await db
+            .select({ count: countDistinct(userSubscriptions.user_id) })
+            .from(userSubscriptions)
+            .where(and(
+                eq(userSubscriptions.status, 'canceled'),
+                gte(userSubscriptions.updated_at, thirtyDaysAgo)
+            ));
+        const cancellationsLast30d = Number(cancellationsRes?.count || 0);
         const churnRate = activeSubs > 0 ? (cancellationsLast30d / (activeSubs + cancellationsLast30d)) * 100 : 0;
 
-        // Get growth data (last 30 days)
-        const signupsPerDay = await sql`
-            SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count
-            FROM amz_users
-            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
-            GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
-            ORDER BY date ASC
-        `;
+        // Growth Data
+        console.log('[get-admin-stats] Fetching growth data...');
+        const signupDateExpr = sql`TO_CHAR(${users.created_at}, 'YYYY-MM-DD')`;
+        const signupsPerDay = await db
+            .select({
+                date: signupDateExpr,
+                count: count()
+            })
+            .from(users)
+            .where(gte(users.created_at, thirtyDaysAgo))
+            .groupBy(signupDateExpr)
+            .orderBy(signupDateExpr);
 
-        const cancellationsPerDay = await sql`
-            SELECT TO_CHAR(updated_at, 'YYYY-MM-DD') as date, COUNT(*) as count
-            FROM amz_user_subscriptions
-            WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days'
-            GROUP BY TO_CHAR(updated_at, 'YYYY-MM-DD')
-            ORDER BY date ASC
-        `;
+        const cancelDateExpr = sql`TO_CHAR(${userSubscriptions.updated_at}, 'YYYY-MM-DD')`;
+        const cancellationsPerDay = await db
+            .select({
+                date: cancelDateExpr,
+                count: countDistinct(userSubscriptions.user_id)
+            })
+            .from(userSubscriptions)
+            .where(and(
+                eq(userSubscriptions.status, 'canceled'),
+                gte(userSubscriptions.updated_at, thirtyDaysAgo)
+            ))
+            .groupBy(cancelDateExpr)
+            .orderBy(cancelDateExpr);
 
-        // Format growth data for the frontend (merge signups and cancellations)
+        // Format growth data
         const growthDataMap: Record<string, { date: string, signups: number, cancellations: number }> = {};
-
-        // Fill last 30 days with zeros
         for (let i = 29; i >= 0; i--) {
             const date = new Date();
             date.setDate(date.getDate() - i);
@@ -115,26 +121,30 @@ export const handler: Handler = async (event) => {
         }
 
         signupsPerDay.forEach(row => {
-            if (growthDataMap[row.date]) growthDataMap[row.date].signups = parseInt(row.count);
+            const dateStr = row.date as string;
+            if (dateStr && growthDataMap[dateStr]) growthDataMap[dateStr].signups = Number(row.count);
         });
-
         cancellationsPerDay.forEach(row => {
-            if (growthDataMap[row.date]) growthDataMap[row.date].cancellations = parseInt(row.count);
+            const dateStr = row.date as string;
+            if (dateStr && growthDataMap[dateStr]) growthDataMap[dateStr].cancellations = Number(row.count);
         });
 
         const growthData = Object.values(growthDataMap);
 
-        // Get maintenance mode status
-        const maintenanceResult = await sql`
-            SELECT value FROM amz_system_config WHERE key = 'maintenance_mode'
-        `;
-        const isMaintenanceMode = maintenanceResult.length > 0 ? maintenanceResult[0].value === 'true' : false;
+        // Maintenance Status
+        console.log('[get-admin-stats] Checking maintenance status...');
+        let isMaintenanceMode = false;
+        try {
+            const config = await db.select().from(systemConfig).where(eq(systemConfig.key, 'maintenance_mode')).limit(1);
+            isMaintenanceMode = config.length > 0 ? config[0].value === 'true' : false;
+        } catch (e) {
+            console.warn('systemConfig table might not exist yet');
+        }
 
+        console.log('[get-admin-stats] Success!');
         return {
             statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 totalUsers,
                 activeSubs,
@@ -145,19 +155,20 @@ export const handler: Handler = async (event) => {
                 isMaintenanceMode
             })
         };
+
     } catch (error: any) {
         console.error('Error fetching admin stats:', error);
-
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({ error: 'Invalid or expired token', details: error.message })
-            };
+            return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
         }
-
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error', details: error.message })
+            body: JSON.stringify({
+                error: 'Internal server error',
+                details: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            })
         };
     }
 };
+
