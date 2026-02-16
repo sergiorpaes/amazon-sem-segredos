@@ -47,6 +47,8 @@ export const handler = async (event: any) => {
         }
 
         // Clean base64 string
+        const mimeMatch = image.match(/^data:(image\/\w+);base64,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
         const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
 
         // Fetch Global Settings
@@ -58,7 +60,7 @@ export const handler = async (event: any) => {
         const isDebug = configMap.debug_mode === 'true';
 
         if (isDebug) {
-            console.log('[DEBUG] Analyze Image Request:', { model: aiModel });
+            console.log('[DEBUG] Analyze Image Request:', { model: aiModel, mimeType });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -102,7 +104,7 @@ export const handler = async (event: any) => {
             {
                 inlineData: {
                     data: base64Image,
-                    mimeType: "image/jpeg", // Assuming JPEG for simplicity, or detect from header
+                    mimeType: mimeType,
                 },
             },
         ]);
