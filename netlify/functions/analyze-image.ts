@@ -46,25 +46,46 @@ export const handler = async (event: any) => {
             };
         }
 
-        // Clean base64 string
-        const mimeMatch = image.match(/^data:(image\/\w+);base64,/);
+        // Clean base64 string and extract mime type robustly
+        const mimeMatch = image.match(/^data:([^;]+);base64,/);
         const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-        const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
+        const base64Image = image.includes(';base64,') ? image.split(';base64,')[1] : image;
 
-        // Fetch Global Settings
-        const allConfigs = await db.select().from(systemConfig);
-        const configMap: Record<string, string> = {};
-        allConfigs.forEach(c => configMap[c.key] = c.value);
+        // Supported Gemini Image types: image/png, image/jpeg, image/webp, image/heic, image/heif
+        // If it's not one of these, we might need a fallback or return early
+        const supportedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'];
+        const effectiveMimeType = supportedTypes.includes(mimeType) ? mimeType : "image/jpeg";
+
+        // Fetch Global Settings with error handling
+        let configMap: Record<string, string> = {};
+        try {
+            const allConfigs = await db.select().from(systemConfig);
+            allConfigs.forEach(c => configMap[c.key] = c.value);
+        } catch (dbErr) {
+            console.error("[DEBUG] DB Fetch Error in analyze-image:", dbErr);
+            // Non-blocking, will use defaults
+        }
 
         const aiModel = configMap.ai_model || "gemini-1.5-flash";
         const isDebug = configMap.debug_mode === 'true';
 
         if (isDebug) {
-            console.log('[DEBUG] Analyze Image Request:', { model: aiModel, mimeType });
+            console.log('[DEBUG] Analyze Image Request:', {
+                model: aiModel,
+                mimeType: effectiveMimeType,
+                originalMime: mimeType,
+                imageLength: base64Image.length
+            });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: aiModel });
+        const model = genAI.getGenerativeModel({
+            model: aiModel,
+            generationConfig: {
+                maxOutputTokens: 2048,
+                temperature: 0.4,
+            }
+        });
 
         const prompt = `
         Atue como um Especialista em Catalogação de E-commerce da Amazon. Sua tarefa é analisar a imagem enviada por um vendedor e gerar os termos de busca técnicos que retornarão o produto exato ou seus concorrentes diretos na Amazon.
@@ -99,21 +120,38 @@ export const handler = async (event: any) => {
         Do not use markdown formatting.
         `;
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: base64Image,
-                    mimeType: mimeType,
+        let result;
+        try {
+            result = await model.generateContent([
+                prompt,
+                {
+                    inlineData: {
+                        data: base64Image,
+                        mimeType: effectiveMimeType,
+                    },
                 },
-            },
-        ]);
+            ]);
+        } catch (geminiErr: any) {
+            console.error("[DEBUG] Gemini Execution Error:", geminiErr);
+            throw new Error(`Gemini Analysis Failed: ${geminiErr.message}`);
+        }
 
-        const responseText = result.response.text();
+        const response = await result.response;
+        const responseText = response.text();
+
+        if (isDebug) {
+            console.log('[DEBUG] Analyze Image Raw Response:', responseText);
+        }
 
         // Clean markdown if present
         const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const jsonResponse = JSON.parse(cleanText);
+        let jsonResponse;
+        try {
+            jsonResponse = JSON.parse(cleanText);
+        } catch (parseErr) {
+            console.error("[DEBUG] JSON Parse Error in analyze-image:", cleanText);
+            throw new Error("Failed to parse AI response as JSON");
+        }
 
         return {
             statusCode: 200,
@@ -125,7 +163,7 @@ export const handler = async (event: any) => {
         };
 
     } catch (error: any) {
-        console.error("Analysis Error:", error);
+        console.error("Detailed Analysis Error:", error);
         return {
             statusCode: 500,
             headers: {
@@ -134,7 +172,8 @@ export const handler = async (event: any) => {
             },
             body: JSON.stringify({
                 error: 'Internal Server Error',
-                message: error.message
+                message: error.message,
+                details: error.stack?.split('\n').slice(0, 3).join('\n')
             })
         };
     }
