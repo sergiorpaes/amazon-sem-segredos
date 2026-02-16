@@ -115,7 +115,7 @@ export const translations = {
         'lo.q.category': 'Qual a categoria dele? (Ex: Cozinha, Esportes, Eletrônicos)',
         'lo.q.material': 'De qual material ele é feito? (Ex: Aço Inox, Algodão Orgânico)',
         'lo.q.benefits': 'Quais são os principais benefícios? (Liste 2 ou 3)',
-        'lo.q.differentiators': 'O que o diferencia dos concorrentes? (Seu "Tchan")',
+        'lo.q.differentiators': 'O que o diferencia dos concorrentes? (Seu diferencial)',
         'lo.q.audience': 'Quem é o seu público-alvo? (Ex: Mães, Atletas, Gamers)',
         'lo.q.problem': 'Que problema ele resolve para o cliente?',
         'lo.q.usage': 'Qual o uso principal? (Ex: Dia a dia, Presente, Viagem)',
