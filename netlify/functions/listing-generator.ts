@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import { consumeCredits } from '../../src/lib/credits';
 import { db } from '../../src/db';
-import { systemConfig } from '../../src/db/schema';
-import { eq } from 'drizzle-orm';
+import { systemConfig, plans, userSubscriptions } from '../../src/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -80,8 +80,31 @@ export const handler = async (event: any) => {
         const aiModel = configMap.ai_model || "gemini-2.0-flash-lite";
         const isDebug = configMap.debug_mode === 'true';
 
+        // --- PLAN DETECTION ---
+        let userPlan = 'Free';
+        try {
+            const [subscription] = await db
+                .select({ planName: plans.name })
+                .from(userSubscriptions)
+                .innerJoin(plans, eq(userSubscriptions.plan_id, plans.id))
+                .where(and(
+                    eq(userSubscriptions.user_id, userId),
+                    eq(userSubscriptions.status, 'active')
+                ))
+                .limit(1);
+
+            if (subscription) {
+                userPlan = subscription.planName;
+            }
+        } catch (planErr) {
+            console.warn("[WARN] Failed to fetch user plan, defaulting to Free:", planErr);
+        }
+
+        const isPro = userPlan.toLowerCase().includes('pro') || userPlan.toLowerCase().includes('premium');
+        const bulletCount = isPro ? 10 : 5;
+
         if (isDebug) {
-            console.log('[DEBUG] Listing Generator Request:', { productName, model: aiModel });
+            console.log('[DEBUG] Listing Generator Request:', { productName, model: aiModel, plan: userPlan, bullets: bulletCount });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -97,50 +120,38 @@ export const handler = async (event: any) => {
         1️⃣ TÍTULO DO PRODUTO (máx. 200 caracteres)
         - Em ESPANHOL
         - Com as principais palavras-chave no início
-        - Claro, direto, sem promessas proibidas
         - Otimizado para SEO da Amazon
 
-        2️⃣ BULLET POINTS / CARACTERÍSTICAS (5 bullets)
+        2️⃣ BULLET POINTS / CARACTERÍSTICAS (${bulletCount} bullets)
         - Em ESPANHOL
-        - Focados em benefícios + diferenciais (Os 2 primeiros devem ser mais agressivos em benefícios)
+        - ${isPro ? 'Como você é um usuário ELITE (PRO/Premium), gere 10 bullet points extremamente detalhados.' : 'Gere 5 bullet points focados em benefícios.'}
+        - Focados em benefícios + diferenciais
         - Linguagem clara, objetiva e persuasiva
-        - Usar palavras-chave secundárias de forma natural
 
         3️⃣ DESCRIÇÃO LONGA
         - Em ESPANHOL
         - Estrutura escaneável
         - Foco em solução de problema, benefícios e uso prático
-        - Otimizada para SEO da Amazon
 
         4️⃣ VERSÃO EM PORTUGUÊS (PORTUGAL)
         - Título
-        - Bullet points
+        - Bullet points (${bulletCount} bullets)
         - Descrição
         - Linguagem adaptada para português europeu (PT-PT)
 
         5️⃣ PALAVRAS-CHAVE BACKEND (SEARCH TERMS)
         - Lista separada por espaço
-        - Sem repetição de palavras do título
-        - Sem marcas concorrentes
         - Otimizada para Amazon ES
-        - Misturar espanhol + português (melhorar indexação para cauda longa)
-
+        
         📌 INFORMAÇÕES DO PRODUTO:
         - Nome do produto: ${productName}
         - Categoria: ${category}
         - Material: ${material}
         - Principais benefícios: ${benefits}
-        - Diferenciais em relação aos concorrentes: ${differentiators}
+        - Diferenciais: ${differentiators}
         - Público-alvo: ${audience}
-        - Problema que o produto resolve: ${problem}
-        - Uso principal: ${usage}
-
-        📌 REGRAS IMPORTANTES:
-        - Não usar emojis no Título
-        - Não usar promessas médicas ou proibidas pela Amazon
-        - Não mencionar preços, garantias ou envios
-        - Linguagem profissional e orientada à conversão
-        - SEO voltado para o mercado espanhol, mas com apoio ao público português
+        - Problema: ${problem}
+        - Uso: ${usage}
         
         Retorne APENAS o JSON com a estrutura estrita abaixo (sem markdown, sem code blocks):
         {
@@ -156,7 +167,7 @@ export const handler = async (event: any) => {
                 "description": "...",
                 "keywords": "..." 
             },
-            "imagePromptContext": "Descrição visual curta do produto para gerar imagens (em inglês)"
+            "imagePromptContext": "Short visual description for image generation (in English)"
         }
         `;
 
