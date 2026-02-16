@@ -75,6 +75,10 @@ export const AdminDashboard: React.FC = () => {
             setSavingConfig(true);
             const res = await fetch('/.netlify/functions/update-admin-config', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                },
                 body: JSON.stringify({
                     type: 'UPDATE_PLAN',
                     payload: { planId, monthly_price_eur: price, credit_limit: credits }
@@ -95,12 +99,20 @@ export const AdminDashboard: React.FC = () => {
             const newValue = !isMaintenanceMode;
             const res = await fetch('/.netlify/functions/update-admin-config', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                },
                 body: JSON.stringify({
                     type: 'UPDATE_CONFIG',
                     payload: { key: 'maintenance_mode', value: newValue }
                 })
             });
             if (res.ok) setIsMaintenanceMode(newValue);
+            else {
+                const errorData = await res.json();
+                alert(`Erro: ${errorData.details || errorData.error || 'Falha ao atualizar'}`);
+            }
         } catch (err: any) {
             alert(err.message);
         } finally {
@@ -217,40 +229,46 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="h-[350px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats?.growthData}>
-                                <defs>
-                                    <linearGradient id="colorSignups" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#d97706" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorCancels" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                <XAxis
-                                    dataKey="date"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#9ca3af', fontSize: 10 }}
-                                    tickFormatter={(str) => new Date(str).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fill: '#9ca3af', fontSize: 10 }}
-                                />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                    labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
-                                />
-                                <Area type="monotone" dataKey="signups" stroke="#d97706" strokeWidth={2} fillOpacity={1} fill="url(#colorSignups)" />
-                                <Area type="monotone" dataKey="cancellations" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorCancels)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="h-[350px] w-full min-h-[350px]">
+                        {stats?.growthData && stats.growthData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={stats.growthData}>
+                                    <defs>
+                                        <linearGradient id="colorSignups" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#d97706" stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorCancels" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                    <XAxis
+                                        dataKey="date"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#9ca3af', fontSize: 10 }}
+                                        tickFormatter={(str) => new Date(str).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: '#9ca3af', fontSize: 10 }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
+                                    />
+                                    <Area type="monotone" dataKey="signups" stroke="#d97706" strokeWidth={2} fillOpacity={1} fill="url(#colorSignups)" />
+                                    <Area type="monotone" dataKey="cancellations" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorCancels)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full w-full flex items-center justify-center text-gray-400 text-sm italic">
+                                Sem dados de crescimento disponíveis.
+                            </div>
+                        )}
                     </div>
                 </div>
 

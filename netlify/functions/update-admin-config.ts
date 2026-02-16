@@ -41,8 +41,7 @@ export const handler: Handler = async (event) => {
             await db.update(plans)
                 .set({
                     monthly_price_eur: Number(monthly_price_eur),
-                    credit_limit: Number(credit_limit),
-                    created_at: new Date()
+                    credit_limit: Number(credit_limit)
                 })
                 .where(eq(plans.id, planId));
         } else if (type === 'UPDATE_CONFIG') {
@@ -50,6 +49,9 @@ export const handler: Handler = async (event) => {
             console.log('[update-admin-config] Updating config:', key, '=', value);
 
             try {
+                // Ensure key and value are present
+                if (!key) throw new Error('Config key is required');
+
                 const existing = await db.select().from(systemConfig).where(eq(systemConfig.key, key)).limit(1);
 
                 if (existing.length > 0) {
@@ -67,7 +69,7 @@ export const handler: Handler = async (event) => {
                 }
             } catch (dbError: any) {
                 console.error('[update-admin-config] Database operation failed:', dbError);
-                throw new Error(`Database operation failed: ${dbError.message}. Does the amz_system_config table exist?`);
+                throw new Error(`DB Error: ${dbError.message}`);
             }
         } else {
             console.log('[update-admin-config] Invalid config type:', type);
