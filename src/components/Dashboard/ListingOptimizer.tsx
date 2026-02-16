@@ -161,11 +161,13 @@ export const ListingOptimizer: React.FC = () => {
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('lo.success.image') }]);
       } else {
         setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('lo.error.image') }]);
+        setWaitingForImage(true); // Allow retry/re-upload on failure
       }
 
     } catch (error) {
       console.error(error);
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('lo.error.image') }]);
+      setWaitingForImage(true); // Allow retry/re-upload on error
     } finally {
       setGeneratingImages(false);
     }
@@ -305,7 +307,7 @@ export const ListingOptimizer: React.FC = () => {
         </div>
 
         <div className="p-4 bg-white border-t">
-          {waitingForImage ? (
+          {(waitingForImage || (listingResult && generatedImages.length === 0 && !generatingImages)) ? (
             <div
               onClick={() => imageInputRef.current?.click()}
               className="border-2 border-dashed border-brand-300 bg-brand-50 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-brand-100 transition-colors"
