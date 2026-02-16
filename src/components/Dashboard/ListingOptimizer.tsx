@@ -25,7 +25,7 @@ interface ProductInput {
 }
 
 export const ListingOptimizer: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { refreshUser } = useAuth();
 
   // Questions with translations
@@ -148,7 +148,6 @@ export const ListingOptimizer: React.FC = () => {
   };
 
   const handleGenerateImages = async (base64Image: string) => {
-    const { language } = useLanguage(); // Get current language
     setGeneratingImages(true);
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('lo.processing.image') }]);
 

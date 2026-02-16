@@ -55,11 +55,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = async () => {
-        setUser(null);
         try {
-            // Call backend to clear cookie
-            // await fetch('/.netlify/functions/auth-logout'); 
-        } catch (e) { console.error(e); }
+            await fetch('/.netlify/functions/auth-logout', { method: 'POST' });
+        } catch (e) {
+            console.error('Logout failed:', e);
+        } finally {
+            setUser(null);
+            window.location.href = '/';
+        }
     };
 
     return (
