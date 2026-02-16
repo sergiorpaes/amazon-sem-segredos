@@ -4,7 +4,7 @@ import { SavedListing, ListingGeneratorResult } from '../types';
 export const saveListing = async (productName: string, listingData: ListingGeneratorResult, generatedImages: string[]): Promise<SavedListing> => {
     const res = await fetch('/.netlify/functions/save-listing', {
         method: 'POST',
-        body: JSON.stringify({ productName, listingData, generatedImages }),
+        body: JSON.stringify({ productName, listingData, generatedImages: [] }), // Images not saved to DB (too large)
         headers: { 'Content-Type': 'application/json' }
     });
 

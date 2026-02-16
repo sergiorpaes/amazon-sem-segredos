@@ -34,7 +34,8 @@ export const handler = async (event: any) => {
             user_id: userId,
             product_name: productName,
             listing_data: listingData,
-            generated_images: generatedImages || []
+            // generated_images: generatedImages || [] // base64 strings are too large for simple DB text column
+            generated_images: []
         }).returning();
 
         return {
