@@ -124,6 +124,12 @@ export const handler: Handler = async (event) => {
 
         const growthData = Object.values(growthDataMap);
 
+        // Get maintenance mode status
+        const maintenanceResult = await sql`
+            SELECT value FROM amz_system_config WHERE key = 'maintenance_mode'
+        `;
+        const isMaintenanceMode = maintenanceResult.length > 0 ? maintenanceResult[0].value === 'true' : false;
+
         return {
             statusCode: 200,
             headers: {
@@ -135,7 +141,8 @@ export const handler: Handler = async (event) => {
                 monthlyRevenue,
                 churnRate: Math.round(churnRate * 10) / 10,
                 totalCreditUsage,
-                growthData
+                growthData,
+                isMaintenanceMode
             })
         };
     } catch (error: any) {

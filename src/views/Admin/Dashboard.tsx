@@ -50,6 +50,9 @@ export const AdminDashboard: React.FC = () => {
             if (!statsResponse.ok) throw new Error('Failed to fetch stats');
             const statsData = await statsResponse.json();
             setStats(statsData);
+            if (statsData.isMaintenanceMode !== undefined) {
+                setIsMaintenanceMode(statsData.isMaintenanceMode);
+            }
 
             // Fetch plans for config
             const plansResponse = await fetch('/.netlify/functions/get-plans');

@@ -64,9 +64,17 @@ export const handler: Handler = async (event) => {
 
     } catch (error: any) {
         console.error('Update Config Error:', error);
+
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return {
+                statusCode: 401,
+                body: JSON.stringify({ error: 'Invalid or expired token', details: error.message })
+            };
+        }
+
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' })
+            body: JSON.stringify({ error: 'Internal server error', details: error.message })
         };
     }
 };
