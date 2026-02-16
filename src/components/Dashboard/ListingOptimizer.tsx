@@ -196,7 +196,8 @@ export const ListingOptimizer: React.FC = () => {
     );
 
     if (isAlreadySaved) {
-      alert(t('lo.ui.saved_already') || 'Este listing já está salvo!');
+      // alert(t('lo.ui.saved_already') || 'Este listing já está salvo!');
+      console.log('Listing already saved');
       return;
     }
 
@@ -208,7 +209,8 @@ export const ListingOptimizer: React.FC = () => {
       );
 
       setSavedListings(prev => [savedItem, ...prev]);
-      alert(t('lo.ui.save_success') || 'Listing salvo com sucesso!');
+      // alert(t('lo.ui.save_success') || 'Listing salvo com sucesso!');
+      console.log('Listing saved successfully');
     } catch (error) {
       console.error("Failed to save listing", error);
       alert(t('lo.ui.save_error') || 'Erro ao salvar listing.');
@@ -363,138 +365,148 @@ export const ListingOptimizer: React.FC = () => {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
-            <div className="mb-8 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{listingResult.es.title.substring(0, 50)}...</h2>
-                <span className="text-sm text-gray-500 bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded inline-block mt-1">{inputs.category}</span>
+            {/* Guard against incomplete data */}
+            {!listingResult.es || !listingResult.pt ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-red-500 p-8 text-center">
+                <p>{t('lo.error.data_incomplete') || 'Erro: Dados da listing incompletos. Tente gerar novamente.'}</p>
+                <button onClick={() => setListingResult(null)} className="mt-4 text-sm text-brand-600 underline">Voltar</button>
               </div>
-              <div className="flex items-center gap-2">
-                {generatingImages && (
-                  <div className="flex items-center gap-2 text-brand-600 bg-brand-50 px-3 py-1 rounded-full text-sm font-medium">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    {t('lo.ui.generating_images')}
+            ) : (
+              <>
+                <div className="mb-8 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{listingResult.es.title?.substring(0, 50)}...</h2>
+                    <span className="text-sm text-gray-500 bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded inline-block mt-1">{inputs.category}</span>
                   </div>
-                )}
-                <button
-                  onClick={handleSaveListing}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  <Save className="w-4 h-4" /> {t('lo.ui.save')}
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Images Showcase */}
-              {generatedImages.length > 0 && (
-                <div className="lg:col-span-2 grid grid-cols-3 gap-4 mb-4">
-                  {generatedImages.map((img, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-                      <img src={img} alt={`Generated ${idx}`} className="w-full h-48 object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <a href={img} download={`amazon-listing-${idx}.png`} className="text-white bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40">
-                          <Download className="w-5 h-5" />
-                        </a>
+                  <div className="flex items-center gap-2">
+                    {generatingImages && (
+                      <div className="flex items-center gap-2 text-brand-600 bg-brand-50 px-3 py-1 rounded-full text-sm font-medium">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        {t('lo.ui.generating_images')}
                       </div>
+                    )}
+                    <button
+                      onClick={handleSaveListing}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      <Save className="w-4 h-4" /> {t('lo.ui.save')}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Images Showcase */}
+                  {generatedImages.length > 0 && (
+                    <div className="lg:col-span-2 grid grid-cols-3 gap-4 mb-4">
+                      {generatedImages.map((img, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                          <img src={img} alt={`Generated ${idx}`} className="w-full h-48 object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a href={img} download={`amazon-listing-${idx}.png`} className="text-white bg-white/20 backdrop-blur-sm p-2 rounded-full hover:bg-white/40">
+                              <Download className="w-5 h-5" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              {/* Spanish Listing */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
-                  <img src="https://flagcdn.com/w20/es.png" alt="ES" className="w-5" />
-                  <h3 className="font-bold text-gray-800 dark:text-gray-200">Amazon Espanha (ES)</h3>
-                </div>
+                  {/* Spanish Listing */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
+                      <img src="https://flagcdn.com/w20/es.png" alt="ES" className="w-5" />
+                      <h3 className="font-bold text-gray-800 dark:text-gray-200">Amazon Espanha (ES)</h3>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.es.title, 'es-title')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'es-title' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Título</label>
-                  <p className="text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed">{listingResult.es.title}</p>
-                </div>
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.es.title, 'es-title')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'es-title' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Título</label>
+                      <p className="text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed">{listingResult.es.title}</p>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.es.bullets.join('\n'), 'es-bullets')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'es-bullets' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Bullet Points</label>
-                  <ul className="space-y-2">
-                    {listingResult.es.bullets.map((bp, i) => (
-                      <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
-                        <span className="text-brand-500 font-bold">•</span> {bp}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.es.bullets.join('\n'), 'es-bullets')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'es-bullets' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Bullet Points</label>
+                      <ul className="space-y-2">
+                        {listingResult.es.bullets.map((bp, i) => (
+                          <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
+                            <span className="text-brand-500 font-bold">•</span> {bp}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.es.description, 'es-desc')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'es-desc' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Descrição</label>
-                  <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.es.description}</div>
-                </div>
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.es.description, 'es-desc')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'es-desc' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Descrição</label>
+                      <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.es.description}</div>
+                    </div>
 
-                {/* Keywords ES */}
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.es.keywords, 'es-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'es-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (ES)</label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white dark:bg-dark-800 p-3 rounded border border-gray-200 dark:border-dark-700">{listingResult.es.keywords}</p>
-                </div>
-              </div>
+                    {/* Keywords ES */}
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.es.keywords, 'es-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'es-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (ES)</label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white dark:bg-dark-800 p-3 rounded border border-gray-200 dark:border-dark-700">{listingResult.es.keywords}</p>
+                    </div>
+                  </div>
 
-              {/* Portuguese Listing */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
-                  <img src="https://flagcdn.com/w20/pt.png" alt="PT" className="w-5" />
-                  <h3 className="font-bold text-gray-800 dark:text-gray-200">Tradução (PT-PT)</h3>
-                </div>
+                  {/* Portuguese Listing */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
+                      <img src="https://flagcdn.com/w20/pt.png" alt="PT" className="w-5" />
+                      <h3 className="font-bold text-gray-800 dark:text-gray-200">Tradução (PT-PT)</h3>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.pt.title, 'pt-title')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'pt-title' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Título</label>
-                  <p className="text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed">{listingResult.pt.title}</p>
-                </div>
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.pt.title, 'pt-title')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'pt-title' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Título</label>
+                      <p className="text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed">{listingResult.pt.title}</p>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.pt.bullets.join('\n'), 'pt-bullets')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'pt-bullets' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Bullet Points</label>
-                  <ul className="space-y-2">
-                    {listingResult.pt.bullets.map((bp, i) => (
-                      <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
-                        <span className="text-brand-500 font-bold">•</span> {bp}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.pt.bullets.join('\n'), 'pt-bullets')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'pt-bullets' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Bullet Points</label>
+                      <ul className="space-y-2">
+                        {listingResult.pt.bullets.map((bp, i) => (
+                          <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex gap-2">
+                            <span className="text-brand-500 font-bold">•</span> {bp}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.pt.description, 'pt-desc')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'pt-desc' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Descrição</label>
-                  <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.pt.description}</div>
-                </div>
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.pt.description, 'pt-desc')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'pt-desc' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Descrição</label>
+                      <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap h-32 overflow-y-auto custom-scrollbar">{listingResult.pt.description}</div>
+                    </div>
 
-                {/* Keywords PT */}
-                <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
-                  <button onClick={() => copyToClipboard(listingResult.pt.keywords, 'pt-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
-                    {copiedField === 'pt-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (PT)</label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white dark:bg-dark-800 p-3 rounded border border-gray-200 dark:border-dark-700">{listingResult.pt.keywords}</p>
+                    {/* Keywords PT */}
+                    <div className="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg border border-gray-200 dark:border-dark-700 group relative">
+                      <button onClick={() => copyToClipboard(listingResult.pt.keywords, 'pt-kw')} className="absolute top-2 right-2 text-gray-400 hover:text-brand-600">
+                        {copiedField === 'pt-kw' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Palavras-Chave (PT)</label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-white dark:bg-dark-800 p-3 rounded border border-gray-200 dark:border-dark-700">{listingResult.pt.keywords}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         )}
       </div>
