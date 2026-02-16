@@ -66,14 +66,59 @@ export const handler: Handler = async (event) => {
         `;
         const monthlyRevenue = parseFloat(revenueResult[0].revenue) / 100; // Convert cents to euros
 
-        // Get today's activity count (you can customize this query)
-        // For now, let's count users created today
-        const todayActivityResult = await sql`
-            SELECT COUNT(*) as count
-            FROM amz_users
-            WHERE DATE(created_at) = CURRENT_DATE
+        // Get total platform credit usage
+        const creditUsageResult = await sql`
+            SELECT COALESCE(SUM(credits_spent), 0) as total_spent
+            FROM amz_usage_history
         `;
-        const generationsToday = parseInt(todayActivityResult[0].count);
+        const totalCreditUsage = parseInt(creditUsageResult[0].total_spent);
+
+        // Get cancellations in the last 30 days (Churn)
+        const cancellationsResult = await sql`
+            SELECT COUNT(*) as count
+            FROM amz_user_subscriptions
+            WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days'
+        `;
+        const cancellationsLast30d = parseInt(cancellationsResult[0].count);
+        const churnRate = activeSubs > 0 ? (cancellationsLast30d / (activeSubs + cancellationsLast30d)) * 100 : 0;
+
+        // Get growth data (last 30 days)
+        const signupsPerDay = await sql`
+            SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count
+            FROM amz_users
+            WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+            ORDER BY date ASC
+        `;
+
+        const cancellationsPerDay = await sql`
+            SELECT TO_CHAR(updated_at, 'YYYY-MM-DD') as date, COUNT(*) as count
+            FROM amz_user_subscriptions
+            WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY TO_CHAR(updated_at, 'YYYY-MM-DD')
+            ORDER BY date ASC
+        `;
+
+        // Format growth data for the frontend (merge signups and cancellations)
+        const growthDataMap: Record<string, { date: string, signups: number, cancellations: number }> = {};
+
+        // Fill last 30 days with zeros
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            growthDataMap[dateStr] = { date: dateStr, signups: 0, cancellations: 0 };
+        }
+
+        signupsPerDay.forEach(row => {
+            if (growthDataMap[row.date]) growthDataMap[row.date].signups = parseInt(row.count);
+        });
+
+        cancellationsPerDay.forEach(row => {
+            if (growthDataMap[row.date]) growthDataMap[row.date].cancellations = parseInt(row.count);
+        });
+
+        const growthData = Object.values(growthDataMap);
 
         return {
             statusCode: 200,
@@ -84,7 +129,9 @@ export const handler: Handler = async (event) => {
                 totalUsers,
                 activeSubs,
                 monthlyRevenue,
-                generationsToday
+                churnRate: Math.round(churnRate * 10) / 10,
+                totalCreditUsage,
+                growthData
             })
         };
     } catch (error: any) {

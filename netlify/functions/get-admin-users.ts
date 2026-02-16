@@ -40,6 +40,7 @@ export const handler: Handler = async (event) => {
         const searchQuery = event.queryStringParameters?.search || '';
         const limit = parseInt(event.queryStringParameters?.limit || '50');
         const offset = parseInt(event.queryStringParameters?.offset || '0');
+        const statusFilter = event.queryStringParameters?.status || ''; // 'active', 'trialing', 'past_due', 'canceled'
 
         if (!process.env.NETLIFY_DATABASE_URL) {
             throw new Error('NETLIFY_DATABASE_URL is not defined');
@@ -48,52 +49,54 @@ export const handler: Handler = async (event) => {
         // Connect to database
         const sql = neon(process.env.NETLIFY_DATABASE_URL);
 
-        // Build query with optional search
-        let users;
+        // Build base query
+        let query = sql`
+            SELECT 
+                u.id,
+                u.email,
+                u.full_name,
+                u.role,
+                u.created_at,
+                u.credits_balance,
+                us.status as subscription_status,
+                p.name as plan_name
+            FROM amz_users u
+            LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id
+            LEFT JOIN amz_plans p ON us.plan_id = p.id
+            WHERE 1=1
+        `;
+
+        // Apply filters
         if (searchQuery) {
-            users = await sql`
-                SELECT 
-                    u.id,
-                    u.email,
-                    u.full_name,
-                    u.role,
-                    u.created_at,
-                    u.credits_balance,
-                    us.status as subscription_status,
-                    p.name as plan_name
-                FROM amz_users u
-                LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id
-                LEFT JOIN amz_plans p ON us.plan_id = p.id
-                WHERE u.email ILIKE ${`%${searchQuery}%`} 
-                   OR u.full_name ILIKE ${`%${searchQuery}%`}
-                ORDER BY u.created_at DESC
-                LIMIT ${limit}
-                OFFSET ${offset}
-            `;
-        } else {
-            users = await sql`
-                SELECT 
-                    u.id,
-                    u.email,
-                    u.full_name,
-                    u.role,
-                    u.created_at,
-                    u.credits_balance,
-                    us.status as subscription_status,
-                    p.name as plan_name
-                FROM amz_users u
-                LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id
-                LEFT JOIN amz_plans p ON us.plan_id = p.id
-                ORDER BY u.created_at DESC
-                LIMIT ${limit}
-                OFFSET ${offset}
-            `;
+            query = sql`${query} AND (u.email ILIKE ${`%${searchQuery}%`} OR u.full_name ILIKE ${`%${searchQuery}%`})`;
         }
 
-        // Get total count for pagination
-        const countResult = await sql`
-            SELECT COUNT(*) as count FROM amz_users
-        `;
+        if (statusFilter) {
+            if (statusFilter === 'delinquent') {
+                query = sql`${query} AND us.status IN ('past_due', 'unpaid')`;
+            } else {
+                query = sql`${query} AND us.status = ${statusFilter}`;
+            }
+        }
+
+        const users = await sql`${query} ORDER BY u.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+        // Get total count for pagination with same filters
+        let countQuery = sql`SELECT COUNT(*) as count FROM amz_users u LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id WHERE 1=1`;
+
+        if (searchQuery) {
+            countQuery = sql`${countQuery} AND (u.email ILIKE ${`%${searchQuery}%`} OR u.full_name ILIKE ${`%${searchQuery}%`})`;
+        }
+        if (statusFilter) {
+            if (statusFilter === 'delinquent') {
+                countQuery = sql`${countQuery} AND us.status IN ('past_due', 'unpaid')`;
+            } else {
+                countQuery = sql`${countQuery} AND us.status = ${statusFilter}`;
+            }
+        }
+
+        const countResult = await sql`${countQuery}`;
+        const totalCount = parseInt(countResult[0].count);
         const totalCount = parseInt(countResult[0].count);
 
         return {
