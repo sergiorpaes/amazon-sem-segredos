@@ -9,7 +9,9 @@ export const saveListing = async (productName: string, listingData: ListingGener
     });
 
     if (!res.ok) {
-        throw new Error('Failed to save listing');
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Save Listing Failed:', errorData);
+        throw new Error(errorData.details || errorData.message || 'Failed to save listing');
     }
 
     return await res.json();

@@ -47,7 +47,14 @@ export const handler = async (event: any) => {
             body: JSON.stringify(newListing)
         };
     } catch (error: any) {
-        console.error('Save Listing Error:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: 'Internal Server Error', message: error.message }) };
+        console.error('Save Listing Error FULL:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: 'Internal Server Error',
+                message: error.message,
+                details: error.toString()
+            })
+        };
     }
 };
