@@ -5,86 +5,105 @@ import { systemConfig } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 
 export const handler = async (event: any) => {
-    // Handle CORS
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            },
-            body: ''
-        };
-    }
-
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            body: JSON.stringify({ error: 'Method not allowed' })
-        };
-    }
-
+    // 1. Broadest possible Error Handling
     try {
-        const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+        // Handle CORS
+        if (event.httpMethod === 'OPTIONS') {
+            return {
+                statusCode: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                body: ''
+            };
+        }
 
+        if (event.httpMethod !== 'POST') {
+            return {
+                statusCode: 405,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ error: 'Method not allowed' })
+            };
+        }
+
+        const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
         if (!apiKey) {
-            console.error("Missing Gemini API Key");
+            console.error("[CRITICAL] Missing Gemini API Key");
             return {
                 statusCode: 500,
+                headers: { 'Access-Control-Allow-Origin': '*' },
                 body: JSON.stringify({ error: 'Server configuration error: Missing API Key' })
             };
         }
 
-        const body = JSON.parse(event.body || '{}');
-        const { image, additionalPrompt } = body;
+        // Parse Body safely
+        let body;
+        try {
+            body = JSON.parse(event.body || '{}');
+        } catch (e) {
+            return {
+                statusCode: 400,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ error: 'Invalid JSON body' })
+            };
+        }
 
+        const { image, additionalPrompt } = body;
         if (!image) {
             return {
                 statusCode: 400,
+                headers: { 'Access-Control-Allow-Origin': '*' },
                 body: JSON.stringify({ error: 'Image is required' })
             };
         }
 
-        // Clean base64 string and extract mime type robustly
-        const mimeMatch = image.match(/^data:([^;]+);base64,/);
-        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-        const base64Image = image.includes(';base64,') ? image.split(';base64,')[1] : image;
+        // Robust MIME and Base64 extraction
+        let mimeType = "image/jpeg";
+        let base64Image = image;
 
-        // Supported Gemini Image types: image/png, image/jpeg, image/webp, image/heic, image/heif
-        // If it's not one of these, we might need a fallback or return early
+        if (image.includes(';base64,')) {
+            const parts = image.split(';base64,');
+            if (parts.length === 2) {
+                const mimeMatch = parts[0].match(/data:([^;]+)/);
+                if (mimeMatch) mimeType = mimeMatch[1];
+                base64Image = parts[1];
+            }
+        }
+
+        // Supported Gemini Image types
         const supportedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'];
         const effectiveMimeType = supportedTypes.includes(mimeType) ? mimeType : "image/jpeg";
 
-        // Fetch Global Settings with error handling
-        let configMap: Record<string, string> = {};
+        // Configuration with safe fallbacks
+        let aiModel = "gemini-1.5-flash";
+        let isDebug = false;
+
         try {
             const allConfigs = await db.select().from(systemConfig);
+            const configMap: Record<string, string> = {};
             allConfigs.forEach(c => configMap[c.key] = c.value);
-        } catch (dbErr) {
-            console.error("[DEBUG] DB Fetch Error in analyze-image:", dbErr);
-            // Non-blocking, will use defaults
-        }
 
-        const aiModel = configMap.ai_model || "gemini-1.5-flash";
-        const isDebug = configMap.debug_mode === 'true';
+            aiModel = configMap.ai_model || aiModel;
+            isDebug = configMap.debug_mode === 'true';
+        } catch (dbErr) {
+            console.warn("[WARN] DB Config fetch failed in analyze-image, using defaults:", dbErr);
+        }
 
         if (isDebug) {
             console.log('[DEBUG] Analyze Image Request:', {
                 model: aiModel,
                 mimeType: effectiveMimeType,
-                originalMime: mimeType,
                 imageLength: base64Image.length
             });
         }
 
+        // Gemini Call
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
             model: aiModel,
-            generationConfig: {
-                maxOutputTokens: 2048,
-                temperature: 0.4,
-            }
+            generationConfig: { temperature: 0.4 }
         });
 
         const prompt = `
@@ -133,24 +152,20 @@ export const handler = async (event: any) => {
             ]);
         } catch (geminiErr: any) {
             console.error("[DEBUG] Gemini Execution Error:", geminiErr);
-            throw new Error(`Gemini Analysis Failed: ${geminiErr.message}`);
+            throw new Error(`Gemini Multi-modal Failed: ${geminiErr.message}`);
         }
 
         const response = await result.response;
         const responseText = response.text();
 
-        if (isDebug) {
-            console.log('[DEBUG] Analyze Image Raw Response:', responseText);
-        }
-
-        // Clean markdown if present
+        // Clean and Parse AI response
         const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
         let jsonResponse;
         try {
             jsonResponse = JSON.parse(cleanText);
         } catch (parseErr) {
             console.error("[DEBUG] JSON Parse Error in analyze-image:", cleanText);
-            throw new Error("Failed to parse AI response as JSON");
+            throw new Error(`Invalid AI response format: ${cleanText.substring(0, 100)}...`);
         }
 
         return {
@@ -163,7 +178,8 @@ export const handler = async (event: any) => {
         };
 
     } catch (error: any) {
-        console.error("Detailed Analysis Error:", error);
+        console.error("[FATAL] analyze-image handler error:", error);
+
         return {
             statusCode: 500,
             headers: {
@@ -173,7 +189,7 @@ export const handler = async (event: any) => {
             body: JSON.stringify({
                 error: 'Internal Server Error',
                 message: error.message,
-                details: error.stack?.split('\n').slice(0, 3).join('\n')
+                stack: error.stack?.split('\n').slice(0, 3).join('\n')
             })
         };
     }

@@ -43,7 +43,9 @@ export const generateListingImages = async (userPrompt: string, imageBase64: str
 
         if (!analysisRes.ok) {
             const err = await analysisRes.json();
-            throw new Error(err.error || "Failed to analyze image");
+            const errMsg = err.message || err.error || "Failed to analyze image";
+            const errDetails = err.details ? `\nDetails: ${err.details}` : "";
+            throw new Error(`${errMsg}${errDetails}`);
         }
 
         const analysisData: AnalysisResponse = await analysisRes.json();
