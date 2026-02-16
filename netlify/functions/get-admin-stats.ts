@@ -49,20 +49,23 @@ export const handler: Handler = async (event) => {
         `;
         const totalUsers = parseInt(totalUsersResult[0].count);
 
-        // Get active subscriptions count
+        // Get active subscriptions count (distinct users)
         const activeSubsResult = await sql`
-            SELECT COUNT(*) as count 
+            SELECT COUNT(DISTINCT user_id) as count 
             FROM amz_user_subscriptions 
             WHERE status = 'active'
         `;
         const activeSubs = parseInt(activeSubsResult[0].count);
 
-        // Calculate monthly revenue (sum of active subscription prices)
+        // Calculate monthly revenue (sum of active subscription prices for unique users)
         const revenueResult = await sql`
-            SELECT COALESCE(SUM(p.monthly_price_eur), 0) as revenue
-            FROM amz_user_subscriptions us
-            JOIN amz_plans p ON us.plan_id = p.id
-            WHERE us.status = 'active'
+            SELECT COALESCE(SUM(revenue), 0) as revenue FROM (
+                SELECT DISTINCT ON (user_id) p.monthly_price_eur as revenue
+                FROM amz_user_subscriptions us
+                JOIN amz_plans p ON us.plan_id = p.id
+                WHERE us.status = 'active'
+                ORDER BY user_id, us.updated_at DESC
+            ) sub
         `;
         const monthlyRevenue = parseFloat(revenueResult[0].revenue) / 100; // Convert cents to euros
 
@@ -74,8 +77,9 @@ export const handler: Handler = async (event) => {
         const totalCreditUsage = parseInt(creditUsageResult[0].total_spent);
 
         // Get cancellations in the last 30 days (Churn)
+        // Only count the most recent status change per user to avoided overcounting
         const cancellationsResult = await sql`
-            SELECT COUNT(*) as count
+            SELECT COUNT(DISTINCT user_id) as count
             FROM amz_user_subscriptions
             WHERE status = 'canceled' AND updated_at >= CURRENT_DATE - INTERVAL '30 days'
         `;

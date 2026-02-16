@@ -43,25 +43,57 @@ export const handler: Handler = async (event) => {
         const offset = parseInt(event.queryStringParameters?.offset || '0');
         const statusFilter = event.queryStringParameters?.status || ''; // 'active', 'trialing', 'past_due', 'canceled', 'delinquent'
 
-        // Build Where Clause
-        const filters = [];
+        // 1. Subquery to pick the "best" subscription for each user
+        const bestSubsSubquery = db
+            .select({
+                user_id: userSubscriptions.user_id,
+                plan_id: userSubscriptions.plan_id,
+                status: userSubscriptions.status,
+                rn: drizzleSql<number>`ROW_NUMBER() OVER(
+                    PARTITION BY ${userSubscriptions.user_id} 
+                    ORDER BY 
+                        CASE ${userSubscriptions.status}
+                            WHEN 'active' THEN 1 
+                            WHEN 'trialing' THEN 2 
+                            WHEN 'past_due' THEN 3 
+                            WHEN 'unpaid' THEN 4 
+                            WHEN 'canceled' THEN 5 
+                            ELSE 6 
+                        END ASC, 
+                        ${userSubscriptions.updated_at} DESC
+                )`.as('rn')
+            })
+            .from(userSubscriptions)
+            .as('best_subs_sq');
 
+        const bestSubs = db
+            .select()
+            .from(bestSubsSubquery)
+            .where(eq(bestSubsSubquery.rn, 1))
+            .as('best_subs');
+
+        // Build Filters
+        const userFilters = [];
         if (searchQuery) {
-            filters.push(or(
+            userFilters.push(or(
                 ilike(users.email, `%${searchQuery}%`),
                 ilike(users.full_name, `%${searchQuery}%`)
             ));
         }
 
+        const statusFilters = [];
         if (statusFilter) {
             if (statusFilter === 'delinquent') {
-                filters.push(inArray(userSubscriptions.status, ['past_due', 'unpaid']));
+                statusFilters.push(inArray(bestSubs.status, ['past_due', 'unpaid']));
             } else {
-                filters.push(eq(userSubscriptions.status, statusFilter));
+                statusFilters.push(eq(bestSubs.status, statusFilter));
             }
         }
 
-        const whereClause = filters.length > 0 ? and(...filters) : undefined;
+        const finalWhere = and(
+            userFilters.length > 0 ? and(...userFilters) : undefined,
+            statusFilters.length > 0 ? and(...statusFilters) : undefined
+        );
 
         // Execute queries
         const [usersData, countResult] = await Promise.all([
@@ -72,22 +104,22 @@ export const handler: Handler = async (event) => {
                 role: users.role,
                 created_at: users.created_at,
                 credits_balance: users.credits_balance,
-                subscription_status: userSubscriptions.status,
+                subscription_status: bestSubs.status,
                 plan_name: plans.name,
                 banned_at: users.banned_at
             })
                 .from(users)
-                .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
-                .leftJoin(plans, eq(userSubscriptions.plan_id, plans.id))
-                .where(whereClause)
+                .leftJoin(bestSubs, eq(users.id, bestSubs.user_id))
+                .leftJoin(plans, eq(bestSubs.plan_id, plans.id))
+                .where(finalWhere)
                 .orderBy(desc(users.created_at))
                 .limit(limit)
                 .offset(offset),
 
             db.select({ count: drizzleSql<number>`count(*)` })
                 .from(users)
-                .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
-                .where(whereClause)
+                .leftJoin(bestSubs, eq(users.id, bestSubs.user_id))
+                .where(finalWhere)
         ]);
 
         const totalCount = Number(countResult[0]?.count || 0);
