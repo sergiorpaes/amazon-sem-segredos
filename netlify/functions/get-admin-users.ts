@@ -1,7 +1,8 @@
 import { Handler } from '@netlify/functions';
-import { neon } from '@neondatabase/serverless';
+import { db } from '../../src/db';
+import { users, userSubscriptions, plans } from '../../src/db/schema';
+import { eq, or, ilike, desc, and, inArray, sql as drizzleSql } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
-
 import cookie from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-dev-key';
@@ -40,64 +41,56 @@ export const handler: Handler = async (event) => {
         const searchQuery = event.queryStringParameters?.search || '';
         const limit = parseInt(event.queryStringParameters?.limit || '50');
         const offset = parseInt(event.queryStringParameters?.offset || '0');
-        const statusFilter = event.queryStringParameters?.status || ''; // 'active', 'trialing', 'past_due', 'canceled'
+        const statusFilter = event.queryStringParameters?.status || ''; // 'active', 'trialing', 'past_due', 'canceled', 'delinquent'
 
-        if (!process.env.NETLIFY_DATABASE_URL) {
-            throw new Error('NETLIFY_DATABASE_URL is not defined');
-        }
+        // Build Where Clause
+        const filters = [];
 
-        // Connect to database
-        const sql = neon(process.env.NETLIFY_DATABASE_URL);
-
-        // Build base query
-        let query = sql`
-            SELECT 
-                u.id,
-                u.email,
-                u.full_name,
-                u.role,
-                u.created_at,
-                u.credits_balance,
-                us.status as subscription_status,
-                p.name as plan_name
-            FROM amz_users u
-            LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id
-            LEFT JOIN amz_plans p ON us.plan_id = p.id
-            WHERE 1=1
-        `;
-
-        // Apply filters
         if (searchQuery) {
-            query = sql`${query} AND (u.email ILIKE ${`%${searchQuery}%`} OR u.full_name ILIKE ${`%${searchQuery}%`})`;
+            filters.push(or(
+                ilike(users.email, `%${searchQuery}%`),
+                ilike(users.full_name, `%${searchQuery}%`)
+            ));
         }
 
         if (statusFilter) {
             if (statusFilter === 'delinquent') {
-                query = sql`${query} AND us.status IN ('past_due', 'unpaid')`;
+                filters.push(inArray(userSubscriptions.status, ['past_due', 'unpaid']));
             } else {
-                query = sql`${query} AND us.status = ${statusFilter}`;
+                filters.push(eq(userSubscriptions.status, statusFilter));
             }
         }
 
-        const users = await sql`${query} ORDER BY u.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+        const whereClause = filters.length > 0 ? and(...filters) : undefined;
 
-        // Get total count for pagination with same filters
-        let countQuery = sql`SELECT COUNT(*) as count FROM amz_users u LEFT JOIN amz_user_subscriptions us ON u.id = us.user_id WHERE 1=1`;
+        // Execute queries
+        const [usersData, countResult] = await Promise.all([
+            db.select({
+                id: users.id,
+                email: users.email,
+                full_name: users.full_name,
+                role: users.role,
+                created_at: users.created_at,
+                credits_balance: users.credits_balance,
+                subscription_status: userSubscriptions.status,
+                plan_name: plans.name,
+                banned_at: users.banned_at
+            })
+                .from(users)
+                .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
+                .leftJoin(plans, eq(userSubscriptions.plan_id, plans.id))
+                .where(whereClause)
+                .orderBy(desc(users.created_at))
+                .limit(limit)
+                .offset(offset),
 
-        if (searchQuery) {
-            countQuery = sql`${countQuery} AND (u.email ILIKE ${`%${searchQuery}%`} OR u.full_name ILIKE ${`%${searchQuery}%`})`;
-        }
-        if (statusFilter) {
-            if (statusFilter === 'delinquent') {
-                countQuery = sql`${countQuery} AND us.status IN ('past_due', 'unpaid')`;
-            } else {
-                countQuery = sql`${countQuery} AND us.status = ${statusFilter}`;
-            }
-        }
+            db.select({ count: drizzleSql<number>`count(*)` })
+                .from(users)
+                .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.user_id))
+                .where(whereClause)
+        ]);
 
-        const countResult = await sql`${countQuery}`;
-        const totalCount = parseInt(countResult[0].count);
-        const totalCount = parseInt(countResult[0].count);
+        const totalCount = Number(countResult[0]?.count || 0);
 
         return {
             statusCode: 200,
@@ -105,7 +98,7 @@ export const handler: Handler = async (event) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                users,
+                users: usersData,
                 totalCount,
                 limit,
                 offset
@@ -127,3 +120,4 @@ export const handler: Handler = async (event) => {
         };
     }
 };
+
