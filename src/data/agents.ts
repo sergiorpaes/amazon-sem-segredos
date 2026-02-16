@@ -30,9 +30,9 @@ export const AGENTS: Agent[] = [
         id: 'mentor-virtual',
         name: 'Mentor Virtual',
         description: {
-            en: 'Official Assistant of the Amazon Sem Segredos methodology. Expert in Amazon FBA Europe and lifestyle design.',
-            pt: 'Assistente Oficial da metodologia Amazon Sem Segredos. Especialista em Amazon FBA Europa e design de estilo de vida.',
-            es: 'Asistente Oficial de la metodología Amazon Sem Segredos. Experto en Amazon FBA Europa y diseño de estilo de vida.'
+            en: 'Official Assistant of the Amazon Sem Segredos methodology. Expert in Amazon FBA Europe.',
+            pt: 'Assistente Oficial da metodologia Amazon Sem Segredos. Especialista em Amazon FBA Europa.',
+            es: 'Asistente Oficial de la metodología Amazon Sem Segredos. Experto en Amazon FBA Europa.'
         },
         icon: Sparkles,
         color: 'text-brand-500',
