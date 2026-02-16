@@ -56,10 +56,21 @@ function AppContent() {
 
   const handleLogout = () => {
     setCurrentView(AppView.LANDING);
+    // Force re-check maintenance on logout
+    const checkMaintenance = async () => {
+      try {
+        const res = await fetch('/.netlify/functions/get-system-status');
+        if (res.ok) {
+          const data = await res.json();
+          setIsMaintenance(data.isMaintenance);
+        }
+      } catch (e) { }
+    };
+    checkMaintenance();
   };
 
   // Maintenance Barrier
-  if (isMaintenance && user?.role !== 'ADMIN') {
+  if (isMaintenance && user?.role !== 'ADMIN' && currentView !== AppView.LANDING) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 text-center">
         <div className="max-w-md w-full space-y-8 animate-in zoom-in-95 duration-500">
@@ -78,6 +89,13 @@ function AppContent() {
                 <Shield className="w-4 h-4 text-brand-500" />
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Acesso Restrito</span>
               </div>
+
+              <button
+                onClick={() => login(null)} // This clears the local user state
+                className="mt-8 text-gray-500 hover:text-white text-xs underline transition-colors"
+              >
+                Voltar ao Início
+              </button>
             </div>
           </div>
         </div>

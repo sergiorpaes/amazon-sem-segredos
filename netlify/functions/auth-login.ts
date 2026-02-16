@@ -1,6 +1,5 @@
-
 import { db } from '../../src/db';
-import { users, userSubscriptions, plans } from '../../src/db/schema';
+import { users, userSubscriptions, plans, systemConfig } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -17,6 +16,10 @@ export const handler = async (event: any) => {
         if (!email || !password) {
             return { statusCode: 400, body: JSON.stringify({ error: 'Email and password are required' }) };
         }
+
+        // 0. Check Maintenance Mode
+        const [config] = await db.select().from(systemConfig).where(eq(systemConfig.key, 'maintenance_mode')).limit(1);
+        const isMaintenance = config?.value === 'true';
 
         // Find user
         const [user] = await db.select({
@@ -36,6 +39,17 @@ export const handler = async (event: any) => {
 
         if (!user) {
             return { statusCode: 404, body: JSON.stringify({ error: 'Usuário não encontrado' }) };
+        }
+
+        // Check if Maintenance Mode blocks this user
+        if (isMaintenance && user.role !== 'ADMIN') {
+            return {
+                statusCode: 503,
+                body: JSON.stringify({
+                    error: 'Sistema em Manutenção',
+                    details: 'O sistema está em manutenção programada. Por favor, tente novamente mais tarde.'
+                })
+            };
         }
 
         // Check password
