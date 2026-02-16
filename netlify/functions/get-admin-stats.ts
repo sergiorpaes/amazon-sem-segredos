@@ -15,7 +15,7 @@ export const handler: Handler = async (event) => {
         // Verify JWT (Header OR Cookie)
         let token = event.headers.authorization?.replace('Bearer ', '');
 
-        if (!token) {
+        if (!token || token === 'null' || token === 'undefined') {
             const cookies = cookie.parse(event.headers.cookie || '');
             token = cookies.auth_token;
         }

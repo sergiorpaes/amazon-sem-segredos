@@ -45,20 +45,14 @@ export const AdminDashboard: React.FC = () => {
     const fetchAdminData = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
-
             // Fetch enriched stats
-            const statsResponse = await fetch('/.netlify/functions/get-admin-stats', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const statsResponse = await fetch('/.netlify/functions/get-admin-stats');
             if (!statsResponse.ok) throw new Error('Failed to fetch stats');
             const statsData = await statsResponse.json();
             setStats(statsData);
 
             // Fetch plans for config
-            const plansResponse = await fetch('/.netlify/functions/get-plans', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const plansResponse = await fetch('/.netlify/functions/get-plans');
             if (plansResponse.ok) {
                 const plansData = await plansResponse.json();
                 setPlans(plansData);
@@ -76,10 +70,8 @@ export const AdminDashboard: React.FC = () => {
     const handleUpdatePlan = async (planId: number, price: number, credits: number) => {
         try {
             setSavingConfig(true);
-            const token = localStorage.getItem('token');
             const res = await fetch('/.netlify/functions/update-admin-config', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
                     type: 'UPDATE_PLAN',
                     payload: { planId, monthly_price_eur: price, credit_limit: credits }
@@ -97,11 +89,9 @@ export const AdminDashboard: React.FC = () => {
     const toggleMaintenance = async () => {
         try {
             setSavingConfig(true);
-            const token = localStorage.getItem('token');
             const newValue = !isMaintenanceMode;
             const res = await fetch('/.netlify/functions/update-admin-config', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
                     type: 'UPDATE_CONFIG',
                     payload: { key: 'maintenance_mode', value: newValue }

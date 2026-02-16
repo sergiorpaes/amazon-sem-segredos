@@ -49,16 +49,13 @@ export const AdminUsers: React.FC = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token');
             const offset = (currentPage - 1) * itemsPerPage;
 
             let url = `/.netlify/functions/get-admin-users?limit=${itemsPerPage}&offset=${offset}`;
             if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
             if (statusFilter) url += `&status=${statusFilter}`;
 
-            const response = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await fetch(url);
 
             if (!response.ok) throw new Error('Failed to fetch users');
 
@@ -79,7 +76,6 @@ export const AdminUsers: React.FC = () => {
 
         try {
             setSubmitting(true);
-            const token = localStorage.getItem('token');
 
             let payload: any = {};
             if (modal.type === 'CREDITS') payload = { amount: creditAmount, description: 'Ajuste manual administrativo' };
@@ -89,7 +85,6 @@ export const AdminUsers: React.FC = () => {
 
             const res = await fetch('/.netlify/functions/admin-user-action', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
                     userId: modal.user.id,
                     action: modal.type === 'CREDITS' ? 'UPDATE_CREDITS' :

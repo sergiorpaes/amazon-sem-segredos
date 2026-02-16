@@ -15,7 +15,7 @@ export const handler: Handler = async (event) => {
     try {
         // 1. Auth check
         let token = event.headers.authorization?.replace('Bearer ', '');
-        if (!token) {
+        if (!token || token === 'null' || token === 'undefined') {
             const cookies = cookie.parse(event.headers.cookie || '');
             token = cookies.auth_token;
         }
