@@ -252,31 +252,34 @@ export const ListingOptimizer: React.FC = () => {
             {savedListings.length === 0 && (
               <p className="text-center text-gray-400 text-sm mt-8">{t('lo.ui.history.empty')}</p>
             )}
-            {savedListings.map(item => (
-              <div
-                key={item.id}
-                onClick={() => handleLoadListing(item)}
-                className="bg-white dark:bg-dark-700 border dark:border-dark-600 hover:border-brand-300 p-3 rounded-lg shadow-sm cursor-pointer group transition-all"
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-bold text-gray-800 text-sm line-clamp-1">{item.productName}</span>
-                  <button
-                    onClick={(e) => handleDeleteListing(item.id, e)}
-                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleDateString()} - {new Date(item.createdAt).toLocaleTimeString()}</p>
-                {item.generatedImages.length > 0 && (
-                  <div className="mt-2 flex gap-1">
-                    {item.generatedImages.slice(0, 3).map((img, i) => (
-                      <img key={i} src={img} className="w-8 h-8 rounded object-cover border" />
-                    ))}
+            {savedListings.map((item) => {
+              if (!item) return null; // Guard against undefined items
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => handleLoadListing(item)}
+                  className="bg-white dark:bg-dark-700 border dark:border-dark-600 hover:border-brand-300 p-3 rounded-lg shadow-sm cursor-pointer group transition-all"
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-bold text-gray-800 text-sm line-clamp-1">{item.productName}</span>
+                    <button
+                      onClick={(e) => handleDeleteListing(item.id, e)}
+                      className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
-              </div>
-            ))}
+                  <p className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleDateString()} - {new Date(item.createdAt).toLocaleTimeString()}</p>
+                  {item.generatedImages && item.generatedImages.length > 0 && (
+                    <div className="mt-2 flex gap-1">
+                      {item.generatedImages.slice(0, 3).map((img, i) => (
+                        <img key={i} src={img} className="w-8 h-8 rounded object-cover border" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

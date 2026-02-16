@@ -25,18 +25,22 @@ export const getListings = async (): Promise<SavedListing[]> => {
     }
 
     const data = await res.json();
+    console.log('API getListings RAW:', data);
 
     // Map backend response (id, product_name, listing_data, generated_images, created_at) 
     // to frontend interface (id, productName, listing_data -> es/pt, generatedImages, createdAt)
-    return data.map((item: any) => ({
-        id: item.id.toString(),
-        productName: item.product_name,
-        es: item.listing_data.es,
-        pt: item.listing_data.pt,
-        imagePromptContext: item.listing_data.imagePromptContext,
-        generatedImages: item.generated_images || [],
-        createdAt: item.created_at
-    }));
+    return data.map((item: any) => {
+        // console.log('Processing item:', item); 
+        return {
+            id: item.id.toString(),
+            productName: item.product_name,
+            es: item.listing_data?.es,
+            pt: item.listing_data?.pt,
+            imagePromptContext: item.listing_data?.imagePromptContext,
+            generatedImages: item.generated_images || [],
+            createdAt: item.created_at
+        };
+    });
 };
 
 export const deleteListing = async (id: string): Promise<void> => {
