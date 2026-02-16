@@ -99,49 +99,49 @@ export const handler = async (event: any) => {
             });
         }
 
-        // Gemini Call
+        // Gemini Call with Robust Error Recovery
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: aiModel,
-            generationConfig: { temperature: 0.4 }
-        });
 
-        const prompt = `
-        Atue como um Especialista em Catalogação de E-commerce da Amazon. Sua tarefa é analisar a imagem enviada por um vendedor e gerar os termos de busca técnicos que retornarão o produto exato ou seus concorrentes diretos na Amazon.
+        async function tryGenerate(modelName: string) {
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                generationConfig: { temperature: 0.4 }
+            });
 
-        DIRETRIZES DE ANÁLISE:
-        1. IDENTIFICAÇÃO DE TEXTO (OCR): Extraia prioritariamente nomes de marcas, logotipos, códigos de modelo (ex: WH-1000XM4), números de peça (MPN) ou voltagem/capacidade.
-        2. ATRIBUTOS COMERCIAIS: Identifique cor oficial, material, público-alvo (masculino/feminino/infantil) e quantidade (ex: Pack de 2).
-        3. FILTRAGEM DE RUÍDO: Ignore elementos de fundo, mãos do vendedor ou objetos irrelevantes na cena. Foque 100% no item principal.
-        4. CATEGORIZAÇÃO: Determine a qual departamento da Amazon o item pertence (Eletrônicos, Cozinha, Ferramentas, etc).
+            const prompt = `
+            Atue como um Especialista em Catalogação de E-commerce da Amazon. Sua tarefa é analisar a imagem enviada por um vendedor e gerar os termos de busca técnicos que retornarão o produto exato ou seus concorrentes diretos na Amazon.
 
-        ${additionalPrompt ? `Contexto adicional do usuário: ${additionalPrompt}` : ''}
-        
-        Generate 3 distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product, maintaining its core identity but placing it in different professional contexts:
-        1. A "Lifestyle" shot (e.g., in use, home setting).
-        2. A "Creative" shot (e.g., studio lighting, artistic background).
-        3. An "Application" shot (e.g., showing the benefit/result).
+            DIRETRIZES DE ANÁLISE:
+            1. IDENTIFICAÇÃO DE TEXTO (OCR): Extraia prioritariamente nomes de marcas, logotipos, códigos de modelo (ex: WH-1000XM4), números de peça (MPN) ou voltagem/capacidade.
+            2. ATRIBUTOS COMERCIAIS: Identifique cor oficial, material, público-alvo (masculino/feminino/infantil) e quantidade (ex: Pack de 2).
+            3. FILTRAGEM DE RUÍDO: Ignore elementos de fundo, mãos do vendedor ou objetos irrelevantes na cena. Foque 100% no item principal.
+            4. CATEGORIZAÇÃO: Determine a qual departamento da Amazon o item pertence (Eletrônicos, Cozinha, Ferramentas, etc).
 
-        Return the result as a STRICT JSON object with these keys:
-        {
-          "amazon_optimized_query": "[MARCA] + [MODELO EXATO] + [PRINCIPAL CARACTERÍSTICA] + [COR/TAMANHO]",
-          "detected_brand": "Nome da Marca",
-          "product_category": "Categoria sugerida para o SearchIndex",
-          "technical_details": ["detalhe 1", "detalhe 2"],
-          "confidence_score": "0-100",
-          "description": "Brief literal description in Portuguese",
-          "prompts": {
-                "lifestyle": "Full prompt...",
-                "creative": "Full prompt...",
-                "application": "Full prompt..."
-          }
-        }
-        Do not use markdown formatting.
-        `;
+            ${additionalPrompt ? `Contexto adicional do usuário: ${additionalPrompt}` : ''}
+            
+            Generate 3 distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product, maintaining its core identity but placing it in different professional contexts:
+            1. A "Lifestyle" shot (e.g., in use, home setting).
+            2. A "Creative" shot (e.g., studio lighting, artistic background).
+            3. An "Application" shot (e.g., showing the benefit/result).
 
-        let result;
-        try {
-            result = await model.generateContent([
+            Return the result as a STRICT JSON object with these keys:
+            {
+              "amazon_optimized_query": "[MARCA] + [MODELO EXATO] + [PRINCIPAL CARACTERÍSTICA] + [COR/TAMANHO]",
+              "detected_brand": "Nome da Marca",
+              "product_category": "Categoria sugerida para o SearchIndex",
+              "technical_details": ["detalhe 1", "detalhe 2"],
+              "confidence_score": "0-100",
+              "description": "Brief literal description in Portuguese",
+              "prompts": {
+                    "lifestyle": "Full prompt...",
+                    "creative": "Full prompt...",
+                    "application": "Full prompt..."
+              }
+            }
+            Do not use markdown formatting.
+            `;
+
+            return await model.generateContent([
                 prompt,
                 {
                     inlineData: {
@@ -150,9 +150,31 @@ export const handler = async (event: any) => {
                     },
                 },
             ]);
-        } catch (geminiErr: any) {
-            console.error("[DEBUG] Gemini Execution Error:", geminiErr);
-            throw new Error(`Gemini Multi-modal Failed: ${geminiErr.message}`);
+        }
+
+        let result;
+        const modelsToTry = [aiModel, "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash-lite"];
+        // Remove duplicates and keep order
+        const uniqueModels = [...new Set(modelsToTry)];
+
+        let lastError: any;
+        for (const modelName of uniqueModels) {
+            try {
+                if (isDebug) console.log(`[DEBUG] Attempting with model: ${modelName}`);
+                result = await tryGenerate(modelName);
+                if (result) break;
+            } catch (err: any) {
+                lastError = err;
+                console.warn(`[WARN] Model ${modelName} failed:`, err.message);
+                if (err.message?.includes('404') || err.message?.includes('not found')) {
+                    continue; // Try next model
+                }
+                throw err; // If it's another error (like auth or quota), throw immediately
+            }
+        }
+
+        if (!result) {
+            throw lastError || new Error("All models failed to respond");
         }
 
         const response = await result.response;
@@ -160,13 +182,7 @@ export const handler = async (event: any) => {
 
         // Clean and Parse AI response
         const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-        let jsonResponse;
-        try {
-            jsonResponse = JSON.parse(cleanText);
-        } catch (parseErr) {
-            console.error("[DEBUG] JSON Parse Error in analyze-image:", cleanText);
-            throw new Error(`Invalid AI response format: ${cleanText.substring(0, 100)}...`);
-        }
+        const jsonResponse = JSON.parse(cleanText);
 
         return {
             statusCode: 200,

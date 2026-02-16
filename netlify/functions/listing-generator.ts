@@ -77,7 +77,7 @@ export const handler = async (event: any) => {
         const configMap: Record<string, string> = {};
         allConfigs.forEach(c => configMap[c.key] = c.value);
 
-        const aiModel = configMap.ai_model || "gemini-2.0-flash";
+        const aiModel = configMap.ai_model || "gemini-2.0-flash-lite";
         const isDebug = configMap.debug_mode === 'true';
 
         if (isDebug) {
