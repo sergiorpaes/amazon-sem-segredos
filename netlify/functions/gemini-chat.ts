@@ -1,8 +1,10 @@
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import { consumeCredits } from '../../src/lib/credits';
+import { db } from '../../src/db';
+import { systemConfig } from '../../src/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -67,6 +69,22 @@ export const handler = async (event: any) => {
             };
         }
 
+        // Fetch Global Settings
+        const allConfigs = await db.select().from(systemConfig);
+        const configMap: Record<string, string> = {};
+        allConfigs.forEach(c => configMap[c.key] = c.value);
+
+        const aiModel = configMap.ai_model || "gemini-2.0-flash-lite";
+        const isDebug = configMap.debug_mode === 'true';
+
+        if (isDebug) {
+            console.log('[DEBUG] Gemini Chat Request:', {
+                userId,
+                model: aiModel,
+                messageLength: event.body?.length
+            });
+        }
+
         const body = JSON.parse(event.body || '{}');
         const { message, history, instructions } = body;
 
@@ -79,7 +97,7 @@ export const handler = async (event: any) => {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-lite",
+            model: aiModel,
             systemInstruction: instructions
         });
 
@@ -89,6 +107,12 @@ export const handler = async (event: any) => {
 
         const result = await chat.sendMessage(message);
         const responseText = result.response.text();
+
+        if (isDebug) {
+            console.log('[DEBUG] Gemini Chat Response:', {
+                responseTextLength: responseText.length
+            });
+        }
 
         return {
             statusCode: 200,

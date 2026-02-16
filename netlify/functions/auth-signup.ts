@@ -1,5 +1,5 @@
 import { db } from '../../src/db';
-import { users, plans, userSubscriptions, creditsLedger } from '../../src/db/schema';
+import { users, plans, userSubscriptions, systemConfig } from '../../src/db/schema';
 import { eq, ilike } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -33,6 +33,18 @@ export const handler = async (event: any) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'Faltam campos obrigatórios (Email, Password, Telefone, Morada)' }) };
         }
 
+        // 0. Check Global Settings
+        const allConfigs = await db.select().from(systemConfig);
+        const configMap: Record<string, string> = {};
+        allConfigs.forEach(c => configMap[c.key] = c.value);
+
+        if (configMap.registration_enabled === 'false') {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ error: 'As inscrições estão temporariamente desativadas. Por favor, tente novamente em breve.' })
+            };
+        }
+
         // Check if user exists
         const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
         if (existingUser.length > 0) {
@@ -56,7 +68,7 @@ export const handler = async (event: any) => {
         }
 
         // Determine initial credits and role based on plan
-        let initialCredits = 5;
+        let initialCredits = parseInt(configMap.initial_credits || '5');
         let role = 'USER';
 
         if (plan) {

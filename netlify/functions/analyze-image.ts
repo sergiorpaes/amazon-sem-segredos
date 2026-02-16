@@ -1,5 +1,8 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { db } from '../../src/db';
+import { systemConfig } from '../../src/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -46,9 +49,20 @@ export const handler = async (event: any) => {
         // Clean base64 string
         const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
 
+        // Fetch Global Settings
+        const allConfigs = await db.select().from(systemConfig);
+        const configMap: Record<string, string> = {};
+        allConfigs.forEach(c => configMap[c.key] = c.value);
+
+        const aiModel = configMap.ai_model || "gemini-1.5-flash";
+        const isDebug = configMap.debug_mode === 'true';
+
+        if (isDebug) {
+            console.log('[DEBUG] Analyze Image Request:', { model: aiModel });
+        }
+
         const genAI = new GoogleGenerativeAI(apiKey);
-        // Using Gemini Flash Latest
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const model = genAI.getGenerativeModel({ model: aiModel });
 
         const prompt = `
         Atue como um Especialista em Catalogação de E-commerce da Amazon. Sua tarefa é analisar a imagem enviada por um vendedor e gerar os termos de busca técnicos que retornarão o produto exato ou seus concorrentes diretos na Amazon.

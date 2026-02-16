@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Users, DollarSign, Activity, Settings, Loader2,
     ArrowUpRight, ArrowDownRight, Zap, Shield,
-    Globe, Server, AlertCircle, Save, ToggleLeft, ToggleRight
+    Globe, Server, AlertCircle, Save, ToggleLeft, ToggleRight,
+    CreditCard, UserPlus, Brain, Bug, Cpu, Lock, Unlock, Mail
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -21,6 +22,12 @@ interface AdminStats {
         signups: number;
         cancellations: number;
     }>;
+    // Global Configs
+    stripeMode: 'TEST' | 'LIVE';
+    registrationEnabled: boolean;
+    aiModel: string;
+    debugMode: boolean;
+    initialCredits: number;
 }
 
 interface Plan {
@@ -36,6 +43,14 @@ export const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+
+    // Global Config States
+    const [stripeMode, setStripeMode] = useState<'TEST' | 'LIVE'>('TEST');
+    const [registrationEnabled, setRegistrationEnabled] = useState(true);
+    const [aiModel, setAiModel] = useState('gemini-1.5-flash');
+    const [debugMode, setDebugMode] = useState(false);
+    const [initialCredits, setInitialCredits] = useState(5);
+
     const [savingConfig, setSavingConfig] = useState(false);
 
     useEffect(() => {
@@ -50,9 +65,13 @@ export const AdminDashboard: React.FC = () => {
             if (!statsResponse.ok) throw new Error('Failed to fetch stats');
             const statsData = await statsResponse.json();
             setStats(statsData);
-            if (statsData.isMaintenanceMode !== undefined) {
-                setIsMaintenanceMode(statsData.isMaintenanceMode);
-            }
+
+            if (statsData.isMaintenanceMode !== undefined) setIsMaintenanceMode(statsData.isMaintenanceMode);
+            if (statsData.stripeMode) setStripeMode(statsData.stripeMode);
+            if (statsData.registrationEnabled !== undefined) setRegistrationEnabled(statsData.registrationEnabled);
+            if (statsData.aiModel) setAiModel(statsData.aiModel);
+            if (statsData.debugMode !== undefined) setDebugMode(statsData.debugMode);
+            if (statsData.initialCredits !== undefined) setInitialCredits(statsData.initialCredits);
 
             // Fetch plans for config
             const plansResponse = await fetch('/.netlify/functions/get-plans');
@@ -67,6 +86,34 @@ export const AdminDashboard: React.FC = () => {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const updateGlobalConfig = async (key: string, value: any) => {
+        try {
+            setSavingConfig(true);
+            const res = await fetch('/.netlify/functions/update-admin-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                },
+                body: JSON.stringify({
+                    type: 'UPDATE_CONFIG',
+                    payload: { key, value }
+                })
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.details || errorData.error || 'Falha ao atualizar');
+            }
+
+            // Optimistic update for UI if needed, or just refresh
+            fetchAdminData();
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setSavingConfig(false);
         }
     };
 
@@ -93,32 +140,7 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    const toggleMaintenance = async () => {
-        try {
-            setSavingConfig(true);
-            const newValue = !isMaintenanceMode;
-            const res = await fetch('/.netlify/functions/update-admin-config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                },
-                body: JSON.stringify({
-                    type: 'UPDATE_CONFIG',
-                    payload: { key: 'maintenance_mode', value: newValue }
-                })
-            });
-            if (res.ok) setIsMaintenanceMode(newValue);
-            else {
-                const errorData = await res.json();
-                alert(`Erro: ${errorData.details || errorData.error || 'Falha ao atualizar'}`);
-            }
-        } catch (err: any) {
-            alert(err.message);
-        } finally {
-            setSavingConfig(false);
-        }
-    };
+    const toggleMaintenance = () => updateGlobalConfig('maintenance_mode', !isMaintenanceMode);
 
     if (loading && !stats) {
         return (
@@ -320,49 +342,183 @@ export const AdminDashboard: React.FC = () => {
                             </div>
                             <p className="text-[10px] text-gray-400 mt-1">Fila: 12 tarefas</p>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div className="pt-4 border-t border-gray-50 dark:border-dark-700">
-                            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-xl border border-gray-100 dark:border-dark-700">
-                                <div className="flex items-center gap-3">
-                                    <Shield className={`w-5 h-5 ${isMaintenanceMode ? 'text-red-500' : 'text-gray-400'}`} />
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Modo Manutenção</p>
-                                        <p className="text-[10px] text-gray-500 italic">Trava acesso público</p>
-                                    </div>
+            {/* Global Settings Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Business Settings */}
+                <div className="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <DollarSign className="w-5 h-5 text-brand-500" />
+                        Configurações de Negócio
+                    </h2>
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-xl border border-gray-100 dark:border-dark-700">
+                            <div className="flex items-center gap-3">
+                                <CreditCard className={`w-5 h-5 ${stripeMode === 'LIVE' ? 'text-green-500' : 'text-blue-500'}`} />
+                                <div>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Ambiente Stripe</p>
+                                    <p className="text-[10px] text-gray-500">Define o processamento de pagamentos</p>
                                 </div>
+                            </div>
+                            <div className="flex bg-gray-200 dark:bg-dark-800 p-1 rounded-lg">
                                 <button
-                                    onClick={toggleMaintenance}
-                                    disabled={savingConfig}
-                                    className="transition-colors disabled:opacity-50"
+                                    onClick={() => updateGlobalConfig('stripe_mode', 'TEST')}
+                                    className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${stripeMode === 'TEST' ? 'bg-blue-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
-                                    {isMaintenanceMode ? (
-                                        <ToggleRight className="w-8 h-8 text-red-500" />
-                                    ) : (
-                                        <ToggleLeft className="w-8 h-8 text-gray-400" />
-                                    )}
+                                    TEST
+                                </button>
+                                <button
+                                    onClick={() => updateGlobalConfig('stripe_mode', 'LIVE')}
+                                    className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${stripeMode === 'LIVE' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    LIVE
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-xl border border-gray-100 dark:border-dark-700">
+                            <div className="flex items-center gap-3">
+                                <UserPlus className={`w-5 h-5 ${registrationEnabled ? 'text-green-500' : 'text-red-500'}`} />
+                                <div>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Novos Registros</p>
+                                    <p className="text-[10px] text-gray-500">Permite a criação de novas contas</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => updateGlobalConfig('registration_enabled', !registrationEnabled)}
+                                disabled={savingConfig}
+                                className="transition-colors disabled:opacity-50"
+                            >
+                                {registrationEnabled ? (
+                                    <ToggleRight className="w-8 h-8 text-green-500" />
+                                ) : (
+                                    <ToggleLeft className="w-8 h-8 text-gray-400" />
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-xl border border-gray-100 dark:border-dark-700">
+                            <div className="flex items-center gap-3">
+                                <Zap className="w-5 h-5 text-yellow-500" />
+                                <div>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Créditos Iniciais</p>
+                                    <p className="text-[10px] text-gray-500">Saldo padrão para novos usuários</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    key={initialCredits}
+                                    defaultValue={initialCredits}
+                                    onBlur={(e) => updateGlobalConfig('initial_credits', e.target.value)}
+                                    className="w-16 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg px-2 py-1 text-sm text-center focus:ring-2 focus:ring-brand-500 outline-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Intelligence & Ecosystem Settings */}
+                <div className="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-500" />
+                        Configurações de Ecossistema
+                    </h2>
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-xl border border-gray-100 dark:border-dark-700">
+                            <div className="flex items-center gap-3">
+                                <Cpu className="w-5 h-5 text-purple-600" />
+                                <div>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Modelo de IA</p>
+                                    <p className="text-[10px] text-gray-500">Define o motor para chat e listings</p>
+                                </div>
+                            </div>
+                            <select
+                                value={aiModel}
+                                onChange={(e) => updateGlobalConfig('ai_model', e.target.value)}
+                                className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-300 outline-none focus:ring-2 focus:ring-brand-500 transition-all"
+                            >
+                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                            </select>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-xl border border-gray-100 dark:border-dark-700">
+                            <div className="flex items-center gap-3">
+                                <Bug className={`w-5 h-5 ${debugMode ? 'text-yellow-500' : 'text-gray-400'}`} />
+                                <div>
+                                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Modo Debug</p>
+                                    <p className="text-[10px] text-gray-500">Logs detalhados nas funções Netlify</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => updateGlobalConfig('debug_mode', !debugMode)}
+                                disabled={savingConfig}
+                                className="transition-colors disabled:opacity-50"
+                            >
+                                {debugMode ? (
+                                    <ToggleRight className="w-8 h-8 text-yellow-500" />
+                                ) : (
+                                    <ToggleLeft className="w-8 h-8 text-gray-400" />
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/30">
+                            <div className="flex items-center gap-3">
+                                <Shield className={`w-5 h-5 ${isMaintenanceMode ? 'text-red-500' : 'text-gray-400'}`} />
+                                <div>
+                                    <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase">Modo Manutenção</p>
+                                    <p className="text-[10px] text-red-600/70">Bloqueia acesso público a todo o sistema</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleMaintenance}
+                                disabled={savingConfig}
+                                className="transition-colors disabled:opacity-50"
+                            >
+                                {isMaintenanceMode ? (
+                                    <ToggleRight className="w-8 h-8 text-red-500" />
+                                ) : (
+                                    <ToggleLeft className="w-8 h-8 text-gray-400" />
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Global Config Section */}
+            {/* Plan Config Section */}
             <div className="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-700">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <Settings className="w-5 h-5 text-gray-400" />
-                            Configurações de Planos
+                            Configurações de Planos Pagos
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie preços e limites de créditos globais.</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie preços de checkout e limites de bônus mensal.</p>
                     </div>
+                    {savingConfig && (
+                        <div className="flex items-center gap-2 text-brand-600 text-xs font-bold animate-pulse">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Salvando alterações...
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {plans.map((plan) => (
-                        <div key={plan.id} className="p-6 bg-gray-50 dark:bg-dark-900/50 rounded-2xl border border-gray-100 dark:border-dark-700 space-y-4">
-                            <h3 className="font-bold text-gray-900 dark:text-white">{plan.name}</h3>
+                        <div key={plan.id} className="p-6 bg-gray-50 dark:bg-dark-900/50 rounded-2xl border border-gray-100 dark:border-dark-700 space-y-4 hover:border-brand-300 transition-colors group">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-bold text-gray-900 dark:text-white">{plan.name}</h3>
+                                <div className="p-1.5 bg-white dark:bg-dark-800 rounded-lg border border-gray-100 dark:border-dark-700 transition-transform group-hover:scale-110">
+                                    <Zap className="w-3 h-3 text-brand-500" />
+                                </div>
+                            </div>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Preço Mensal (€)</label>
@@ -374,7 +530,7 @@ export const AdminDashboard: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Créditos / Mês</label>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Limite Créditos / Mês</label>
                                     <input
                                         type="number"
                                         defaultValue={plan.credit_limit}
@@ -385,22 +541,6 @@ export const AdminDashboard: React.FC = () => {
                             </div>
                         </div>
                     ))}
-
-                    {/* Default Balance for Free Users */}
-                    <div className="p-6 bg-brand-50/50 dark:bg-brand-900/10 rounded-2xl border border-brand-100 dark:border-brand-900/30 space-y-4 border-dashed">
-                        <h3 className="font-bold text-brand-700 dark:text-brand-400 flex items-center gap-2">
-                            Default Growth
-                        </h3>
-                        <div>
-                            <label className="block text-[10px] font-bold text-brand-600/60 uppercase mb-1">Créditos de Boas-vindas</label>
-                            <input
-                                type="number"
-                                defaultValue={5}
-                                className="w-full bg-white dark:bg-dark-800 border border-brand-200 dark:border-brand-800/50 rounded-lg px-3 py-2 text-sm outline-none"
-                            />
-                            <p className="text-[10px] text-brand-600/50 mt-2 font-medium">Aplicado a novos cadastros gratuitos.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

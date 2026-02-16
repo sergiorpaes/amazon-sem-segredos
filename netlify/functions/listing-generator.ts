@@ -3,6 +3,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import { consumeCredits } from '../../src/lib/credits';
+import { db } from '../../src/db';
+import { systemConfig } from '../../src/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -69,9 +72,20 @@ export const handler = async (event: any) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'Product Name and Category are required.' }) };
         }
 
+        // Fetch Global Settings
+        const allConfigs = await db.select().from(systemConfig);
+        const configMap: Record<string, string> = {};
+        allConfigs.forEach(c => configMap[c.key] = c.value);
+
+        const aiModel = configMap.ai_model || "gemini-2.0-flash";
+        const isDebug = configMap.debug_mode === 'true';
+
+        if (isDebug) {
+            console.log('[DEBUG] Listing Generator Request:', { productName, model: aiModel });
+        }
+
         const genAI = new GoogleGenerativeAI(apiKey);
-        // Use gemini-2.0-flash for speed and efficiency
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: aiModel });
 
         // --- SINGLE OPTIMIZED PROMPT ---
         const prompt = `
@@ -148,6 +162,10 @@ export const handler = async (event: any) => {
 
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
+
+        if (isDebug) {
+            console.log('[DEBUG] Listing Generator Response:', { responseLength: responseText.length });
+        }
 
         // Clean and Parse
         let jsonString = responseText.trim();

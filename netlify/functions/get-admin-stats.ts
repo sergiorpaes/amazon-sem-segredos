@@ -131,15 +131,25 @@ export const handler: Handler = async (event) => {
 
         const growthData = Object.values(growthDataMap);
 
-        // Maintenance Status
-        console.log('[get-admin-stats] Checking maintenance status...');
-        let isMaintenanceMode = false;
-        try {
-            const config = await db.select().from(systemConfig).where(eq(systemConfig.key, 'maintenance_mode')).limit(1);
-            isMaintenanceMode = config.length > 0 ? config[0].value === 'true' : false;
-        } catch (e) {
-            console.warn('systemConfig table might not exist yet');
-        }
+        // Global Configs
+        console.log('[get-admin-stats] Fetching global configurations...');
+        const allConfigsRes = await db.select().from(systemConfig);
+        const configMap: Record<string, any> = {};
+        allConfigsRes.forEach(c => {
+            if (c.value === 'true') configMap[c.key] = true;
+            else if (c.value === 'false') configMap[c.key] = false;
+            else if (!isNaN(Number(c.value)) && (c.key === 'initial_credits')) configMap[c.key] = Number(c.value);
+            else configMap[c.key] = c.value;
+        });
+
+        const globalConfig = {
+            isMaintenanceMode: configMap.maintenance_mode ?? false,
+            stripeMode: configMap.stripe_mode ?? 'TEST',
+            registrationEnabled: configMap.registration_enabled ?? true,
+            aiModel: configMap.ai_model ?? 'gemini-1.5-flash',
+            debugMode: configMap.debug_mode ?? false,
+            initialCredits: configMap.initial_credits ?? 5,
+        };
 
         console.log('[get-admin-stats] Success!');
         return {
@@ -152,7 +162,7 @@ export const handler: Handler = async (event) => {
                 churnRate: Math.round(churnRate * 10) / 10,
                 totalCreditUsage,
                 growthData,
-                isMaintenanceMode
+                ...globalConfig
             })
         };
 

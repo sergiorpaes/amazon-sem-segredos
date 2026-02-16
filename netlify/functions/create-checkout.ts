@@ -1,17 +1,16 @@
 
 import Stripe from 'stripe';
 import { db } from '../../src/db';
-import { users, plans } from '../../src/db/schema';
+import { users, plans, systemConfig } from '../../src/db/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 
 // Helper to get Stripe instance based on mode
-const getStripe = () => {
-    const mode = process.env.STRIPE_MODE || 'TEST';
+const getStripe = (mode: string) => {
     const secretKey = mode === 'LIVE' ? process.env.STRIPE_LIVE_SK : process.env.STRIPE_TEST_SK;
     if (!secretKey) throw new Error(`Stripe Secret Key not found for mode: ${mode}`);
-    return new Stripe(secretKey, { apiVersion: '2026-01-28.clover' as any }); // Cast to any to avoid future type mismatches if versioning changes
+    return new Stripe(secretKey, { apiVersion: '2026-01-28.clover' as any });
 };
 
 export const handler = async (event: any) => {
@@ -30,12 +29,16 @@ export const handler = async (event: any) => {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
         const userId = decoded.userId;
 
-        // Support both POST body and GET query (for simple links)
+        // Fetch Global Settings
+        const [config] = await db.select().from(systemConfig).where(eq(systemConfig.key, 'stripe_mode')).limit(1);
+        const stripeMode = config?.value || process.env.STRIPE_MODE || 'TEST';
+
+        // Support both POST body and GET query
         const body = event.body ? JSON.parse(event.body) : {};
         const query = event.queryStringParameters || {};
 
-        const type = body.type || query.type || 'plan'; // 'plan' or 'credits'
-        const stripe = getStripe();
+        const type = body.type || query.type || 'plan';
+        const stripe = getStripe(stripeMode);
 
         // Get User
         const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);

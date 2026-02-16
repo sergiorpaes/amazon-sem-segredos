@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import { consumeCredits } from '../../src/lib/credits';
+import { db } from '../../src/db';
+import { systemConfig } from '../../src/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const handler = async (event: any) => {
     // Handle CORS
@@ -45,16 +48,6 @@ export const handler = async (event: any) => {
     }
 
     try {
-        // Consume Credits for IMAGE_GENERATION (5 credits)
-        await consumeCredits(userId, 5, 'IMAGE_GENERATION');
-    } catch (error: any) {
-        return {
-            statusCode: 402,
-            body: JSON.stringify({ error: error.message || 'Insufficient credits' })
-        };
-    }
-
-    try {
         const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
         if (!apiKey) {
@@ -65,6 +58,13 @@ export const handler = async (event: any) => {
             };
         }
 
+        // Fetch Global Settings
+        const allConfigs = await db.select().from(systemConfig);
+        const configMap: Record<string, string> = {};
+        allConfigs.forEach(c => configMap[c.key] = c.value);
+
+        const isDebug = configMap.debug_mode === 'true';
+
         const body = JSON.parse(event.body || '{}');
         const { prompt } = body;
 
@@ -74,6 +74,16 @@ export const handler = async (event: any) => {
                 body: JSON.stringify({ error: 'Prompt is required' })
             };
         }
+
+        if (isDebug) {
+            console.log('[DEBUG] Generate Image Request:', {
+                userId,
+                promptPrefix: prompt.substring(0, 100) + '...'
+            });
+        }
+
+        // Consume Credits for IMAGE_GENERATION (5 credits)
+        await consumeCredits(userId, 5, 'IMAGE_GENERATION');
 
         // Using Imagen 4.0 Fast via REST API (Standard for Billed Accounts)
         const modelName = "imagen-4.0-fast-generate-001";
@@ -90,84 +100,71 @@ export const handler = async (event: any) => {
         };
 
         // Generate Image via REST
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`Imagen API Error (${response.status}):`, errorText);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Imagen API Error (${response.status}):`, errorText);
 
-                let errorMessage = "Failed to generate image.";
-                if (response.status === 403 || errorText.includes("billing")) {
-                    errorMessage = "Image generation requires a billed Google Cloud project/API key.";
-                } else if (response.status === 404) {
-                    errorMessage = "Image generation model not found. API key might be restricted.";
-                } else if (response.status === 429) {
-                    errorMessage = "Quota exceeded for image generation.";
-                }
-
-                return {
-                    statusCode: response.status === 400 || response.status === 403 || response.status === 404 ? 403 : 500,
-                    headers: {
-                        'Access-Control-Allow-Origin': '*',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        error: errorMessage,
-                        details: errorText
-                    })
-                };
-            }
-
-            const data = await response.json();
-
-            let base64Image = null;
-            if (data.predictions && data.predictions.length > 0) {
-                const prediction = data.predictions[0];
-                // Check for bytesBase64Encoded (standard) or mimeType/bytes (sometimes)
-                if (prediction.bytesBase64Encoded) {
-                    base64Image = prediction.bytesBase64Encoded;
-                } else if (prediction.mimeType && prediction.bytesBase64Encoded) {
-                    base64Image = prediction.bytesBase64Encoded;
-                }
-            }
-
-            if (!base64Image) {
-                console.error("No image data in response:", JSON.stringify(data).substring(0, 500));
-                throw new Error("No image data returned from API.");
+            let errorMessage = "Failed to generate image.";
+            if (response.status === 403 || errorText.includes("billing")) {
+                errorMessage = "Image generation requires a billed Google Cloud project/API key.";
+            } else if (response.status === 404) {
+                errorMessage = "Image generation model not found. API key might be restricted.";
+            } else if (response.status === 429) {
+                errorMessage = "Quota exceeded for image generation.";
             }
 
             return {
-                statusCode: 200,
+                statusCode: response.status === 400 || response.status === 403 || response.status === 404 ? 403 : 500,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    image: `data:image/png;base64,${base64Image}`
-                })
-            };
-
-        } catch (genError: any) {
-            console.error("Fetch/Network Error:", genError);
-            return {
-                statusCode: 500,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    error: "Network error during image generation.",
-                    details: genError.message
+                    error: errorMessage,
+                    details: errorText
                 })
             };
         }
+
+        const data = await response.json();
+
+        let base64Image = null;
+        if (data.predictions && data.predictions.length > 0) {
+            const prediction = data.predictions[0];
+            if (prediction.bytesBase64Encoded) {
+                base64Image = prediction.bytesBase64Encoded;
+            } else if (prediction.mimeType && prediction.bytesBase64Encoded) {
+                base64Image = prediction.bytesBase64Encoded;
+            }
+        }
+
+        if (!base64Image) {
+            console.error("No image data in response:", JSON.stringify(data).substring(0, 500));
+            throw new Error("No image data returned from API.");
+        }
+
+        if (isDebug) {
+            console.log('[DEBUG] Generate Image Response: Success');
+        }
+
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: `data:image/png;base64,${base64Image}`
+            })
+        };
 
     } catch (error: any) {
         console.error("Handler Error:", error);
