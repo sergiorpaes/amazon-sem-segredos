@@ -75,7 +75,7 @@ export const handler = async (event: any) => {
             };
         }
 
-        const { image, additionalPrompt } = body;
+        const { image, additionalPrompt, language = 'pt' } = body;
         if (!image) {
             return {
                 statusCode: 400,
@@ -164,6 +164,8 @@ export const handler = async (event: any) => {
 
             ${additionalPrompt ? `Contexto adicional do usuário: ${additionalPrompt}` : ''}
             
+            O idioma de saída para os textos descritivos e callouts dentro das imagens deve ser: **${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'}**.
+
             Generate ${isPro ? '6' : '3'} distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product.
             ${isPro ? `
             Como o usuário é PRO/Premium, gere 6 prompts em 2 categorias:
@@ -174,15 +176,17 @@ export const handler = async (event: any) => {
             - Application: Showing the benefit/result.
 
             CATEGORIA 2: INFOGRÁFICOS TÉCNICOS (3 imagens)
-            - Dimensions: White background, product only, with technical arrows and dimension text (e.g., "14cm / 5.51inch").
-            - Features Callout: Product detail with text overlays pointing to features (e.g., "Stainless Steel Blade", "Safety Lock").
-            - Exploded View: Parts separated clearly with labels for each component.
+            - Dimensions: White background, product only, with technical arrows and dimension labels in ${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'} (ex: "14cm de altura").
+            - Features Callout: Product detail with text overlays in ${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'} pointing to features (ex: "Lâmina de Aço Inoxidável", "Trava de Segurança").
+            - Exploded View: Parts separated clearly with labels in ${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'} for each component.
             ` : `
             Gere 3 prompts de estilo Lifestyle:
             1. A "Lifestyle" shot (e.g., in use, home setting).
             2. A "Creative" shot (e.g., studio lighting, artistic background).
             3. An "Application" shot (e.g., showing the benefit/result).
             `}
+
+            IMPORTANT: All text that will be visually rendered in the image (labels, callouts, descriptions) MUST be in **${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'}**.
 
             Return the result as a STRICT JSON object with these keys:
             {
@@ -197,9 +201,9 @@ export const handler = async (event: any) => {
                     "creative": "Full prompt...",
                     "application": "Full prompt..."
                     ${isPro ? `,
-                    "dimensions": "Full prompt for infographic with dimensions...",
-                    "features": "Full prompt with feature callouts and text...",
-                    "exploded": "Full prompt showing exploded view of components..."
+                    "dimensions": "Full prompt for infographic with dimensions in ${language}...",
+                    "features": "Full prompt with feature callouts in ${language}...",
+                    "exploded": "Full prompt showing exploded view with labels in ${language}..."
                     ` : ''}
               }
             }

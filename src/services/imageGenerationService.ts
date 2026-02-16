@@ -21,7 +21,7 @@ export interface GenerationResult {
     error?: string;
 }
 
-export const generateListingImages = async (userPrompt: string, imageBase64: string | null): Promise<GenerationResult> => {
+export const generateListingImages = async (userPrompt: string, imageBase64: string | null, language: string = 'pt'): Promise<GenerationResult> => {
     if (!imageBase64) {
         throw new Error("Image is required for analysis.");
     }
@@ -32,7 +32,8 @@ export const generateListingImages = async (userPrompt: string, imageBase64: str
             method: 'POST',
             body: JSON.stringify({
                 image: imageBase64,
-                additionalPrompt: userPrompt
+                additionalPrompt: userPrompt,
+                language: language
             }),
             headers: { 'Content-Type': 'application/json' }
         });

@@ -148,12 +148,13 @@ export const ListingOptimizer: React.FC = () => {
   };
 
   const handleGenerateImages = async (base64Image: string) => {
+    const { language } = useLanguage(); // Get current language
     setGeneratingImages(true);
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: t('lo.processing.image') }]);
 
     try {
       const context = listingResult?.imagePromptContext || inputs.productName;
-      const result = await generateListingImages(context, base64Image);
+      const result = await generateListingImages(context, base64Image, language);
       refreshUser(); // Refresh credits after image generation
 
       if (result.images && result.images.length > 0) {
