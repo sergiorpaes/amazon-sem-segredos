@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Sparkles, Send, User, Bot, Image as ImageIcon, Copy, Check, Download, RefreshCw, Upload, Save, History, Trash2, X, ChevronRight } from 'lucide-react';
 import { generateListing } from '../../services/listingGeneratorService';
 import { generateListingImages } from '../../services/imageGenerationService';
+import { getListings, saveListing as apiSaveListing, deleteListing as apiDeleteListing } from '../../services/listingService';
 import { ListingGeneratorResult, SavedListing } from '../../types';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -71,14 +72,15 @@ export const ListingOptimizer: React.FC = () => {
 
   // Load History on Mount
   useEffect(() => {
-    const saved = localStorage.getItem('amazon_listing_history');
-    if (saved) {
+    const fetchHistory = async () => {
       try {
-        setSavedListings(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse history", e);
+        const history = await getListings();
+        setSavedListings(history);
+      } catch (error) {
+        console.error("Failed to fetch listing history", error);
       }
-    }
+    };
+    fetchHistory();
   }, []);
 
   // Scroll to bottom
@@ -181,40 +183,49 @@ export const ListingOptimizer: React.FC = () => {
   };
 
   // History Handlers
-  const handleSaveListing = () => {
+  const handleSaveListing = async () => {
     if (!listingResult) return;
 
-    // Check if already saved (by ID or content match)
+    // Check if already saved (by content match - productName and createdAt)
+    // Note: Since ID is now from DB, we can't check ID initially for new saves easily without refetching.
+    // But we can check if we already have a saved item with same created time in current session.
+    // Or just rely on user not clicking save twice.
+    // Let's keep a simple check.
     const isAlreadySaved = savedListings.some(item =>
-      (listingResult as SavedListing).id === item.id ||
-      (item.createdAt === (listingResult as SavedListing).createdAt && item.productName === inputs.productName)
+      item.createdAt === (listingResult as SavedListing).createdAt && item.productName === inputs.productName
     );
 
     if (isAlreadySaved) {
-      alert('Este listing já está salvo!');
+      alert(t('lo.ui.saved_already') || 'Este listing já está salvo!');
       return;
     }
 
-    const newSavedItem: SavedListing = {
-      ...listingResult,
-      id: Date.now().toString(),
-      productName: inputs.productName || 'Sem nome', // Use input or fallback
-      createdAt: new Date().toISOString(),
-      generatedImages: generatedImages
-    };
+    try {
+      const savedItem = await apiSaveListing(
+        inputs.productName || 'Sem nome',
+        listingResult,
+        generatedImages
+      );
 
-    const updatedHistory = [newSavedItem, ...savedListings];
-    setSavedListings(updatedHistory);
-    localStorage.setItem('amazon_listing_history', JSON.stringify(updatedHistory));
-
-    alert(t('lo.ui.save') + '!');
+      setSavedListings(prev => [savedItem, ...prev]);
+      alert(t('lo.ui.save_success') || 'Listing salvo com sucesso!');
+    } catch (error) {
+      console.error("Failed to save listing", error);
+      alert(t('lo.ui.save_error') || 'Erro ao salvar listing.');
+    }
   };
 
-  const handleDeleteListing = (id: string, e: React.MouseEvent) => {
+  const handleDeleteListing = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updatedHistory = savedListings.filter(item => item.id !== id);
-    setSavedListings(updatedHistory);
-    localStorage.setItem('amazon_listing_history', JSON.stringify(updatedHistory));
+    if (!confirm(t('lo.ui.delete_confirm') || 'Tem certeza que deseja excluir?')) return;
+
+    try {
+      await apiDeleteListing(id);
+      setSavedListings(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error("Failed to delete listing", error);
+      alert(t('lo.ui.delete_error') || 'Erro ao excluir listing.');
+    }
   };
 
   const handleLoadListing = (item: SavedListing) => {
