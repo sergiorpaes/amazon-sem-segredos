@@ -43,33 +43,27 @@ export const handler: Handler = async (event) => {
         const offset = parseInt(event.queryStringParameters?.offset || '0');
         const statusFilter = event.queryStringParameters?.status || ''; // 'active', 'trialing', 'past_due', 'canceled', 'delinquent'
 
-        // 1. Subquery to pick the "best" subscription for each user
-        const bestSubsSubquery = db
+        // 1. Subquery to pick the "best" subscription for each user using DISTINCT ON
+        const bestSubs = db
             .select({
                 user_id: userSubscriptions.user_id,
                 plan_id: userSubscriptions.plan_id,
                 status: userSubscriptions.status,
-                rn: drizzleSql<number>`ROW_NUMBER() OVER(
-                    PARTITION BY ${userSubscriptions.user_id} 
-                    ORDER BY 
-                        CASE ${userSubscriptions.status}
+            })
+            .from(userSubscriptions)
+            .distinctOn(userSubscriptions.user_id)
+            .orderBy(
+                userSubscriptions.user_id,
+                drizzleSql`CASE ${userSubscriptions.status}
                             WHEN 'active' THEN 1 
                             WHEN 'trialing' THEN 2 
                             WHEN 'past_due' THEN 3 
                             WHEN 'unpaid' THEN 4 
                             WHEN 'canceled' THEN 5 
                             ELSE 6 
-                        END ASC, 
-                        ${userSubscriptions.updated_at} DESC
-                )`.as('rn')
-            })
-            .from(userSubscriptions)
-            .as('best_subs_sq');
-
-        const bestSubs = db
-            .select()
-            .from(bestSubsSubquery)
-            .where(eq(bestSubsSubquery.rn, 1))
+                        END ASC`,
+                desc(userSubscriptions.updated_at)
+            )
             .as('best_subs');
 
         // Build Filters
