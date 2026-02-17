@@ -25,7 +25,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="AI Suite Logo" className="w-10 h-10 rounded-lg object-cover" />
-              <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">Amazon Sem Segredos AI</span>
+              <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">Amazon Sem Segredos IA Suite</span>
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">
               <a href="#features" className="hover:text-brand-600 transition-colors">Funcionalidades</a>
@@ -204,7 +204,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
 
       <footer className="bg-gray-900 dark:bg-black text-white py-12 border-t border-gray-800 dark:border-gray-900">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="opacity-50 text-sm">© 2026 Amazon Sem Segredos AI Suite. Todos os direitos reservados.</p>
+          <p className="opacity-50 text-sm">© 2026 Amazon Sem Segredos IA Suite. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

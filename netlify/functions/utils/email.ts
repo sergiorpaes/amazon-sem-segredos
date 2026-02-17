@@ -33,8 +33,8 @@ export const sendWelcomeEmail = async (email: string, activationUrl: string) => 
 
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
                 <p style="color: #999; font-size: 12px; text-align: center;">
-                    Este é um e-mail automático. Por favor, não responda.<br>
-                    &copy; 2026 Amazon Sem Segredos AI
+                    This is an automated email. Please do not reply.<br>
+                    &copy; 2026 Amazon Sem Segredos IA Suite
                 </p>
             </div>
         `

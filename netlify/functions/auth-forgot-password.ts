@@ -53,12 +53,12 @@ export const handler = async (event: any) => {
         await transporter.sendMail({
             from: '"Amazon Sem Segredos" <sergiorobertopaes@gmail.com>',
             to: email,
-            subject: '🔒 Recuperação de Senha - Amazon Sem Segredos AI',
+            subject: '🔒 Recuperação de Senha - Amazon Sem Segredos IA Suite',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
                     <h2 style="color: #2563eb; text-align: center;">Recuperação de Senha</h2>
                     <p>Olá,</p>
-                    <p>Você solicitou a redefinição de sua senha no Amazon Sem Segredos AI.</p>
+                    <p>Você solicitou a redefinição de sua senha no Amazon Sem Segredos IA Suite.</p>
                     <p>Clique no botão abaixo para escolher uma nova senha. Este link expira em 1 hora.</p>
                     
                     <div style="text-align: center; margin: 30px 0;">
@@ -70,7 +70,7 @@ export const handler = async (event: any) => {
 
                     <p style="color: #666; font-size: 14px;">Se você não solicitou isso, por favor ignore este e-mail.</p>
                     <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-                    <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Amazon Sem Segredos AI</p>
+                    <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2026 Amazon Sem Segredos IA Suite</p>
                 </div>
             `
         });

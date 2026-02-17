@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={`p-4 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           <div className="flex items-center gap-2 overflow-hidden">
             <img src="/logo.png" alt="AI Suite Logo" className="w-8 h-8 min-w-[32px] rounded-lg object-cover" />
-            {!isCollapsed && <span className="text-gray-900 dark:text-white font-bold tracking-tight whitespace-nowrap">AI Suite</span>}
+            {!isCollapsed && <span className="text-gray-900 dark:text-white font-bold tracking-tight whitespace-nowrap">Amazon Sem Segredos IA Suite</span>}
           </div>
 
           <button
