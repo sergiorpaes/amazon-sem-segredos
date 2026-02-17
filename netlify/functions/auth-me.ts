@@ -48,6 +48,13 @@ export const handler = async (event: any) => {
         };
     } catch (error: any) {
         console.error('Auth Error:', error);
-        return { statusCode: 401, body: JSON.stringify({ error: 'Invalid Token' }) };
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: 'Auth Check Failed',
+                details: error.message,
+                stack: error.stack
+            })
+        };
     }
 };
