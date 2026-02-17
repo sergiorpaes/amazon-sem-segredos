@@ -129,15 +129,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             <p className="text-gray-500 dark:text-gray-400">Escolha o plano ideal para o seu estágio na jornada Amazon FBA.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
             {/* Free */}
-            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-6 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-4 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">Free</h3>
               <div className="my-4">
-                <span className="text-3xl font-extrabold text-gray-900 dark:text-white">€0</span>
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€0</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-2 mb-4">
                 {['5 pesquisas/dia', 'Análise básica', 'Suporte por email'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
@@ -148,13 +148,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             </div>
 
             {/* Starter */}
-            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-6 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-4 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">Starter</h3>
               <div className="my-4">
-                <span className="text-3xl font-extrabold text-gray-900 dark:text-white">€19</span>
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€19</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-2 mb-4">
                 {['50 créditos/mês', 'Acesso a Mentor', 'Suporte por e-mail'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
@@ -165,14 +165,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             </div>
 
             {/* Pro */}
-            <div className="border-2 border-brand-500 rounded-2xl p-6 relative shadow-xl shadow-brand-100 bg-white dark:bg-dark-900">
+            <div className="border-2 border-brand-500 rounded-2xl p-4 relative shadow-xl shadow-brand-100 bg-white dark:bg-dark-900">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Recomendado</div>
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">Pro</h3>
               <div className="my-4">
-                <span className="text-3xl font-extrabold text-gray-900 dark:text-white">€49</span>
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€49</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-2 mb-4">
                 {['200 créditos/mês', 'Acesso a tudo do Starter', 'Análise de ROI'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-brand-500 flex-shrink-0" /> {item}
@@ -183,13 +183,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             </div>
 
             {/* Premium */}
-            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-6 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-4 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">Premium</h3>
               <div className="my-4">
-                <span className="text-3xl font-extrabold text-gray-900 dark:text-white">€99</span>
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€99</span>
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
-              <ul className="space-y-4 mb-8">
+              <ul className="space-y-2 mb-4">
                 {['600 créditos/mês', 'Tudo ilimitado', 'Mentoria VIP'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
