@@ -43,6 +43,32 @@ const MARKETPLACE_REGION_MAP: Record<string, Region> = {
     'A1VC38T7YXB528': 'FE', // Japan
 };
 
+export const SUPPORTED_MARKETPLACES = [
+    // North America
+    { name: 'United States', id: 'ATVPDKIKX0DER', code: 'US', flag: '🇺🇸', region: 'NA' as Region },
+    { name: 'Canada', id: 'A2EUQ1WTGCTBG2', code: 'CA', flag: '🇨🇦', region: 'NA' as Region },
+    { name: 'Mexico', id: 'A1AM78C64UM0Y8', code: 'MX', flag: '🇲🇽', region: 'NA' as Region },
+    { name: 'Brazil', id: 'A2Q3Y263D00KWC', code: 'BR', flag: '🇧🇷', region: 'NA' as Region },
+    // Europe
+    { name: 'Spain', id: 'A1RKKUPIHCS9HS', code: 'ES', flag: '🇪🇸', region: 'EU' as Region },
+    { name: 'United Kingdom', id: 'A1F83G8C2ARO7P', code: 'UK', flag: '🇬🇧', region: 'EU' as Region },
+    { name: 'Germany', id: 'A1PA6795UKMFR9', code: 'DE', flag: '🇩🇪', region: 'EU' as Region },
+    { name: 'France', id: 'A13V1IB3VIYZZH', code: 'FR', flag: '🇫🇷', region: 'EU' as Region },
+    { name: 'Italy', id: 'APJ6JRA9NG5V4', code: 'IT', flag: '🇮🇹', region: 'EU' as Region },
+    { name: 'Netherlands', id: 'A1805IZSGTT6HS', code: 'NL', flag: '🇳🇱', region: 'EU' as Region },
+    { name: 'Sweden', id: 'A2NODRKZP88ZB9', code: 'SE', flag: '🇸🇪', region: 'EU' as Region },
+    { name: 'Poland', id: 'A1C3SOZRARQ6R3', code: 'PL', flag: '🇵🇱', region: 'EU' as Region },
+    { name: 'Turkey', id: 'A33AVAJ2PDY3EV', code: 'TR', flag: '🇹🇷', region: 'EU' as Region },
+    // Middle East
+    { name: 'UAE', id: 'A2VIGQ35RCS4UG', code: 'AE', flag: '🇦🇪', region: 'EU' as Region },
+    { name: 'Saudi Arabia', id: 'A17E79C6D8DWNP', code: 'SA', flag: '🇸🇦', region: 'EU' as Region },
+    // Asia Pacific
+    { name: 'India', id: 'A21TJRUUN4KGV', code: 'IN', flag: '🇮🇳', region: 'EU' as Region }, // Using EU as per map
+    { name: 'Japan', id: 'A1VC38T7YXB528', code: 'JP', flag: '🇯🇵', region: 'FE' as Region },
+    { name: 'Australia', id: 'A39IBJ37TRP1C6', code: 'AU', flag: '🇦🇺', region: 'FE' as Region },
+    { name: 'Singapore', id: 'A19VAU5U5O7RUS', code: 'SG', flag: '🇸🇬', region: 'FE' as Region },
+];
+
 const getRegionFromMarketplaceId = (marketplaceId: string): Region => {
     return MARKETPLACE_REGION_MAP[marketplaceId] || 'EU'; // Default to EU if unknown
 };

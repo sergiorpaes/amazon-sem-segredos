@@ -11,6 +11,7 @@ import { ProfitCalculator } from '../components/Dashboard/ProfitCalculator';
 import { DashboardModule } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../services/languageService';
+import { useSettings, AppFeatures } from '../contexts/SettingsContext';
 import { ChangePasswordModal } from '../components/Auth/ChangePasswordModal';
 import { BuyCreditsModal } from '../components/Dashboard/BuyCreditsModal';
 import { ChangePlanModal } from '../components/Dashboard/ChangePlanModal';
@@ -23,6 +24,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { features } = useSettings();
   const [currentModule, setCurrentModule] = useState<DashboardModule>(DashboardModule.PRODUCT_FINDER);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -31,7 +33,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 
-  const renderModule = () => {
+  const getModuleContent = () => {
     switch (currentModule) {
       case DashboardModule.MENTOR:
         return (
@@ -66,6 +68,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.SETTINGS:
         return <Settings />;
       case DashboardModule.ADS_MANAGER:
+        // Always return the premium logic block for ADS_MANAGER as it's handled specifically
         return (
           <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-xl border border-gray-100 opacity-40 grayscale pointer-events-none select-none">
             <div className="bg-brand-50 p-6 rounded-full mb-6">
@@ -95,6 +98,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           </div>
         );
     }
+  };
+
+  const renderModule = () => {
+    // Check if the current module is disabled via settings
+    if (Object.keys(features).includes(currentModule)) {
+      const isEnabled = features[currentModule as keyof AppFeatures];
+      if (!isEnabled && currentModule !== DashboardModule.ADS_MANAGER) {
+        return (
+          <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
+            {getModuleContent()}
+          </div>
+        );
+      }
+    }
+    return getModuleContent();
   };
 
   const getTitle = () => {

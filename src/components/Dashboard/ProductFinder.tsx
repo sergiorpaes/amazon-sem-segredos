@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag, Sparkles, Camera, Upload } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
-import { searchProducts, getItemOffers, getBatchOffers } from '../../services/amazonAuthService';
+import { searchProducts, getItemOffers, getBatchOffers, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
 import { analyzeImage } from '../../services/geminiService';
+import { useSettings } from '../../contexts/SettingsContext';
 import { SalesGraph } from "./SalesGraph";
 import { SalesDetailModal } from "./SalesDetailModal";
 import { ProductDetailModal } from "./ProductDetailModal";
@@ -224,37 +225,29 @@ const mockProducts: ProductDisplay[] = [
   },
 ];
 
-const marketplaces = [
-  // North America
-  { name: 'United States', id: 'ATVPDKIKX0DER', code: 'US', flag: '🇺🇸' },
-  { name: 'Canada', id: 'A2EUQ1WTGCTBG2', code: 'CA', flag: '🇨🇦' },
-  { name: 'Mexico', id: 'A1AM78C64UM0Y8', code: 'MX', flag: '🇲🇽' },
-  { name: 'Brazil', id: 'A2Q3Y263D00KWC', code: 'BR', flag: '🇧🇷' },
-  // Europe
-  { name: 'Spain', id: 'A1RKKUPIHCS9HS', code: 'ES', flag: '🇪🇸' },
-  { name: 'United Kingdom', id: 'A1F83G8C2ARO7P', code: 'UK', flag: '🇬🇧' },
-  { name: 'Germany', id: 'A1PA6795UKMFR9', code: 'DE', flag: '🇩🇪' },
-  { name: 'France', id: 'A13V1IB3VIYZZH', code: 'FR', flag: '🇫🇷' },
-  { name: 'Italy', id: 'APJ6JRA9NG5V4', code: 'IT', flag: '🇮🇹' },
-  { name: 'Netherlands', id: 'A1805IZSGTT6HS', code: 'NL', flag: '🇳🇱' },
-  { name: 'Sweden', id: 'A2NODRKZP88ZB9', code: 'SE', flag: '🇸🇪' },
-  { name: 'Poland', id: 'A1C3SOZRARQ6R3', code: 'PL', flag: '🇵🇱' },
-  { name: 'Turkey', id: 'A33AVAJ2PDY3EV', code: 'TR', flag: '🇹🇷' },
-  // Middle East
-  { name: 'UAE', id: 'A2VIGQ35RCS4UG', code: 'AE', flag: '🇦🇪' },
-  { name: 'Saudi Arabia', id: 'A17E79C6D8DWNP', code: 'SA', flag: '🇸🇦' },
-  // Asia Pacific
-  { name: 'India', id: 'A21TJRUUN4KGV', code: 'IN', flag: '🇮🇳' },
-  { name: 'Japan', id: 'A1VC38T7YXB528', code: 'JP', flag: '🇯🇵' },
-  { name: 'Australia', id: 'A39IBJ37TRP1C6', code: 'AU', flag: '🇦🇺' },
-  { name: 'Singapore', id: 'A19VAU5U5O7RUS', code: 'SG', flag: '🇸🇬' },
-];
 
 export const ProductFinder: React.FC = () => {
   const { t, language, setLanguage } = useLanguage();
   const { refreshUser } = useAuth();
+  const { enabledMarketplaces } = useSettings();
+
+  // Filter marketplaces based on settings
+  const availableMarketplaces = SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id));
+
+  // Default to Brazil if available, otherwise first available, otherwise fallback to BR ID (shouldn't happen if logic prevents empty)
+  const defaultMarketplace = availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMarketplace, setSelectedMarketplace] = useState<string>('A2Q3Y263D00KWC');
+  const [selectedMarketplace, setSelectedMarketplace] = useState<string>(defaultMarketplace);
+
+  // Effect to ensure selected marketplace is valid when settings change
+  useEffect(() => {
+    if (!enabledMarketplaces.includes(selectedMarketplace)) {
+      const fallback = availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+      setSelectedMarketplace(fallback);
+    }
+  }, [enabledMarketplaces, selectedMarketplace, availableMarketplaces]);
+
   const [isSearching, setIsSearching] = useState(false);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
@@ -581,8 +574,8 @@ export const ProductFinder: React.FC = () => {
     handleSearch(false);
   }
 
-  const selectedFlag = marketplaces.find(m => m.id === selectedMarketplace)?.flag;
-  const selectedCode = marketplaces.find(m => m.id === selectedMarketplace)?.code;
+  const selectedFlag = availableMarketplaces.find(m => m.id === selectedMarketplace)?.flag;
+  const selectedCode = availableMarketplaces.find(m => m.id === selectedMarketplace)?.code;
 
   return (
 
@@ -672,7 +665,7 @@ export const ProductFinder: React.FC = () => {
               {isMarketplaceOpen && (
                 <div className="absolute top-full right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
                   <div className="p-2 grid gap-1">
-                    {marketplaces.map((m) => (
+                    {availableMarketplaces.map((m) => (
                       <button
                         key={m.id}
                         onClick={() => {

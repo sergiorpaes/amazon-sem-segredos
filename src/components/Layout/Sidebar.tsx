@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   if (user?.role === 'ADMIN') {
-    menuItems.push({ id: DashboardModule.SETTINGS, label: t('module.settings'), icon: Settings });
+    menuItems.push({ id: DashboardModule.SETTINGS, label: t('module.settings'), icon: Settings, disabled: false });
   }
 
   return (
@@ -102,16 +102,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => {
-                  if (!isDisabled) {
-                    onModuleChange(item.id);
-                    if (window.innerWidth < 1024) onClose();
-                  }
+                  onModuleChange(item.id);
+                  if (window.innerWidth < 1024) onClose();
                 }}
-                disabled={isDisabled}
                 className={`
                   w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} gap-3 py-3 rounded-xl transition-all duration-200
                   ${isDisabled
-                    ? 'opacity-50 cursor-not-allowed hover:bg-transparent text-gray-500'
+                    ? 'opacity-50 hover:bg-transparent text-gray-500'
                     : isActive
                       ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/20'
                       : 'hover:bg-gray-100 dark:hover:bg-dark-800 hover:text-gray-900 dark:hover:text-white'

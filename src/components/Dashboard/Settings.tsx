@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle, ShieldCheck, Lock, Globe, ChevronDown, ChevronUp, Users, BarChart, ToggleLeft } from 'lucide-react';
-import { connectToAmazon, saveCredentials as saveToStorage, loadCredentials, AmazonCredentials, Region } from '../../services/amazonAuthService';
+import { Save, AlertCircle, CheckCircle, ShieldCheck, Lock, Globe, ChevronDown, ChevronUp, Users, BarChart, ToggleLeft, Globe2 } from 'lucide-react';
+import { connectToAmazon, saveCredentials as saveToStorage, loadCredentials, AmazonCredentials, Region, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings, AppFeatures } from '../../contexts/SettingsContext';
 import { AdminDashboard } from '../../views/Admin/Dashboard';
 import { AdminUsers } from '../../views/Admin/Users';
 
-type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'FEATURES';
+type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'FEATURES' | 'MARKETPLACES';
 
 export const Settings: React.FC = () => {
     const { user } = useAuth();
-    const { features, toggleFeature } = useSettings();
+    const { features, toggleFeature, enabledMarketplaces, toggleMarketplace } = useSettings();
     const [activeTab, setActiveTab] = useState<SettingsTab>('AMAZON_API');
     const [activeRegion, setActiveRegion] = useState<Region>('EU');
 
@@ -162,6 +162,16 @@ export const Settings: React.FC = () => {
                         >
                             <ToggleLeft size={18} />
                             Funcionalidades
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('MARKETPLACES')}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'MARKETPLACES'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
+                                }`}
+                        >
+                            <Globe2 size={18} />
+                            Marketplaces
                         </button>
                     </div>
                 )}
@@ -319,6 +329,41 @@ export const Settings: React.FC = () => {
                                             onChange={() => toggleFeature(feature.id as keyof AppFeatures)}
                                         />
                                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'MARKETPLACES' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-white dark:bg-dark-800 rounded-xl border border-gray-100 dark:border-dark-700 shadow-sm p-8">
+                        <div className="mb-6">
+                            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Gerenciar Marketplaces</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Selecione quais países estarão disponíveis no Buscador de Produtos.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {SUPPORTED_MARKETPLACES.map((marketplace) => (
+                                <div key={marketplace.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-lg border border-gray-200 dark:border-dark-700">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">{marketplace.flag}</span>
+                                        <div>
+                                            <h3 className="font-medium text-gray-900 dark:text-white">{marketplace.name}</h3>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{marketplace.region} - {marketplace.code}</p>
+                                        </div>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={enabledMarketplaces.includes(marketplace.id)}
+                                            onChange={() => toggleMarketplace(marketplace.id)}
+                                            disabled={enabledMarketplaces.length === 1 && enabledMarketplaces.includes(marketplace.id)}
+                                        />
+                                        <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 ${enabledMarketplaces.length === 1 && enabledMarketplaces.includes(marketplace.id) ? 'peer-checked:bg-brand-400 opacity-50 cursor-not-allowed' : 'peer-checked:bg-brand-600'}`}></div>
                                     </label>
                                 </div>
                             ))}
