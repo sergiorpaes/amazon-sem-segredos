@@ -24,7 +24,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">A</div>
+              <img src="/logo.png" alt="AI Suite Logo" className="w-10 h-10 rounded-lg object-cover" />
               <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">Amazon Sem Segredos AI</span>
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">

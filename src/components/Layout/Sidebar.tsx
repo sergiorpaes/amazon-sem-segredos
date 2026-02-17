@@ -72,10 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Logo & Toggle */}
         <div className={`p-4 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-8 h-8 min-w-[32px] bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-              A
-            </div>
-            {!isCollapsed && <span className="text-white font-bold tracking-tight whitespace-nowrap">AI Suite</span>}
+            <img src="/logo.png" alt="AI Suite Logo" className="w-8 h-8 min-w-[32px] rounded-lg object-cover" />
+            {!isCollapsed && <span className="text-gray-900 dark:text-white font-bold tracking-tight whitespace-nowrap">AI Suite</span>}
           </div>
 
           <button
