@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ArrowRight, TrendingUp, Bot, BarChart3, Globe } from 'lucide-react';
+import { Check, ArrowRight, TrendingUp, Bot, BarChart3, Globe, Search, Sparkles, Megaphone } from 'lucide-react';
 import { AuthModal } from '../components/Auth/AuthModal';
 import { useTheme } from '../contexts/ThemeContext';
 import { ThemeToggle } from '../components/Layout/ThemeToggle';
@@ -65,9 +65,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             >
               Começar Agora Gratuitamente <ArrowRight className="w-5 h-5" />
             </button>
-            <button className="px-8 py-4 bg-gray-50 dark:bg-dark-800 hover:bg-gray-100 dark:hover:bg-dark-700 text-gray-900 dark:text-white border border-gray-200 dark:border-dark-700 rounded-xl font-bold text-lg transition-colors">
-              Ver Demo em Vídeo
-            </button>
           </div>
         </div>
       </div>
@@ -82,28 +79,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: <Bot className="w-8 h-8 text-white" />,
-                title: "Amazon Mentor.AI",
-                desc: "Mentor virtual 24h treinado na metodologia Amazon Sem Segredos. Tira dúvidas, analisa estratégias e recomenda ações.",
-                color: "bg-indigo-600"
-              },
-              {
-                icon: <TrendingUp className="w-8 h-8 text-white" />,
-                title: "Product Finder AI",
+                icon: <Search className="w-8 h-8 text-white" />,
+                title: "Buscador de Produtos",
                 desc: "Encontre produtos vencedores com baixa concorrência e alta demanda usando algoritmos preditivos.",
                 color: "bg-brand-600"
               },
               {
                 icon: <BarChart3 className="w-8 h-8 text-white" />,
-                title: "Profit Dashboard",
+                title: "Calculadora de Lucro",
                 desc: "Visualização clara dos seus lucros reais, descontando todas as taxas da Amazon em tempo real.",
                 color: "bg-emerald-600"
               },
               {
-                icon: <Globe className="w-8 h-8 text-white" />,
-                title: "Listing Optimizer Multi-Language",
+                icon: <Sparkles className="w-8 h-8 text-white" />,
+                title: "Criador de Listings",
                 desc: "Crie listings perfeitas em Português, Espanhol, Francês e Italiano otimizadas para SEO.",
                 color: "bg-blue-600"
+              },
+              {
+                icon: <Bot className="w-8 h-8 text-white" />,
+                title: "Mentor Virtual",
+                desc: "Mentor virtual 24h treinado na metodologia Amazon Sem Segredos. Tira dúvidas, analisa estratégias e recomenda ações.",
+                color: "bg-indigo-600"
+              },
+              {
+                icon: <Megaphone className="w-8 h-8 text-white" />,
+                title: "Gerenciador de Ads",
+                desc: "Otimize suas campanhas de PPC com inteligência artificial para maximizar seu ROAS e reduzir desperdícios.",
+                color: "bg-purple-600"
               }
             ].map((feature, idx) => (
               <div key={idx} className="bg-white dark:bg-dark-900 p-8 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm hover:shadow-md transition-shadow">
@@ -201,7 +204,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
 
       <footer className="bg-gray-900 dark:bg-black text-white py-12 border-t border-gray-800 dark:border-gray-900">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="opacity-50 text-sm">© 2024 Amazon Sem Segredos AI Suite. Todos os direitos reservados.</p>
+          <p className="opacity-50 text-sm">© 2026 Amazon Sem Segredos AI Suite. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
