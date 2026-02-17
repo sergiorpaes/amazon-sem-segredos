@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle, ShieldCheck, Lock, Globe, ChevronDown, ChevronUp, Users, BarChart } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, ShieldCheck, Lock, Globe, ChevronDown, ChevronUp, Users, BarChart, ToggleLeft } from 'lucide-react';
 import { connectToAmazon, saveCredentials as saveToStorage, loadCredentials, AmazonCredentials, Region } from '../../services/amazonAuthService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSettings, AppFeatures } from '../../contexts/SettingsContext';
 import { AdminDashboard } from '../../views/Admin/Dashboard';
 import { AdminUsers } from '../../views/Admin/Users';
 
-type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS';
+type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'FEATURES';
 
 export const Settings: React.FC = () => {
     const { user } = useAuth();
+    const { features, toggleFeature } = useSettings();
     const [activeTab, setActiveTab] = useState<SettingsTab>('AMAZON_API');
     const [activeRegion, setActiveRegion] = useState<Region>('EU');
 
@@ -151,6 +153,16 @@ export const Settings: React.FC = () => {
                             <Users size={18} />
                             Usuários
                         </button>
+                        <button
+                            onClick={() => setActiveTab('FEATURES')}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'FEATURES'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
+                                }`}
+                        >
+                            <ToggleLeft size={18} />
+                            Funcionalidades
+                        </button>
                     </div>
                 )}
             </div>
@@ -275,6 +287,43 @@ export const Settings: React.FC = () => {
             {activeTab === 'ADMIN_USERS' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <AdminUsers />
+                </div>
+            )}
+
+            {activeTab === 'FEATURES' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-white dark:bg-dark-800 rounded-xl border border-gray-100 dark:border-dark-700 shadow-sm p-8">
+                        <div className="mb-6">
+                            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Funcionalidades do Sistema</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Ative ou desative módulos globais. Módulos desativados aparecerão como indisponíveis no menu.</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                { id: 'PRODUCT_FINDER', label: 'Buscador de Produtos', desc: 'Pesquisa avançada de produtos na Amazon' },
+                                { id: 'PROFIT_CALCULATOR', label: 'Calculadora de Lucro Real', desc: 'Cálculo detalhado de margens e ROI' },
+                                { id: 'LISTING_OPTIMIZER', label: 'Criador de Listing', desc: 'Otimização de títulos e descrições com IA' },
+                                { id: 'MENTOR', label: 'Mentor Virtual', desc: 'Assistente AI para estratégias de venda' },
+                                { id: 'ADS_MANAGER', label: 'Gerenciador de Ads', desc: 'Gestão de campanhas publicitárias (Premium)' },
+                            ].map((feature) => (
+                                <div key={feature.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-lg border border-gray-200 dark:border-dark-700">
+                                    <div>
+                                        <h3 className="font-medium text-gray-900 dark:text-white">{feature.label}</h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{feature.desc}</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={features[feature.id as keyof AppFeatures]}
+                                            onChange={() => toggleFeature(feature.id as keyof AppFeatures)}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

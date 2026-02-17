@@ -5,6 +5,7 @@ import { AppView } from './types';
 import { LanguageProvider } from './services/languageService';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 import { AdminDashboard } from './views/Admin/Dashboard';
 import { AdminUsers } from './views/Admin/Users';
@@ -123,9 +124,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <LanguageProvider>
-        <AppContent />
-      </LanguageProvider>
+      <SettingsProvider>
+        <LanguageProvider>
+          <AppContent />
+        </LanguageProvider>
+      </SettingsProvider>
     </AuthProvider>
   );
 }

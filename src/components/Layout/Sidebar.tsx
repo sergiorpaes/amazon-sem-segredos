@@ -16,6 +16,7 @@ import {
 import { DashboardModule } from '../../types';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { ShieldCheck, Users } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -36,15 +37,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
+  const { features } = useSettings();
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
-    { id: DashboardModule.PRODUCT_FINDER, label: t('module.product_finder'), icon: Search },
-    { id: DashboardModule.PROFIT_CALCULATOR, label: t('module.profit_calculator'), icon: LayoutDashboard },
-    { id: DashboardModule.LISTING_OPTIMIZER, label: t('module.listing_optimizer'), icon: Sparkles },
-    { id: DashboardModule.MENTOR, label: t('module.mentor'), icon: Bot },
-    { id: DashboardModule.ADS_MANAGER, label: t('module.ads_manager'), icon: Megaphone },
+    { id: DashboardModule.PRODUCT_FINDER, label: t('module.product_finder'), icon: Search, disabled: !features.PRODUCT_FINDER },
+    { id: DashboardModule.PROFIT_CALCULATOR, label: t('module.profit_calculator'), icon: LayoutDashboard, disabled: !features.PROFIT_CALCULATOR },
+    { id: DashboardModule.LISTING_OPTIMIZER, label: t('module.listing_optimizer'), icon: Sparkles, disabled: !features.LISTING_OPTIMIZER },
+    { id: DashboardModule.MENTOR, label: t('module.mentor'), icon: Bot, disabled: !features.MENTOR },
+    { id: DashboardModule.ADS_MANAGER, label: t('module.ads_manager'), icon: Megaphone, disabled: !features.ADS_MANAGER },
   ];
 
   if (user?.role === 'ADMIN') {
