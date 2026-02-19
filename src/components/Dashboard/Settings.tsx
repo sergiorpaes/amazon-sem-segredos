@@ -5,8 +5,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSettings, AppFeatures } from '../../contexts/SettingsContext';
 import { AdminDashboard } from '../../views/Admin/Dashboard';
 import { AdminUsers } from '../../views/Admin/Users';
+import { Suppliers as AdminSuppliers } from '../../views/Admin/Suppliers';
 
-type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'FEATURES' | 'MARKETPLACES';
+type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'ADMIN_SUPPLIERS' | 'FEATURES' | 'MARKETPLACES';
 
 export const Settings: React.FC = () => {
     const { user } = useAuth();
@@ -154,6 +155,16 @@ export const Settings: React.FC = () => {
                             Usuários
                         </button>
                         <button
+                            onClick={() => setActiveTab('ADMIN_SUPPLIERS')}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'ADMIN_SUPPLIERS'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
+                                }`}
+                        >
+                            <Users size={18} />
+                            Fornecedores
+                        </button>
+                        <button
                             onClick={() => setActiveTab('FEATURES')}
                             className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'FEATURES'
                                 ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
@@ -297,6 +308,12 @@ export const Settings: React.FC = () => {
             {activeTab === 'ADMIN_USERS' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <AdminUsers />
+                </div>
+            )}
+
+            {activeTab === 'ADMIN_SUPPLIERS' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <AdminSuppliers />
                 </div>
             )}
 

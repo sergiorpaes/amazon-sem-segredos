@@ -125,3 +125,14 @@ export const productsCache = pgTable('amz_products_cache', {
     raw_data: jsonb('raw_data'),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const suppliers = pgTable('amz_suppliers', {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    url: text('url').notNull(),
+    categories: jsonb('categories').notNull(), // Array of strings
+    description: text('description'),
+    country: text('country'),
+    featured: boolean('featured').default(false),
+    created_at: timestamp('created_at').defaultNow(),
+});
