@@ -6,7 +6,7 @@ export const users = pgTable('amz_users', {
     email: text('email').unique().notNull(),
     password_hash: text('password_hash').notNull(),
     role: text('role').default('USER').notNull(), // 'USER' | 'ADMIN'
-    credits_balance: integer('credits_balance').default(5).notNull(),
+    credits_balance: integer('credits_balance').default(30).notNull(),
     stripe_customer_id: text('stripe_customer_id'),
 
     // Extended Profile (Not in current DB migration)

@@ -7,13 +7,15 @@ import {
 import { useLanguage } from '../../services/languageService';
 import { jsPDF } from 'jspdf';
 import { getRecommendations } from '../../lib/strategicRecommendations';
-import { searchProducts } from '../../services/amazonAuthService';
+import { searchProducts, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import { ProductMetadata } from '../../types';
 import { getSupplierLinks } from '../../lib/sourcingUtils';
 
 export const ProfitCalculator: React.FC = () => {
     const { t, language } = useLanguage();
+    const { enabledMarketplaces } = useSettings();
 
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
@@ -220,11 +222,10 @@ export const ProfitCalculator: React.FC = () => {
                             className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg outline-none focus:ring-2 focus:ring-[#007185]/20"
                         />
                     </div>
-                    <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg px-3 py-2 text-sm font-semibold outline-none">
-                        <option value="A1RKKUPIHCS9HS">🇪🇸 ES</option>
-                        <option value="ATVPDKIKX0DER">🇺🇸 US</option>
-                        <option value="A2Q3Y263D00KWC">🇧🇷 BR</option>
-                        <option value="A1F83G8C2ARO7P">🇬🇧 UK</option>
+                    <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg px-3 py-2 text-sm font-semibold outline-none max-w-[150px]">
+                        {SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id)).map(m => (
+                            <option key={m.id} value={m.id}>{m.flag} {m.code}</option>
+                        ))}
                     </select>
                     <button type="submit" disabled={isSearching} className="bg-[#007185] hover:bg-[#005a6a] text-white px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                         {isSearching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}

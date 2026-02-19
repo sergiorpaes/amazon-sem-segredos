@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 export interface AppFeatures {
     PRODUCT_FINDER: boolean;
@@ -27,54 +28,86 @@ const defaultFeatures: AppFeatures = {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [features, setFeatures] = useState<AppFeatures>(() => {
-        const saved = localStorage.getItem('app_feature_flags');
-        return saved ? JSON.parse(saved) : defaultFeatures;
-    });
+    const { user } = useAuth(); // Need auth to check role
 
-    const [enabledMarketplaces, setEnabledMarketplaces] = useState<string[]>(() => {
-        const saved = localStorage.getItem('app_enabled_marketplaces');
-        // Default to ALL marketplaces if nothing saved
-        // We avoid circular dependency by not importing SUPPORTED_MARKETPLACES here directly if possible, 
-        // or we just assume all IDs. For simplicity, let's initialize empty and handle "all" logic 
-        // in components or ideally, import the constant.
-        // Better: Let's default to a known set or let components handle "empty means all" or "empty means none".
-        // Actually, let's import the constant to be safe and robust.
-        return saved ? JSON.parse(saved) : [
-            'ATVPDKIKX0DER', 'A2EUQ1WTGCTBG2', 'A1AM78C64UM0Y8', 'A2Q3Y263D00KWC',
-            'A1RKKUPIHCS9HS', 'A1F83G8C2ARO7P', 'A1PA6795UKMFR9', 'A13V1IB3VIYZZH',
-            'APJ6JRA9NG5V4', 'A1805IZSGTT6HS', 'A2NODRKZP88ZB9', 'A1C3SOZRARQ6R3',
-            'A33AVAJ2PDY3EV', 'A2VIGQ35RCS4UG', 'A17E79C6D8DWNP', 'A21TJRUUN4KGV',
-            'A1VC38T7YXB528', 'A39IBJ37TRP1C6', 'A19VAU5U5O7RUS'
-        ];
-    });
+    const [features, setFeatures] = useState<AppFeatures>(defaultFeatures);
 
+    const [enabledMarketplaces, setEnabledMarketplaces] = useState<string[]>([
+        'ATVPDKIKX0DER', 'A2EUQ1WTGCTBG2', 'A1AM78C64UM0Y8', 'A2Q3Y263D00KWC',
+        'A1RKKUPIHCS9HS', 'A1F83G8C2ARO7P', 'A1PA6795UKMFR9', 'A13V1IB3VIYZZH',
+        'APJ6JRA9NG5V4', 'A1805IZSGTT6HS', 'A2NODRKZP88ZB9', 'A1C3SOZRARQ6R3',
+        'A33AVAJ2PDY3EV', 'A2VIGQ35RCS4UG', 'A17E79C6D8DWNP', 'A21TJRUUN4KGV',
+        'A1VC38T7YXB528', 'A39IBJ37TRP1C6', 'A19VAU5U5O7RUS'
+    ]);
+
+    // Load Global Settings
     useEffect(() => {
-        localStorage.setItem('app_feature_flags', JSON.stringify(features));
-    }, [features]);
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch('/.netlify/functions/system-settings');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.global_features) setFeatures(data.global_features);
+                    if (data.enabled_marketplaces) setEnabledMarketplaces(data.enabled_marketplaces);
+                }
+            } catch (error) {
+                console.error('Failed to load global settings:', error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
-    useEffect(() => {
-        localStorage.setItem('app_enabled_marketplaces', JSON.stringify(enabledMarketplaces));
-    }, [enabledMarketplaces]);
+    // Save Settings (Admin Only)
+    const saveSetting = async (key: string, value: any) => {
+        if (user?.role !== 'ADMIN') return;
+
+        try {
+            await fetch('/.netlify/functions/system-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}` // Ensure we pass token
+                },
+                body: JSON.stringify({ key, value })
+            });
+        } catch (error) {
+            console.error(`Failed to save ${key}:`, error);
+        }
+    };
 
     const toggleFeature = (feature: keyof AppFeatures) => {
-        setFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
+        // Optimistic Update
+        const newFeatures = { ...features, [feature]: !features[feature] };
+        setFeatures(newFeatures);
+
+        // Persist if Admin
+        if (user?.role === 'ADMIN') {
+            saveSetting('global_features', newFeatures);
+        }
     };
 
     const setFeature = (feature: keyof AppFeatures, value: boolean) => {
-        setFeatures(prev => ({ ...prev, [feature]: value }));
+        const newFeatures = { ...features, [feature]: value };
+        setFeatures(newFeatures);
+        if (user?.role === 'ADMIN') {
+            saveSetting('global_features', newFeatures);
+        }
     };
 
     const toggleMarketplace = (id: string) => {
-        setEnabledMarketplaces(prev => {
-            if (prev.includes(id)) {
-                // Prevent disabling the last marketplace? Optional but good UX.
-                if (prev.length <= 1) return prev;
-                return prev.filter(m => m !== id);
-            } else {
-                return [...prev, id];
-            }
-        });
+        let newMarketplaces: string[];
+        if (enabledMarketplaces.includes(id)) {
+            if (enabledMarketplaces.length <= 1) return;
+            newMarketplaces = enabledMarketplaces.filter(m => m !== id);
+        } else {
+            newMarketplaces = [...enabledMarketplaces, id];
+        }
+
+        setEnabledMarketplaces(newMarketplaces);
+
+        if (user?.role === 'ADMIN') {
+            saveSetting('enabled_marketplaces', newMarketplaces);
+        }
     };
 
     return (

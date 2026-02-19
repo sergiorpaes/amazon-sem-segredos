@@ -68,7 +68,7 @@ export const handler = async (event: any) => {
         }
 
         // Determine initial credits and role based on plan
-        let initialCredits = parseInt(configMap.initial_credits || '5');
+        let initialCredits = parseInt(configMap.initial_credits || '30');
         let role = 'USER';
 
         if (plan) {

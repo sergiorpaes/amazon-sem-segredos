@@ -29,14 +29,18 @@ export const handler = async (event: any) => {
                 statusCode: 200,
                 body: `
                 <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Conta já Ativada</title>
+                    </head>
                     <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
                         <h1 style="color: #059669;">Conta já Ativada!</h1>
                         <p>Sua conta já foi ativada anteriormente. Você já pode fazer login.</p>
-                        <a href="/" style="display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; rounded: 5px;">Ir para Login</a>
+                        <a href="/" style="display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 5px;">Ir para Login</a>
                     </body>
                 </html>
                 `,
-                headers: { 'Content-Type': 'text/html' }
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
             };
         }
 
@@ -52,14 +56,18 @@ export const handler = async (event: any) => {
             statusCode: 200,
             body: `
             <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Conta Ativada</title>
+                </head>
                 <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
                     <h1 style="color: #059669;">Conta Ativada com Sucesso!</h1>
                     <p>Sua conta foi ativada. Agora você pode acessar a plataforma e utilizar seus créditos.</p>
-                    <a href="/" style="display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; rounded: 5px;">Acessar Plataforma</a>
+                    <a href="/" style="display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 5px;">Acessar Plataforma</a>
                 </body>
             </html>
             `,
-            headers: { 'Content-Type': 'text/html' }
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
         };
 
     } catch (error: any) {
