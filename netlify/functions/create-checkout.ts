@@ -57,10 +57,17 @@ export const handler = async (event: any) => {
         const SUCCESS_URL = `${process.env.URL || 'http://localhost:8888'}/dashboard?success=true`;
         const CANCEL_URL = `${process.env.URL || 'http://localhost:8888'}/dashboard?canceled=true`;
 
+        const getPriceId = (key: string) => {
+            if (stripeMode === 'LIVE') {
+                return process.env[`STRIPE_LIVE_PRICE_${key}`] || process.env[`STRIPE_PRICE_${key}`] || '';
+            }
+            return process.env[`STRIPE_TEST_PRICE_${key}`] || process.env[`STRIPE_PRICE_${key}`] || '';
+        };
+
         const CREDIT_PACKS: Record<string, { priceId: string, credits: number }> = {
-            'micro': { priceId: process.env.STRIPE_PRICE_MICRO || '', credits: 20 },
-            'business': { priceId: process.env.STRIPE_PRICE_BUSINESS || '', credits: 100 },
-            'bulk': { priceId: process.env.STRIPE_PRICE_BULK || '', credits: 300 }
+            'micro': { priceId: getPriceId('MICRO'), credits: 20 },
+            'business': { priceId: getPriceId('BUSINESS'), credits: 100 },
+            'bulk': { priceId: getPriceId('BULK'), credits: 300 }
         };
 
         if (type === 'credits') {
