@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, ChevronDown, User, LogOut, CreditCard, Sparkles, Key, Coins, Plus } from 'lucide-react';
 import { Sidebar } from '../components/Layout/Sidebar';
 import { Mentor } from '../components/Dashboard/Mentor';
@@ -34,12 +34,43 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
 
+  // Handle URL-based routing on mount
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.includes('/dashboard/mentor')) setCurrentModule(DashboardModule.MENTOR);
+    else if (path.includes('/dashboard/product-finder')) setCurrentModule(DashboardModule.PRODUCT_FINDER);
+    else if (path.includes('/dashboard/listing-optimizer')) setCurrentModule(DashboardModule.LISTING_OPTIMIZER);
+    else if (path.includes('/dashboard/suppliers')) setCurrentModule(DashboardModule.SUPPLIER_FINDER);
+    else if (path.includes('/dashboard/profit-calculator')) setCurrentModule(DashboardModule.PROFIT_CALCULATOR);
+    else if (path.includes('/dashboard/ads-manager')) setCurrentModule(DashboardModule.ADS_MANAGER);
+    else if (path.includes('/dashboard/settings')) setCurrentModule(DashboardModule.SETTINGS);
+    else if (path.includes('/dashboard/account')) setCurrentModule(DashboardModule.ACCOUNT);
+  }, []);
+
+  const handleNavigate = (module: DashboardModule) => {
+    setCurrentModule(module);
+    // Update URL without reload
+    const routeMap: Record<string, string> = {
+      [DashboardModule.MENTOR]: '/dashboard/mentor',
+      [DashboardModule.PRODUCT_FINDER]: '/dashboard/product-finder',
+      [DashboardModule.LISTING_OPTIMIZER]: '/dashboard/listing-optimizer',
+      [DashboardModule.SUPPLIER_FINDER]: '/dashboard/suppliers',
+      [DashboardModule.PROFIT_CALCULATOR]: '/dashboard/profit-calculator',
+      [DashboardModule.ADS_MANAGER]: '/dashboard/ads-manager',
+      [DashboardModule.SETTINGS]: '/dashboard/settings',
+      [DashboardModule.ACCOUNT]: '/dashboard/account',
+    };
+    if (routeMap[module]) {
+      window.history.pushState({}, '', routeMap[module]);
+    }
+  };
+
   const getModuleContent = () => {
     switch (currentModule) {
       case DashboardModule.MENTOR:
         return (
           <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
-            <Mentor />
+            <Mentor onNavigate={handleNavigate} />
           </CreditGuard>
         );
       case DashboardModule.LISTING_OPTIMIZER:

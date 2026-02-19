@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, ArrowLeft, MoreHorizontal, Rocket } from 'lucide-react';
+import { Send, Bot, User, Loader2, MoreHorizontal, Rocket } from 'lucide-react';
 import { chatWithMentor } from '../../services/geminiService';
 import { ChatMessage } from '../../types';
 import { AGENTS, Agent } from '../../data/agents';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 
-export const Mentor: React.FC = () => {
+interface MentorProps {
+  onNavigate?: (module: any) => void;
+}
+
+export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
   const { language, t } = useLanguage();
   const { refreshUser } = useAuth();
   const [selectedAgent] = useState<Agent | null>(AGENTS.find(a => a.id === 'mentor-virtual') || AGENTS[0]);
@@ -152,16 +156,19 @@ export const Mentor: React.FC = () => {
                   if (part.match(/https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)) {
                     const videoId = part.match(/https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[3];
                     return (
-                      <div key={i} className="my-3 rounded-xl overflow-hidden shadow-md">
+                      <div key={i} className="my-3 rounded-xl overflow-hidden shadow-2xl border-4 border-gray-900 bg-black">
                         <iframe
                           width="100%"
-                          height="200"
+                          className="w-full aspect-video h-64 md:h-80"
                           src={`https://www.youtube.com/embed/${videoId}`}
                           title="YouTube video player"
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         ></iframe>
+                        <div className="p-2 bg-gray-900 text-center text-xs text-gray-400">
+                          Vídeo Recomendado pelo Mentor
+                        </div>
                       </div>
                     );
                   }
@@ -170,24 +177,33 @@ export const Mentor: React.FC = () => {
                   if (part.startsWith('Route: ')) {
                     const route = part.replace('Route: ', '').trim();
                     return (
-                      <a
+                      <button
                         key={i}
-                        href={route} // Using href for simplicity, but could be converted to onClick with useNavigate if avoiding full reload is key. 
-                        // Since this is inside a React app, using window.location or typical <a> might reload. 
-                        // Better to use a button that calls navigation if we had access to navigate.
-                        // For now, let's use a styled anchor that looks like a button.
-                        className="inline-flex items-center gap-2 px-4 py-2 mt-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-semibold text-sm no-underline"
+                        onClick={() => {
+                          if (onNavigate) {
+                            if (route.includes('product-finder')) onNavigate('PRODUCT_FINDER');
+                            else if (route.includes('listing-optimizer')) onNavigate('LISTING_OPTIMIZER');
+                            else if (route.includes('suppliers')) onNavigate('SUPPLIER_FINDER');
+                            else if (route.includes('profit-calculator')) onNavigate('PROFIT_CALCULATOR');
+                            else if (route.includes('ads-manager')) onNavigate('ADS_MANAGER');
+                            else if (route.includes('settings')) onNavigate('SETTINGS');
+                            else if (route.includes('account')) onNavigate('ACCOUNT');
+                          } else {
+                            window.location.href = route;
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 px-6 py-3 mt-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl transition-all shadow-lg hover:shadow-brand-500/30 transform hover:-translate-y-0.5 font-bold text-sm tracking-wide"
                       >
-                        <Rocket className="w-4 h-4" />
+                        <Rocket className="w-5 h-5" />
                         Acessar Ferramenta
-                      </a>
+                      </button>
                     );
                   }
 
                   // 3. Standard Links (non-video)
                   if (part.match(/^https?:\/\//) && !part.includes('youtube')) {
                     return (
-                      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline break-all">
                         {part}
                       </a>
                     );

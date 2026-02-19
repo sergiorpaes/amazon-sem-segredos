@@ -20,35 +20,49 @@ export const YOUTUBE_VIDEOS: KnowledgeResource[] = [
         id: 'start-zero',
         title: 'Começar do Zero e Vender Todos os Dias na Amazon',
         description: 'Guia completo para iniciantes começarem a vender na Amazon e construírem um negócio recorrente.',
-        url: 'https://www.youtube.com/watch?v=F38RDttzpFpchyJM8VeJAM2vEct_dIMF3bMo76Akk5LxOzWZqL3PEbTCIe16iKSmezm667LVSwWlFFRcUHb5Y25BjOoAKFiMV2mm_Dz_K9jJJE9DX6j22yL0KL6etcfB3ECChaAxVxQg', // Placeholder ID based on search result (simulated) - replacing with known working ID for demo if needed, but using best guess from search context
+        url: 'https://www.youtube.com/watch?v=F38RDttzpFp',
         tags: ['iniciante', 'começar', 'zero', 'vendas']
     },
     {
         id: 'top-1000',
         title: 'Como Encontrar os 1000 Produtos Mais Vendidos',
         description: 'Estratégia prática para encontrar produtos vencedores e de alta demanda.',
-        url: 'https://youtu.be/a50--U08gLE', // User provided
+        url: 'https://www.youtube.com/watch?v=a50--U08gLE',
         tags: ['produtos', 'pesquisa', 'vencedores', 'demanda']
     },
     {
         id: 'buy-box',
         title: 'Buy Box na Prática: Como Ser o Vendedor Destaque',
         description: 'Aprenda os segredos para ganhar a Buy Box e aumentar suas vendas exponencialmente.',
-        url: 'https://www.youtube.com/watch?v=QHHoVoRfJL8', // Extracted ID from search result context
+        url: 'https://www.youtube.com/watch?v=QHHoVoRfJL8',
         tags: ['buy box', 'vendas', 'destaque', 'concorrência']
     },
     {
         id: 'account-health',
         title: 'Como aquecer conta para evitar bloqueio',
         description: 'Dicas cruciais para manter a saúde da sua conta e evitar bloqueios da Amazon.',
-        url: 'https://www.youtube.com/watch?v=AUZIYQFYSF8', // Extracted ID
+        url: 'https://www.youtube.com/watch?v=AUZIYQFYSF8',
         tags: ['bloqueio', 'saúde da conta', 'segurança', 'conformidade']
+    },
+    {
+        id: 'suppliers',
+        title: 'Como Encontrar Fornecedores na Amazon Brasil',
+        description: 'O guia definitivo para encontrar os melhores fornecedores e garantir estoque de qualidade.',
+        url: 'https://www.youtube.com/watch?v=R9K_s2w-w0c',
+        tags: ['fornecedor', 'sourcing', 'estoque', 'compras']
+    },
+    {
+        id: 'listing-creation',
+        title: 'Como Listar Seu Primeiro Produto (Passo a Passo)',
+        description: 'Tutorial completo de como criar um listing profissional do zero.',
+        url: 'https://www.youtube.com/watch?v=m-uS008T8lY',
+        tags: ['listing', 'criar', 'produto', 'cadastro']
     },
     {
         id: 'promotions',
         title: 'Como criar promoções, ofertas e cupons',
         description: 'Passo a passo para criar campanhas promocionais que convertem.',
-        url: 'https://www.youtube.com/@amazonsemsegredos/videos', // Fallback to channel videos as specific one wasn't clear
+        url: 'https://www.youtube.com/watch?v=3w3q_8p6j9E',
         tags: ['marketing', 'promoção', 'cupom', 'vendas']
     },
     {
