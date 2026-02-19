@@ -1,7 +1,7 @@
 
 import Stripe from 'stripe';
 import { db } from '../../src/db';
-import { users, userSubscriptions, plans } from '../../src/db/schema';
+import { users, userSubscriptions, plans, systemConfig } from '../../src/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { addCredits } from '../../src/lib/credits';
 
@@ -19,7 +19,10 @@ export const handler = async (event: any) => {
 
     const stripe = getStripe();
     const signature = event.headers['stripe-signature'];
-    const mode = process.env.STRIPE_MODE || 'TEST';
+    // Fetch Global Settings for Stripe Mode
+    const [config] = await db.select().from(systemConfig).where(eq(systemConfig.key, 'stripe_mode')).limit(1);
+    const mode = config?.value || process.env.STRIPE_MODE || 'TEST';
+
     const webhookSecret = mode === 'LIVE'
         ? process.env.STRIPE_LIVE_WEBHOOK_SECRET
         : (process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET);
