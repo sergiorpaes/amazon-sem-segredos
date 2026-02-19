@@ -138,7 +138,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
                 <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
               <ul className="space-y-2 mb-4">
-                {['5 pesquisas/dia', 'Análise básica', 'Suporte por email'].map(item => (
+                {['30 créditos iniciais', 'Análise básica', 'Suporte por email'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
                   </li>

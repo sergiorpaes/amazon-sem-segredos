@@ -12,7 +12,7 @@ const PLANS_DATA = [
         credit_limit: 30,
         stripe_price_id: null,
         stripe_product_id: null,
-        features_json: JSON.stringify(['30 créditos iniciais', 'Acesso básico']),
+        features_json: JSON.stringify(['30 créditos iniciais', 'Análise básica', 'Suporte por email']),
     },
     {
         name: 'Starter',

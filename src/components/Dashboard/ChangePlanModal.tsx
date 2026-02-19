@@ -23,7 +23,7 @@ export const ChangePlanModal: React.FC<ChangePlanModalProps> = ({ isOpen, onClos
             name: 'Free',
             price: '€ 0',
             period: '/mês',
-            features: ['5 pesquisas/dia', 'Análise básica', 'Suporte por email'],
+            features: ['30 créditos iniciais', 'Análise básica', 'Suporte por email'],
             current: currentPlan === 'free'
         },
         {
