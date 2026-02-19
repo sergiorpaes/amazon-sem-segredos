@@ -70,90 +70,85 @@ export const handler = async (event: any) => {
             'bulk': { priceId: getPriceId('BULK'), credits: 300 }
         };
 
+        // --- SESSION CREATION WITH AUTO-HEALING FOR INVALID CUSTOMER IDs ---
+        const createSession = async (customerId: string) => {
+            const commonParams = {
+                customer: customerId,
+                payment_method_types: ['card'],
+                success_url: SUCCESS_URL,
+                cancel_url: CANCEL_URL,
+            };
+
+            if (type === 'credits') {
+                // ... (Credits Logic from above) ...
+                // Refetch or use closure values, but for simplicity let's assume params are prepared
+                // Actually, better to restructure. Let's keep the logic simple.
+                // We will define the session config based on type OUTSIDE, then just pass customerId
+                return null; // Placeholder to indicate we need to restructure slightly
+            }
+            return null;
+        };
+
+        // Let's restructure to prepare params first, then try/catch the create call.
+
+        let sessionParams: any = {
+            payment_method_types: ['card'],
+            success_url: SUCCESS_URL,
+            cancel_url: CANCEL_URL,
+        };
+
         if (type === 'credits') {
-            // One-time payment for credits
             let priceId = body.priceId;
             let creditsAmount = 0;
 
             if (body.pack && CREDIT_PACKS[body.pack]) {
                 priceId = CREDIT_PACKS[body.pack].priceId;
                 creditsAmount = CREDIT_PACKS[body.pack].credits;
-
-                if (!priceId) {
-                    throw new Error(`Configuração do Stripe ausente para o pacote: ${body.pack}. Verifique as variáveis de ambiente.`);
-                }
+                if (!priceId) throw new Error(`Configuração do Stripe ausente para o pacote: ${body.pack}.`);
             } else {
-                // Fallback or specific priceId passed
                 priceId = priceId || process.env.STRIPE_CREDITS_PRICE_ID || '';
-                if (!priceId) {
-                    throw new Error("ID de Preço de créditos não configurado. Verifique STRIPE_CREDITS_PRICE_ID.");
-                }
+                if (!priceId) throw new Error("ID de Preço de créditos não configurado.");
             }
 
-            // --- RESOLVE PRODUCT ID TO PRICE ID IF NEEDED ---
             if (priceId.startsWith('prod_')) {
                 console.log(`Resolvendo Price ID para Produto de Crédito: ${priceId}`);
-                const prices = await stripe.prices.list({
-                    product: priceId,
-                    active: true,
-                    limit: 1
-                });
-                if (prices.data.length > 0) {
-                    priceId = prices.data[0].id;
-                } else {
-                    throw new Error(`Nenhum preço ativo encontrado para o produto: ${priceId}`);
-                }
+                const prices = await stripe.prices.list({ product: priceId, active: true, limit: 1 });
+                if (prices.data.length > 0) priceId = prices.data[0].id;
+                else throw new Error(`Nenhum preço ativo encontrado para o produto: ${priceId}`);
             }
-            // ------------------------------------------------
 
-            session = await stripe.checkout.sessions.create({
-                customer: customerId,
-                mode: 'payment',
-                payment_method_types: ['card'],
-                line_items: [{ price: priceId, quantity: 1 }],
-                success_url: SUCCESS_URL,
-                cancel_url: CANCEL_URL,
-                metadata: {
-                    userId: user.id.toString(),
-                    type: 'credits',
-                    creditsAmount: creditsAmount.toString()
-                }
-            });
+            sessionParams.mode = 'payment';
+            sessionParams.line_items = [{ price: priceId, quantity: 1 }];
+            sessionParams.metadata = {
+                userId: user.id.toString(),
+                type: 'credits',
+                creditsAmount: creditsAmount.toString()
+            };
         } else {
-            // Subscription for plan
+            // Subscription
             let priceId = body.priceId || query.priceId;
             let planId = body.planId || query.planId;
 
-            // If we have a priceId but no planId, try to find the plan
+            // ... (Plan resolution logic - kept same) ...
             if (priceId && !planId) {
                 const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
                 if (plan) planId = plan.id;
             }
-
-            // If no priceId or it's a placeholder, but we have a planId, resolve it
             if ((!priceId || priceId.includes('placeholder')) && planId) {
                 const [plan] = await db.select().from(plans).where(eq(plans.id, parseInt(planId))).limit(1);
                 if (plan) {
                     if (plan.stripe_price_id && !plan.stripe_price_id.includes('placeholder')) {
                         priceId = plan.stripe_price_id;
                     } else if (plan.stripe_product_id) {
-                        // Resolve Price ID from Product ID dynamically
                         console.log(`Resolvendo Price ID para Produto: ${plan.stripe_product_id}`);
-                        const prices = await stripe.prices.list({
-                            product: plan.stripe_product_id,
-                            active: true,
-                            limit: 1
-                        });
+                        const prices = await stripe.prices.list({ product: plan.stripe_product_id, active: true, limit: 1 });
                         if (prices.data.length > 0) {
                             priceId = prices.data[0].id;
-                            // Cache it back to DB for performance
                             await db.update(plans).set({ stripe_price_id: priceId }).where(eq(plans.id, plan.id));
                         }
                     }
                 }
             }
-
-            // Fallback if still no valid priceId (Default to Pro)
             if (!priceId || priceId.includes('placeholder')) {
                 const PRO_ENV_ID = process.env.STRIPE_PRO_PLAN_ID;
                 if (PRO_ENV_ID && !PRO_ENV_ID.includes('placeholder')) {
@@ -164,36 +159,50 @@ export const handler = async (event: any) => {
                         priceId = proPlan.stripe_price_id;
                     }
                 }
-
-                if (!priceId || priceId.includes('placeholder')) {
-                    throw new Error("Plano Pro não configurado corretamente no Stripe.");
-                }
-
+                if (!priceId || priceId.includes('placeholder')) throw new Error("Plano Pro não configurado corretamente.");
                 if (!planId && priceId) {
                     const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
                     if (plan) planId = plan.id;
                 }
             }
 
-            session = await stripe.checkout.sessions.create({
-                customer: customerId,
-                mode: 'subscription',
-                payment_method_types: ['card'],
-                line_items: [{ price: priceId, quantity: 1 }],
-                success_url: SUCCESS_URL,
-                cancel_url: CANCEL_URL,
-                subscription_data: {
-                    metadata: {
-                        userId: user.id.toString(),
-                        planId: planId ? planId.toString() : ''
-                    }
-                },
-                metadata: {
-                    userId: user.id.toString(),
-                    type: 'plan',
-                    planId: planId ? planId.toString() : ''
-                }
-            });
+            sessionParams.mode = 'subscription';
+            sessionParams.line_items = [{ price: priceId, quantity: 1 }];
+            sessionParams.subscription_data = {
+                metadata: { userId: user.id.toString(), planId: planId ? planId.toString() : '' }
+            };
+            sessionParams.metadata = {
+                userId: user.id.toString(),
+                type: 'plan',
+                planId: planId ? planId.toString() : ''
+            };
+        }
+
+        // Try to create session, retry if customer not found
+        try {
+            sessionParams.customer = customerId;
+            session = await stripe.checkout.sessions.create(sessionParams);
+        } catch (err: any) {
+            // Check for specific Stripe error "No such customer"
+            if (err.code === 'resource_missing' && err.param === 'customer') {
+                console.log(`Customer ${customerId} not found in ${stripeMode} mode. Creating new customer...`);
+
+                // Create new customer
+                const newCustomer = await stripe.customers.create({
+                    email: user.email,
+                    metadata: { userId: user.id.toString() }
+                });
+
+                // Update DB
+                customerId = newCustomer.id;
+                await db.update(users).set({ stripe_customer_id: customerId }).where(eq(users.id, userId));
+
+                // Retry session creation
+                sessionParams.customer = customerId;
+                session = await stripe.checkout.sessions.create(sessionParams);
+            } else {
+                throw err;
+            }
         }
 
         return {
