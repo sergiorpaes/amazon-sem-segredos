@@ -5,6 +5,7 @@ import { Mentor } from '../components/Dashboard/Mentor';
 import { ListingOptimizer } from '../components/Dashboard/ListingOptimizer';
 import { ProfitAnalytics } from '../components/Dashboard/ProfitAnalytics';
 import { ProductFinder } from '../components/Dashboard/ProductFinder';
+import { SupplierFinder } from '../components/Dashboard/SupplierFinder';
 import { Settings } from '../components/Dashboard/Settings';
 import { AccountDashboard } from '../components/Dashboard/AccountDashboard';
 import { ProfitCalculator } from '../components/Dashboard/ProfitCalculator';
@@ -53,6 +54,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <ProductFinder />
           </CreditGuard>
         );
+      case DashboardModule.SUPPLIER_FINDER:
+        return <SupplierFinder />;
       case DashboardModule.PROFIT_ANALYTICS:
         return (
           <div className="opacity-40 grayscale pointer-events-none select-none relative h-full overflow-hidden">
@@ -120,6 +123,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.MENTOR: return t('module.mentor');
       case DashboardModule.LISTING_OPTIMIZER: return t('module.listing_optimizer');
       case DashboardModule.PRODUCT_FINDER: return t('module.product_finder');
+      case DashboardModule.SUPPLIER_FINDER: return t('module.supplier_finder');
       case DashboardModule.PROFIT_ANALYTICS: return t('module.dashboard');
       case DashboardModule.PROFIT_CALCULATOR: return t('module.profit_calculator');
       case DashboardModule.ADS_MANAGER: return t('module.ads_manager');
