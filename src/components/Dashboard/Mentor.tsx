@@ -153,8 +153,11 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
               <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">
                 {msg.text.split(/(https?:\/\/[^\s]+|Route: \/[^\s]+)/g).map((part, i) => {
                   // 1. YouTube Video Embed
-                  if (part.match(/https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)) {
-                    const videoId = part.match(/https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[3];
+                  // Match robustly: looks for youtube.com or youtu.be followed by exactly 11 ID chars
+                  const ytMatch = part.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+
+                  if (ytMatch && ytMatch[1]) {
+                    const videoId = ytMatch[1];
                     return (
                       <div key={i} className="my-3 rounded-xl overflow-hidden shadow-2xl border-4 border-gray-900 bg-black">
                         <iframe
@@ -200,8 +203,8 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
                     );
                   }
 
-                  // 3. Standard Links (non-video)
-                  if (part.match(/^https?:\/\//) && !part.includes('youtube')) {
+                  // 3. Standard Links (including non-embeddable YouTube links)
+                  if (part.match(/^https?:\/\//)) {
                     return (
                       <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline break-all">
                         {part}
