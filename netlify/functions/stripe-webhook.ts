@@ -19,7 +19,15 @@ export const handler = async (event: any) => {
 
     const stripe = getStripe();
     const signature = event.headers['stripe-signature'];
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const mode = process.env.STRIPE_MODE || 'TEST';
+    const webhookSecret = mode === 'LIVE'
+        ? process.env.STRIPE_LIVE_WEBHOOK_SECRET
+        : (process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET);
+
+    if (!webhookSecret) {
+        console.error(`Webhook Secret not found for mode: ${mode}`);
+        return { statusCode: 500, body: 'Webhook Secret Configuration Error' };
+    }
 
     let stripeEvent;
 
