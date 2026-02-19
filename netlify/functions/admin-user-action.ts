@@ -31,30 +31,38 @@ export const handler: Handler = async (event) => {
 
         // 2. Parse Request Body
         const { userId, action, payload } = JSON.parse(event.body || '{}');
+
+        console.log(`[admin-user-action] Action: ${action}, UserID: ${userId}`);
+
         if (!userId || !action) {
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing userId or action' }) };
+        }
+
+        const targetUserId = Number(userId);
+        if (isNaN(targetUserId)) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'Invalid userId' }) };
         }
 
         // 3. Handle Actions
         switch (action) {
             case 'UPDATE_CREDITS': {
                 const { amount, description } = payload;
-                await addCredits(Number(userId), Number(amount), 'purchased', description || 'Admin manually adjusted credits');
+                await addCredits(targetUserId, Number(amount), 'purchased', description || 'Admin manually adjusted credits');
                 break;
             }
 
             case 'CHANGE_PLAN': {
                 const { planId } = payload;
                 // Check if user has a subscription record
-                const existingSub = await db.select().from(userSubscriptions).where(eq(userSubscriptions.user_id, userId)).limit(1);
+                const existingSub = await db.select().from(userSubscriptions).where(eq(userSubscriptions.user_id, targetUserId)).limit(1);
 
                 if (existingSub.length > 0) {
                     await db.update(userSubscriptions)
                         .set({ plan_id: Number(planId), updated_at: new Date() })
-                        .where(eq(userSubscriptions.user_id, userId));
+                        .where(eq(userSubscriptions.user_id, targetUserId));
                 } else {
                     await db.insert(userSubscriptions).values({
-                        user_id: Number(userId),
+                        user_id: targetUserId,
                         plan_id: Number(planId),
                         status: 'active',
                     });
@@ -64,10 +72,16 @@ export const handler: Handler = async (event) => {
 
             case 'RESET_PASSWORD': {
                 const { newPassword } = payload;
+                if (!newPassword || typeof newPassword !== 'string' || newPassword.trim() === '') {
+                    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid password' }) };
+                }
                 const passwordHash = await bcrypt.hash(newPassword, 10);
-                await db.update(users)
+
+                const result = await db.update(users)
                     .set({ password_hash: passwordHash })
-                    .where(eq(users.id, userId));
+                    .where(eq(users.id, targetUserId));
+
+                console.log(`[admin-user-action] Password reset for user ${targetUserId}. Result:`, result);
                 break;
             }
 
@@ -75,16 +89,12 @@ export const handler: Handler = async (event) => {
                 const { banned } = payload;
                 await db.update(users)
                     .set({ banned_at: banned ? new Date() : null })
-                    .where(eq(users.id, userId));
+                    .where(eq(users.id, targetUserId));
                 break;
             }
 
             case 'DELETE_USER': {
-                // For safety, maybe just ban? But if user asks for delete:
-                // We should probably delete related records first or just soft delete.
-                // Let's implement soft delete (ban) for now or full delete if requested.
-                // Re-reading: the user didn't explicitly ask for delete, but action menu often has it.
-                // The prompt says "Suspend/Ban Account". So SET_BANNED_STATUS covers it.
+                // Not implemented
                 break;
             }
 
