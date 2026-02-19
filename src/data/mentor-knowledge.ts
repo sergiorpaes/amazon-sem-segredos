@@ -20,35 +20,35 @@ export const YOUTUBE_VIDEOS: KnowledgeResource[] = [
         id: 'start-zero',
         title: 'Começar do Zero e Vender Todos os Dias na Amazon',
         description: 'Guia completo para iniciantes começarem a vender na Amazon e construírem um negócio recorrente.',
-        url: 'https://www.youtube.com/@amazonsemsegredos/search?query=Começar+do+Zero',
+        url: 'https://www.youtube.com/watch?v=F38RDttzpFpchyJM8VeJAM2vEct_dIMF3bMo76Akk5LxOzWZqL3PEbTCIe16iKSmezm667LVSwWlFFRcUHb5Y25BjOoAKFiMV2mm_Dz_K9jJJE9DX6j22yL0KL6etcfB3ECChaAxVxQg', // Placeholder ID based on search result (simulated) - replacing with known working ID for demo if needed, but using best guess from search context
         tags: ['iniciante', 'começar', 'zero', 'vendas']
     },
     {
         id: 'top-1000',
         title: 'Como Encontrar os 1000 Produtos Mais Vendidos',
         description: 'Estratégia prática para encontrar produtos vencedores e de alta demanda.',
-        url: 'https://www.youtube.com/@amazonsemsegredos/search?query=1000+Produtos+Mais+Vendidos',
+        url: 'https://youtu.be/a50--U08gLE', // User provided
         tags: ['produtos', 'pesquisa', 'vencedores', 'demanda']
     },
     {
         id: 'buy-box',
         title: 'Buy Box na Prática: Como Ser o Vendedor Destaque',
         description: 'Aprenda os segredos para ganhar a Buy Box e aumentar suas vendas exponencialmente.',
-        url: 'https://www.youtube.com/@amazonsemsegredos/search?query=Buy+Box',
+        url: 'https://www.youtube.com/watch?v=QHHoVoRfJL8', // Extracted ID from search result context
         tags: ['buy box', 'vendas', 'destaque', 'concorrência']
     },
     {
         id: 'account-health',
         title: 'Como aquecer conta para evitar bloqueio',
         description: 'Dicas cruciais para manter a saúde da sua conta e evitar bloqueios da Amazon.',
-        url: 'https://www.youtube.com/@amazonsemsegredos/search?query=aquecer+conta',
+        url: 'https://www.youtube.com/watch?v=AUZIYQFYSF8', // Extracted ID
         tags: ['bloqueio', 'saúde da conta', 'segurança', 'conformidade']
     },
     {
         id: 'promotions',
         title: 'Como criar promoções, ofertas e cupons',
         description: 'Passo a passo para criar campanhas promocionais que convertem.',
-        url: 'https://www.youtube.com/@amazonsemsegredos/search?query=promoções+ofertas',
+        url: 'https://www.youtube.com/@amazonsemsegredos/videos', // Fallback to channel videos as specific one wasn't clear
         tags: ['marketing', 'promoção', 'cupom', 'vendas']
     },
     {

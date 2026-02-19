@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Send, Bot, User, Loader2, ArrowLeft, MoreHorizontal, Rocket } from 'lucide-react';
 import { chatWithMentor } from '../../services/geminiService';
 import { ChatMessage } from '../../types';
 import { AGENTS, Agent } from '../../data/agents';
@@ -144,7 +144,58 @@ export const Mentor: React.FC = () => {
                   <span className="flex items-center gap-1 text-brand-400"><Bot className="w-3 h-3" /> {selectedAgent.name}</span>
                 )}
               </div>
-              <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">{msg.text}</div>
+
+              {/* Message Content with Rich Media Support */}
+              <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-base">
+                {msg.text.split(/(https?:\/\/[^\s]+|Route: \/[^\s]+)/g).map((part, i) => {
+                  // 1. YouTube Video Embed
+                  if (part.match(/https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)) {
+                    const videoId = part.match(/https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[3];
+                    return (
+                      <div key={i} className="my-3 rounded-xl overflow-hidden shadow-md">
+                        <iframe
+                          width="100%"
+                          height="200"
+                          src={`https://www.youtube.com/embed/${videoId}`}
+                          title="YouTube video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    );
+                  }
+
+                  // 2. Internal Tool Route Button
+                  if (part.startsWith('Route: ')) {
+                    const route = part.replace('Route: ', '').trim();
+                    return (
+                      <a
+                        key={i}
+                        href={route} // Using href for simplicity, but could be converted to onClick with useNavigate if avoiding full reload is key. 
+                        // Since this is inside a React app, using window.location or typical <a> might reload. 
+                        // Better to use a button that calls navigation if we had access to navigate.
+                        // For now, let's use a styled anchor that looks like a button.
+                        className="inline-flex items-center gap-2 px-4 py-2 mt-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-semibold text-sm no-underline"
+                      >
+                        <Rocket className="w-4 h-4" />
+                        Acessar Ferramenta
+                      </a>
+                    );
+                  }
+
+                  // 3. Standard Links (non-video)
+                  if (part.match(/^https?:\/\//) && !part.includes('youtube')) {
+                    return (
+                      <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                        {part}
+                      </a>
+                    );
+                  }
+
+                  return part;
+                })}
+              </div>
             </div>
           </div>
         ))}
