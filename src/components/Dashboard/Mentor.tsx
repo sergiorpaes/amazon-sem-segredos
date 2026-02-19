@@ -162,7 +162,7 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
                       <div key={i} className="my-3 rounded-xl overflow-hidden shadow-2xl border-4 border-gray-900 bg-black">
                         <iframe
                           width="100%"
-                          className="w-full aspect-video h-64 md:h-80"
+                          className="w-full aspect-video h-80 md:h-[500px]"
                           src={`https://www.youtube.com/embed/${videoId}`}
                           title="YouTube video player"
                           frameBorder="0"
