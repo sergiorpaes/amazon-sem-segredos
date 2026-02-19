@@ -66,7 +66,13 @@ export const Mentor: React.FC = () => {
     try {
       // Append language instruction to system prompt
       const langInstruction = `\n\nIMPORTANT: ALWAYS Answer in ${language === 'pt' ? 'Portuguese' : language === 'es' ? 'Spanish' : 'English'}.`;
-      const fullInstructions = selectedAgent.systemPrompt + langInstruction;
+
+      // Get the latest prompt builder result (if it's a function or just the string)
+      // We need to ensure we are using the detailed prompt from AGENTS
+      const agentPrompt = selectedAgent.systemPrompt;
+      const fullInstructions = agentPrompt + langInstruction;
+
+      console.log('Sending instructions to Mentor:', fullInstructions); // Debug log
 
       const responseText = await chatWithMentor(textToSend, messages, fullInstructions);
 

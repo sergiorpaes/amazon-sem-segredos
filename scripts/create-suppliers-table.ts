@@ -2,8 +2,16 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-import { db } from "../src/db";
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
 import { sql } from "drizzle-orm";
+
+if (!process.env.NETLIFY_DATABASE_URL) {
+    throw new Error('NETLIFY_DATABASE_URL is not set in .env.local');
+}
+
+const pool = new Pool({ connectionString: process.env.NETLIFY_DATABASE_URL });
+const db = drizzle(pool);
 
 async function createTable() {
     console.log('🛠 Creating amz_suppliers table...');
