@@ -29,6 +29,7 @@ export const handler = async (event: any) => {
             credits_balance: users.credits_balance,
             password_hash: users.password_hash,
             activated_at: users.activated_at,
+            banned_at: users.banned_at,
             plan_name: plans.name
         })
             .from(users)
@@ -39,6 +40,17 @@ export const handler = async (event: any) => {
 
         if (!user) {
             return { statusCode: 404, body: JSON.stringify({ error: 'Usuário não encontrado' }) };
+        }
+
+        // Check if Banned
+        if (user.banned_at) {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({
+                    error: 'Conta Suspensa',
+                    details: 'Sua conta foi suspensa temporariamente ou permanentemente. Entre em contato com o suporte.'
+                })
+            };
         }
 
         // Check if Maintenance Mode blocks this user
