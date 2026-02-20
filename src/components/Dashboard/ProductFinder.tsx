@@ -601,20 +601,20 @@ export const ProductFinder: React.FC = () => {
       {/* Removed Top Header with Local Language Selector */}
 
       {/* Search Header - Compacted */}
-      <div className="flex flex-col gap-6 items-center bg-white p-8 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+      <div className="flex flex-col gap-6 items-center bg-white p-5 md:p-8 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md mx-2 sm:mx-0">
         <div className="w-full max-w-4xl">
-          <div className="flex items-center gap-3 w-full">
-            <div className="relative flex-1 group">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full">
+            <div className="relative flex-1 group w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-brand-500" />
               <input
                 type="text"
                 placeholder={t('search.placeholder')}
-                className="w-full pl-12 pr-24 py-4 bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white text-base shadow-inner transition-all text-gray-900 placeholder:text-gray-400"
+                className="w-full pl-12 pr-24 py-4 bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white text-sm md:text-base shadow-inner transition-all text-gray-900 placeholder:text-gray-400"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && onSearchClick()}
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 md:gap-2">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -629,7 +629,7 @@ export const ProductFinder: React.FC = () => {
                   title={t('search.camera_tooltip')}
                 >
                   <Camera className="w-5 h-5" />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                     {t('search.camera_tooltip')}
                   </span>
                 </button>
@@ -640,76 +640,78 @@ export const ProductFinder: React.FC = () => {
                   title={t('search.image_tooltip')}
                 >
                   {isAnalyzingImage ? (
-                    <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Upload className="w-5 h-5" />
                   )}
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                     {t('search.image_tooltip')}
                   </span>
                 </button>
               </div>
             </div>
 
-            {/* Custom Marketplace Dropdown */}
-            <div className="relative" ref={marketplaceRef}>
-              <button
-                onClick={() => setIsMarketplaceOpen(!isMarketplaceOpen)}
-                className="flex items-center gap-2 h-[58px] px-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all min-w-[120px]"
-              >
-                <span className="text-xl">{selectedFlag}</span>
-                <span className="flex-1 text-left">{selectedCode}</span>
-                <ChevronDown size={16} className={`text-gray-400 transition-transform ${isMarketplaceOpen ? 'rotate-180' : ''}`} />
-              </button>
+            <div className="flex gap-3 w-full md:w-auto">
+              {/* Custom Marketplace Dropdown */}
+              <div className="relative flex-1 md:flex-none" ref={marketplaceRef}>
+                <button
+                  onClick={() => setIsMarketplaceOpen(!isMarketplaceOpen)}
+                  className="flex justify-center items-center gap-2 w-full h-[54px] md:h-[58px] px-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all md:min-w-[120px]"
+                >
+                  <span className="text-xl">{selectedFlag}</span>
+                  <span className="flex-1 md:flex-none text-left">{selectedCode}</span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${isMarketplaceOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-              {isMarketplaceOpen && (
-                <div className="absolute top-full right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
-                  <div className="p-2 grid gap-1">
-                    {availableMarketplaces.map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => {
-                          setSelectedMarketplace(m.id);
-                          setIsMarketplaceOpen(false);
-                        }}
-                        className={`
-                          flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors
-                          ${selectedMarketplace === m.id ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-50 text-gray-700'}
-                        `}
-                      >
-                        <span className="text-xl">{m.flag}</span>
-                        <span className="flex-1 text-left truncate">{m.name}</span>
-                        {selectedMarketplace === m.id && <Check size={14} className="text-brand-600" />}
-                      </button>
-                    ))}
+                {isMarketplaceOpen && (
+                  <div className="absolute top-full right-0 mt-3 w-full md:w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
+                    <div className="p-2 grid gap-1">
+                      {availableMarketplaces.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setSelectedMarketplace(m.id);
+                            setIsMarketplaceOpen(false);
+                          }}
+                          className={`
+                            flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors
+                            ${selectedMarketplace === m.id ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-50 text-gray-700'}
+                          `}
+                        >
+                          <span className="text-xl">{m.flag}</span>
+                          <span className="flex-1 text-left truncate">{m.name}</span>
+                          {selectedMarketplace === m.id && <Check size={14} className="text-brand-600" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <button
-              onClick={onSearchClick}
-              disabled={isSearching || isAnalyzingImage}
-              className="bg-brand-600 text-white px-10 h-[58px] rounded-2xl font-bold hover:bg-brand-700 transition-all text-base shadow-lg shadow-brand-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isSearching ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {t('searching')}
-                </>
-              ) : (
-                <>
-                  <Search className="w-5 h-5" />
-                  {t('search.button')}
-                </>
-              )}
-            </button>
+              <button
+                onClick={onSearchClick}
+                disabled={isSearching || isAnalyzingImage}
+                className="bg-brand-600 flex-1 md:flex-none justify-center text-white px-6 md:px-10 h-[54px] md:h-[58px] rounded-2xl font-bold hover:bg-brand-700 transition-all text-sm md:text-base shadow-lg shadow-brand-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSearching ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="hidden sm:inline">{t('searching')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    <span className="hidden sm:inline">{t('search.button')}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full max-w-4xl">
           <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{t('search.sources_title')}:</div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center sm:justify-start gap-4 flex-wrap w-full">
             {Object.entries({
               'Alibaba': `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(searchTerm)}`,
               '1688': `https://s.1688.com/youyuan/index.htm?tab=imageSearch&searchText=${encodeURIComponent(searchTerm)}`,
@@ -722,7 +724,7 @@ export const ProductFinder: React.FC = () => {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-brand-600 text-sm font-semibold flex items-center gap-1.5 transition-colors"
+                className="text-gray-500 hover:text-brand-600 text-sm font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                 {name}
