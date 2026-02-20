@@ -20,6 +20,7 @@ export const ProfitCalculator: React.FC = () => {
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [marketplace, setMarketplace] = useState('A1RKKUPIHCS9HS'); // ES Default
     const [product, setProduct] = useState<ProductMetadata | null>(null);
     const [fbaFeesExpanded, setFbaFeesExpanded] = useState(true);
@@ -141,6 +142,7 @@ export const ProfitCalculator: React.FC = () => {
         if (!searchQuery.trim()) return;
 
         setIsSearching(true);
+        setError(null);
         try {
             const data = await searchProducts(searchQuery, marketplace);
             if (data && data.items && data.items.length > 0) {
@@ -173,7 +175,10 @@ export const ProfitCalculator: React.FC = () => {
                     setFbmReferral(estRef);
                 }
             }
-        } catch (error) { console.error(error); } finally { setIsSearching(false); }
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || "Erro ao buscar produto na Amazon.");
+        } finally { setIsSearching(false); }
     };
 
     // UI Helpers
@@ -232,6 +237,20 @@ export const ProfitCalculator: React.FC = () => {
                         {t('sim.search_button')}
                     </button>
                 </form>
+
+                {error && (
+                    <div className="mt-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium animate-in fade-in flex items-start gap-3">
+                        <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p>{error}</p>
+                            {error.includes('403') && (
+                                <p className="mt-1 text-xs opacity-80">
+                                    Verifique se as suas credenciais da API na aba "Configurações" estão corretas e se têm permissão para a região selecionada.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {product ? (
                     <div className="mt-8 flex gap-6 items-start border-t border-gray-100 pt-8 animate-in fade-in duration-500">
