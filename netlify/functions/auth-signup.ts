@@ -93,13 +93,7 @@ export const handler = async (event: any) => {
             email: normalizedEmail,
             password_hash: passwordHash,
             role: role as any,
-            credits_balance: initialCredits,
-            phone,
-            company_name,
-            address_street,
-            address_city,
-            address_state,
-            address_zip,
+            credits_balance: 0, // Value will be added via addCredits ledger logic
             activation_token: activationToken,
         }).returning();
 
