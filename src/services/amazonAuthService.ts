@@ -226,7 +226,12 @@ export const searchProducts = async (query: string, marketplaceId?: string, page
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.error || data.message || "Erro ao buscar produto na Amazon.");
+        // Amazon SP-API often returns an array of errors
+        let errorMsg = data.error || data.message || "Erro ao buscar produto na Amazon.";
+        if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+            errorMsg = `Amazon SP-API Error (${response.status}): ${data.errors[0].code} - ${data.errors[0].message}`;
+        }
+        throw new Error(errorMsg);
     }
 
     return data;
