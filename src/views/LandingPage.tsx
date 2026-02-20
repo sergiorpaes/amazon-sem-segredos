@@ -25,10 +25,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="AI Suite Logo" className="w-10 h-10 rounded-lg object-cover" />
-              <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">AMZ Radar</span>
+              <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">Amazon Sem Segredos IA Suite</span>
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">
               <a href="#features" className="hover:text-brand-600 transition-colors">Funcionalidades</a>
+              <a href="#pricing" className="hover:text-brand-600 transition-colors">Preços</a>
               <ThemeToggle />
               <button
                 onClick={() => setIsAuthModalOpen(true)}
@@ -86,7 +87,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             <div className="bg-emerald-50 dark:bg-emerald-900/10 p-8 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 relative">
               <div className="absolute -top-4 -right-4 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-full transform rotate-12 shadow-lg">A Solução</div>
               <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-800/30 rounded-xl flex items-center justify-center mb-6 mx-auto text-emerald-600 dark:text-emerald-400"><Check className="w-6 h-6" /></div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">AMZ Radar Automatizado</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Amazon Sem Segredos IA Suite</h3>
               <p className="text-gray-600 dark:text-gray-400">Cálculo reverso em tempo real. Cole um ASIN e veja seu ROI e lucro líquido instantaneamente.</p>
             </div>
           </div>
@@ -149,47 +150,90 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
         </div>
       </div>
 
-      {/* Social Proof */}
-      <div className="py-20 bg-brand-600 dark:bg-brand-900">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-12">O segredo dos top sellers da Amazon</h2>
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 text-left">
-                <div className="flex text-yellow-400 mb-4">{'★'.repeat(5)}</div>
-                <p className="text-white/90 mb-6 font-medium">"O AMZ Radar mudou o jogo. Antes eu passava horas com planilhas e perdia boas oportunidades. Agora eu sei meu lucro exato antes de fechar com o fornecedor."</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold">A</div>
-                  <div>
-                    <div className="text-white font-bold text-sm">Vendedor PRO</div>
-                    <div className="text-white/70 text-xs">Fatura +10k/mês</div>
-                  </div>
-                </div>
+      {/* Pricing */}
+      <div id="pricing" className="py-24 bg-white dark:bg-dark-900 border-t border-gray-200 dark:border-dark-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Planos que crescem com você</h2>
+            <p className="text-gray-500 dark:text-gray-400">Escolha o plano ideal para o seu estágio na jornada Amazon FBA.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+            {/* Free */}
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-4 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Free</h3>
+              <div className="my-4">
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€0</span>
+                <span className="text-gray-500 dark:text-gray-400">/mês</span>
               </div>
-            ))}
+              <ul className="space-y-2 mb-4">
+                {['30 créditos iniciais', 'Análise básica', 'Suporte por email'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Começar Grátis</button>
+            </div>
+
+            {/* Starter */}
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-4 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Starter</h3>
+              <div className="my-4">
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€19</span>
+                <span className="text-gray-500 dark:text-gray-400">/mês</span>
+              </div>
+              <ul className="space-y-2 mb-4">
+                {['50 créditos/mês', 'Acesso a Mentor', 'Suporte por e-mail'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Selecionar Plano</button>
+            </div>
+
+            {/* Pro */}
+            <div className="border-2 border-brand-500 rounded-2xl p-4 relative shadow-xl shadow-brand-100 bg-white dark:bg-dark-900">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">Recomendado</div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Pro</h3>
+              <div className="my-4">
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€49</span>
+                <span className="text-gray-500 dark:text-gray-400">/mês</span>
+              </div>
+              <ul className="space-y-2 mb-4">
+                {['200 créditos/mês', 'Acesso a tudo do Starter', 'Análise de ROI'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Check className="w-5 h-5 text-brand-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 bg-brand-600 text-white rounded-xl font-semibold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200">Selecionar Plano</button>
+            </div>
+
+            {/* Premium */}
+            <div className="border border-gray-200 dark:border-dark-700 rounded-2xl p-4 bg-white dark:bg-dark-900 hover:border-brand-300 transition-colors">
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">Premium</h3>
+              <div className="my-4">
+                <span className="text-2xl font-extrabold text-gray-900 dark:text-white">€99</span>
+                <span className="text-gray-500 dark:text-gray-400">/mês</span>
+              </div>
+              <ul className="space-y-2 mb-4">
+                {['600 créditos/mês', 'Tudo ilimitado', 'Mentoria VIP'].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                    <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-3 border border-gray-200 dark:border-dark-700 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors text-gray-900 dark:text-white">Selecionar Plano</button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white dark:bg-dark-900 pt-16 pb-8 border-t border-gray-200 dark:border-dark-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center bg-gray-50 dark:bg-dark-800 p-8 rounded-3xl mb-12">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Pronto para escalar com segurança?</h3>
-              <p className="text-gray-600 dark:text-gray-400">Junte-se a vendedores que tomam decisões baseadas em dados.</p>
-            </div>
-            <button onClick={() => setIsAuthModalOpen(true)} className="mt-6 md:mt-0 px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold whitespace-nowrap shadow-premium transition-all">
-              Testar Gratuitamente
-            </button>
-          </div>
-          <div className="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t border-gray-200 dark:border-dark-800 text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <img src="/logo.png" className="w-6 h-6 rounded" alt="" />
-              <span className="font-bold text-gray-900 dark:text-white">AMZ Radar</span>
-            </div>
-            <p>© {new Date().getFullYear()} AMZ Radar. Todos os direitos reservados.</p>
-          </div>
+      <footer className="bg-gray-900 dark:bg-black text-white py-12 border-t border-gray-800 dark:border-gray-900">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="opacity-50 text-sm">© {new Date().getFullYear()} Amazon Sem Segredos IA Suite. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
