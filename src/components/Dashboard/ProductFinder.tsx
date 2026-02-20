@@ -4,6 +4,7 @@ import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { searchProducts, getItemOffers, getBatchOffers, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
 import { analyzeImage } from '../../services/geminiService';
+import { compressImage } from '../../lib/imageUtils';
 import { useSettings } from '../../contexts/SettingsContext';
 import { SalesGraph } from "./SalesGraph";
 import { SalesDetailModal } from "./SalesDetailModal";
@@ -275,7 +276,9 @@ export const ProductFinder: React.FC = () => {
       reader.onloadend = async () => {
         const base64Image = reader.result as string;
         try {
-          const analysis = await analyzeImage(base64Image);
+          // Compress large photos to avoid 504 errors on serverless functions 
+          const compressedBase64 = await compressImage(base64Image, 800, 800, 0.7);
+          const analysis = await analyzeImage(compressedBase64);
           if (analysis) {
             const term = analysis.amazon_optimized_query || analysis.searchKeywords || analysis.description;
             if (term) {

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, X, RefreshCw } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
+import { compressImage } from '../../lib/imageUtils';
 
 interface CameraModalProps {
     isOpen: boolean;
@@ -55,10 +56,13 @@ export const CameraModal: React.FC<CameraModalProps> = ({ isOpen, onClose, onCap
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             if (ctx) {
+                // Compress captured image to max 800x800 px to reduce payload size
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const base64Image = canvas.toDataURL('image/jpeg');
-                onCapture(base64Image);
-                onClose();
+                const rawBase64 = canvas.toDataURL('image/jpeg');
+                compressImage(rawBase64, 800, 800, 0.7).then((compressedBase64) => {
+                    onCapture(compressedBase64);
+                    onClose();
+                });
             }
         }
     };
