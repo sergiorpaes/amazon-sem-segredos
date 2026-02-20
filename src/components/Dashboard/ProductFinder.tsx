@@ -824,7 +824,8 @@ export const ProductFinder: React.FC = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead className="bg-white text-gray-500 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                 <tr>
@@ -1073,20 +1074,101 @@ export const ProductFinder: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
 
-            {/* Load More Button */}
-            {products.length > 0 && (
-              <div className="p-4 border-t border-gray-100 flex flex-col items-center gap-2 bg-gray-50">
-                <button
-                  onClick={() => handleSearch(true)}
-                  disabled={isSearching || !nextToken}
-                  className="px-6 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSearching ? 'Loading...' : (nextToken ? 'Load More Results' : 'No More Results')}
-                </button>
+          {/* Mobile Card View */}
+          <div className="lg:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+            {products.length === 0 ? (
+              <div className="px-6 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col items-center gap-2">
+                <Search className="w-8 h-8 text-gray-300" />
+                <p>{t('error.no_products')}</p>
               </div>
+            ) : (
+              sortedProducts.map((product, index) => (
+                <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm relative flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1">
+                        {product.image ? (
+                          <img src={product.image} alt="" className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
+                            <Box size={20} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <button onClick={() => setSelectedProductForDetail(product)} className="font-medium text-brand-700 line-clamp-2 text-sm text-left leading-tight hover:underline">
+                          {product.title}
+                        </button>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500 font-mono bg-gray-100 px-1 rounded">{product.id}</span>
+                          {product.percentile && product.percentile !== 'NEW_RISING' && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] uppercase bg-green-100 text-green-800">
+                              Top {product.percentile}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer flex-shrink-0"
+                      checked={selectedProductIds.has(product.id)}
+                      onChange={() => handleSelectRow(product.id)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.price')}</span>
+                      <span className="font-bold text-gray-900">
+                        {product.price ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: product.currency || 'USD' }).format(product.price) : '-'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end text-right">
+                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.sales')}</span>
+                      <span className="font-bold text-gray-900">
+                        {product.sales ? product.sales.toLocaleString() : '-'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.revenue')}</span>
+                      <span className="font-bold text-brand-600">
+                        {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: product.currency || 'USD', maximumFractionDigits: 0 }).format(product.revenue) : '-'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end text-right">
+                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.active_sellers')}</span>
+                      <span className="font-bold text-gray-900">
+                        {product.activeSellers ?? '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedProductForDetail(product)}
+                    className="w-full mt-2 py-2.5 bg-brand-50 text-brand-700 text-sm font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-brand-100 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" /> {t('analyze.button')}
+                  </button>
+                </div>
+              ))
             )}
           </div>
+
+          {/* Load More Button */}
+          {products.length > 0 && (
+            <div className="p-4 border-t border-gray-100 flex flex-col items-center gap-2 bg-gray-50 w-full">
+              <button
+                onClick={() => handleSearch(true)}
+                disabled={isSearching || !nextToken}
+                className="px-6 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSearching ? 'Loading...' : (nextToken ? 'Load More Results' : 'No More Results')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
