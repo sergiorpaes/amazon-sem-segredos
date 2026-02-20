@@ -33,6 +33,8 @@ export const handler = async (event: any) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'Faltam campos obrigatórios (Email, Password, Telefone, Morada)' }) };
         }
 
+        const normalizedEmail = email.toLowerCase().trim();
+
         // 0. Check Global Settings
         const allConfigs = await db.select().from(systemConfig);
         const configMap: Record<string, string> = {};
@@ -45,10 +47,10 @@ export const handler = async (event: any) => {
             };
         }
 
-        // Check if user exists
-        const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+        // Check if user exists (case-insensitive)
+        const existingUser = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
         if (existingUser.length > 0) {
-            return { statusCode: 409, body: JSON.stringify({ error: 'Usuário já existe' }) };
+            return { statusCode: 409, body: JSON.stringify({ error: 'Este e-mail já está em uso.' }) };
         }
 
         // Hash password
@@ -88,7 +90,7 @@ export const handler = async (event: any) => {
         const activationToken = crypto.randomUUID();
 
         const [newUser] = await db.insert(users).values({
-            email,
+            email: normalizedEmail,
             password_hash: passwordHash,
             role: role as any,
             credits_balance: initialCredits,
@@ -121,7 +123,7 @@ export const handler = async (event: any) => {
         const activationUrl = `${protocol}://${host}/activate?token=${activationToken}`;
 
         try {
-            await sendWelcomeEmail(email, activationUrl);
+            await sendWelcomeEmail(normalizedEmail, activationUrl);
         } catch (mailError: any) {
             console.error('Failed to send activation email:', mailError);
             return {
