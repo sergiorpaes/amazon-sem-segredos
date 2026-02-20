@@ -791,287 +791,305 @@ export const ProductFinder: React.FC = () => {
         </div>
       )}
 
-      {/* Product Table */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <div className="text-sm text-gray-600 font-medium">
-            {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
+      {/* Product Table or Empty State */}
+      {products.length === 0 && !isSearching && !error ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm mt-8 animate-in fade-in zoom-in-95 duration-500">
+          <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-brand-50/50">
+            <Search className="w-10 h-10 text-brand-500" />
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowFilter(!showFilter)}
-              className={`text-brand-600 text-sm font-semibold hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors ${showFilter ? 'bg-brand-50' : ''}`}
-            >
-              {t('filter.results')}
-            </button>
-          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Onde está o lucro hoje?</h3>
+          <p className="text-gray-500 max-w-md text-center mb-8">
+            Cole um ASIN ou pesquise por palavra-chave para começar a descobrir produtos altamente lucrativos.
+          </p>
+          <button onClick={() => {
+            const el = document.querySelector('input[type="text"]') as HTMLInputElement;
+            if (el) el.focus();
+          }} className="px-6 py-2.5 bg-brand-100 text-brand-700 hover:bg-brand-200 rounded-xl font-bold transition-colors">
+            Fazer Primeira Busca
+          </button>
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-white text-gray-500 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
-              <tr>
-                <th className="px-5 py-4 border-b border-gray-100 w-12 text-center">#</th>
-
-                <th className="px-5 py-4 border-b border-gray-100 min-w-[320px] cursor-pointer hover:bg-gray-50 transition-colors group/head" onClick={() => handleSort('title')}>
-                  <div className="flex items-center gap-1">
-                    {t('col.product_details')}
-                    {sortConfig?.key === 'title' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-                <th className="px-5 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('id')}>
-                  <div className="flex items-center gap-1">
-                    {t('col.asin')}
-                    {sortConfig?.key === 'id' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-                <th className="px-5 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('brand')}>
-                  <div className="flex items-center gap-1">
-                    {t('col.brand')}
-                    {sortConfig?.key === 'brand' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('price')}>
-                  <div className="flex items-center justify-end gap-1">
-                    {t('col.price')}
-                    {sortConfig?.key === 'price' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-                <th className="px-5 py-4 border-b border-gray-100 text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('sales')}>
-                  <div className="flex items-center justify-center gap-1">
-                    {t('col.sales')}
-                    {sortConfig?.key === 'sales' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-                <th className="py-4 pr-5 pl-0 border-b border-gray-100 text-left min-w-[300px]">{t('col.ranking_bsr') || "Ranking (BSR)"}</th>
-
-                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('revenue')}>
-                  <div className="flex items-center justify-end gap-1">
-                    {t('col.revenue')}
-                    {sortConfig?.key === 'revenue' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-
-
-                <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('fbaFees')}>
-                  <div className="flex items-center justify-end gap-1">
-                    {t('col.fba_fees')}
-                    {sortConfig?.key === 'fbaFees' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-
-                <th className="px-5 py-4 border-b border-gray-100 text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('activeSellers')}>
-                  <div className="flex items-center justify-center gap-1">
-                    {t('col.active_sellers')}
-                    {sortConfig?.key === 'activeSellers' && (
-                      sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
-                    )}
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
-              {products.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
-                    <div className="flex flex-col items-center gap-2">
-                      <Search className="w-8 h-8 text-gray-300" />
-                      <p>{t('error.no_products')}</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                sortedProducts.map((product, index) => (
-                  <tr key={product.id} className="hover:bg-blue-50/50 transition-colors group">
-                    <td className="px-5 py-4 text-center text-gray-400 bg-gray-50/30 border-r border-gray-100 font-mono text-xs">
-                      <div className="mb-2">{index + 1}</div>
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
-                        checked={selectedProductIds.has(product.id)}
-                        onChange={() => handleSelectRow(product.id)}
-                      />
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex gap-4">
-                        <div className="w-14 h-14 flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-                          {product.image ? (
-                            <img src={product.image} alt="" className="w-full h-full object-contain" />
-                          ) : (
-                            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
-                              <Box size={20} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0 py-0.5">
-                          <button
-                            onClick={() => setSelectedProductForDetail(product)}
-                            className="font-medium text-brand-700 line-clamp-2 mb-1.5 hover:underline cursor-pointer text-base text-left w-full max-w-[400px]"
-                            title={product.title}
-                          >
-                            {product.title}
-                          </button>
-                          <div className="flex items-center gap-2">
-                            {product.category && (
-                              <span className="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 uppercase tracking-wide">
-                                {t(product.category.startsWith('category.') ? product.category : product.category)}
-                              </span>
-                            )}
-                            <button
-                              onClick={() => setSelectedProductForDetail(product)}
-                              className="text-brand-600 hover:text-brand-800 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
-                              title={t('analyze.button')}
-                            >
-                              <Sparkles className="w-3 h-3" /> {t('analyze.button')}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="text-gray-900 font-mono text-xs bg-gray-100 px-2 py-1 rounded w-fit select-all">
-                        {product.id}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-gray-700 font-medium truncate max-w-[150px]" title={product.brand || ''}>
-                      {product.brand || '-'}
-                    </td>
-                    <td className="px-5 py-4 text-right font-bold text-gray-900">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {product.price ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), {
-                          style: 'currency',
-                          currency: product.currency || 'USD'
-                        }).format(product.price) : '-'}
-                        {product.fallbackUsed && (
-                          <Tag
-                            size={14}
-                            className="text-amber-500 cursor-help"
-                            title="Preço baseado na menor oferta disponível (Professional Seller)"
-                          />
-                        )}
-                        {product.isListPrice && (
-                          <Tag
-                            size={14}
-                            className="text-red-500 cursor-help"
-                            title="Preço de Tabela (MSRP). O preço real de venda pode ser menor."
-                          />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col items-center gap-1.5">
-                        {product.percentile && product.percentile !== 'NEW_RISING' && (
-                          <span
-                            className={`text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter shadow-sm border ${product.percentile === '1%' ? 'bg-green-800 text-white border-green-900' :
-                              product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
-                                'bg-gray-100 text-gray-600 border-gray-200'
-                              }`}
-                            title={`Este produto está entre os top ${product.categoryTotal?.toLocaleString()} itens da categoria ${t(product.category)} (Baseado no Censo 2025).`}
-                          >
-                            Top {product.percentile}
-                          </span>
-                        )}
-                        {product.percentile === 'NEW_RISING' && (
-                          <span
-                            className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter bg-blue-100 text-blue-800 border border-blue-200 shadow-sm"
-                            title="BSR não disponível no momento. Interesse de mercado estimado via volume de busca mensal."
-                          >
-                            New/Rising
-                          </span>
-                        )}
-                        <span className="text-gray-900 font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? 'BSR indisponível. Vendas estimadas baseadas no interesse de mercado.' : `Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
-                          {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : (product.percentile === 'NEW_RISING' ? 'Emergente' : '-')}
-                        </span>
-                        {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
-                      </div>
-                    </td>
-                    <td className="py-4 pr-5 pl-0 text-left align-top min-w-[300px]">
-                      <div className="flex flex-col gap-2 text-xs">
-                        {product.salesRanks && product.salesRanks.length > 0 ? (
-                          product.salesRanks.map((sr: any, idx: number) => (
-                            <div key={idx} className="flex flex-col gap-1.5">
-                              {sr.displayGroupRanks?.map((dgr: any, i: number) => (
-                                <div key={`dgr-${i}`} className="text-gray-900 leading-snug">
-                                  <span className="font-bold">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline font-medium">{dgr.title}</a>
-                                </div>
-                              ))}
-                              {sr.classificationRanks?.map((cr: any, i: number) => (
-                                <div key={`cr-${i}`} className="text-gray-900 leading-snug">
-                                  <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-800 hover:underline">{cr.title}</a>
-                                </div>
-                              ))}
-                            </div>
-                          ))
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right font-bold text-gray-900 tabular-nums">
-                      {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'de-DE', {
-                        style: 'currency',
-                        currency: product.currency || 'USD',
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                      }).format(product.revenue) : '-'}
-                    </td>
-
-                    <td className="px-5 py-4 text-right text-red-600 font-bold">
-                      {product.fbaFees ? (
-                        <div className="flex flex-col items-end gap-0.5">
-                          <span
-                            className="cursor-help"
-                            title={`Referral (${Math.round((product.fbaBreakdown?.referral || 0) / (product.price || 1) * 100)}%): ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30% Fallback)' : ''}`}
-                          >
-                            -{new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
-                          </span>
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td className="px-5 py-4 text-center text-gray-600">
-                      {(product.activeSellers !== undefined && product.activeSellers !== null) ? product.activeSellers : '-'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-
-          {/* Load More Button */}
-          {products.length > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col items-center gap-2 bg-gray-50">
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mt-4">
+          <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div className="text-sm text-gray-600 font-medium">
+              {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => handleSearch(true)}
-                disabled={isSearching || !nextToken}
-                className="px-6 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setShowFilter(!showFilter)}
+                className={`text-brand-600 text-sm font-semibold hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors ${showFilter ? 'bg-brand-50' : ''}`}
               >
-                {isSearching ? 'Loading...' : (nextToken ? 'Load More Results' : 'No More Results')}
+                {t('filter.results')}
               </button>
             </div>
-          )}
+          </div>
 
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-white text-gray-500 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th className="px-5 py-4 border-b border-gray-100 w-12 text-center">#</th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 min-w-[320px] cursor-pointer hover:bg-gray-50 transition-colors group/head" onClick={() => handleSort('title')}>
+                    <div className="flex items-center gap-1">
+                      {t('col.product_details')}
+                      {sortConfig?.key === 'title' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('id')}>
+                    <div className="flex items-center gap-1">
+                      {t('col.asin')}
+                      {sortConfig?.key === 'id' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('brand')}>
+                    <div className="flex items-center gap-1">
+                      {t('col.brand')}
+                      {sortConfig?.key === 'brand' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('price')}>
+                    <div className="flex items-center justify-end gap-1">
+                      {t('col.price')}
+                      {sortConfig?.key === 'price' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('sales')}>
+                    <div className="flex items-center justify-center gap-1">
+                      {t('col.sales')}
+                      {sortConfig?.key === 'sales' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="py-4 pr-5 pl-0 border-b border-gray-100 text-left min-w-[300px]">{t('col.ranking_bsr') || "Ranking (BSR)"}</th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('revenue')}>
+                    <div className="flex items-center justify-end gap-1">
+                      {t('col.revenue')}
+                      {sortConfig?.key === 'revenue' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+
+
+                  <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('fbaFees')}>
+                    <div className="flex items-center justify-end gap-1">
+                      {t('col.fba_fees')}
+                      {sortConfig?.key === 'fbaFees' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('activeSellers')}>
+                    <div className="flex items-center justify-center gap-1">
+                      {t('col.active_sellers')}
+                      {sortConfig?.key === 'activeSellers' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 text-sm">
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                      <div className="flex flex-col items-center gap-2">
+                        <Search className="w-8 h-8 text-gray-300" />
+                        <p>{t('error.no_products')}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  sortedProducts.map((product, index) => (
+                    <tr key={product.id} className="hover:bg-blue-50/50 transition-colors group">
+                      <td className="px-5 py-4 text-center text-gray-400 bg-gray-50/30 border-r border-gray-100 font-mono text-xs">
+                        <div className="mb-2">{index + 1}</div>
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                          checked={selectedProductIds.has(product.id)}
+                          onChange={() => handleSelectRow(product.id)}
+                        />
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-4">
+                          <div className="w-14 h-14 flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                            {product.image ? (
+                              <img src={product.image} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
+                                <Box size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 py-0.5">
+                            <button
+                              onClick={() => setSelectedProductForDetail(product)}
+                              className="font-medium text-brand-700 line-clamp-2 mb-1.5 hover:underline cursor-pointer text-base text-left w-full max-w-[400px]"
+                              title={product.title}
+                            >
+                              {product.title}
+                            </button>
+                            <div className="flex items-center gap-2">
+                              {product.category && (
+                                <span className="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 uppercase tracking-wide">
+                                  {t(product.category.startsWith('category.') ? product.category : product.category)}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => setSelectedProductForDetail(product)}
+                                className="text-brand-600 hover:text-brand-800 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+                                title={t('analyze.button')}
+                              >
+                                <Sparkles className="w-3 h-3" /> {t('analyze.button')}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="text-gray-900 font-mono text-xs bg-gray-100 px-2 py-1 rounded w-fit select-all">
+                          {product.id}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-gray-700 font-medium truncate max-w-[150px]" title={product.brand || ''}>
+                        {product.brand || '-'}
+                      </td>
+                      <td className="px-5 py-4 text-right font-bold text-gray-900">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {product.price ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), {
+                            style: 'currency',
+                            currency: product.currency || 'USD'
+                          }).format(product.price) : '-'}
+                          {product.fallbackUsed && (
+                            <Tag
+                              size={14}
+                              className="text-amber-500 cursor-help"
+                              title="Preço baseado na menor oferta disponível (Professional Seller)"
+                            />
+                          )}
+                          {product.isListPrice && (
+                            <Tag
+                              size={14}
+                              className="text-red-500 cursor-help"
+                              title="Preço de Tabela (MSRP). O preço real de venda pode ser menor."
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col items-center gap-1.5">
+                          {product.percentile && product.percentile !== 'NEW_RISING' && (
+                            <span
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter shadow-sm border ${product.percentile === '1%' ? 'bg-green-800 text-white border-green-900' :
+                                product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
+                                  'bg-gray-100 text-gray-600 border-gray-200'
+                                }`}
+                              title={`Este produto está entre os top ${product.categoryTotal?.toLocaleString()} itens da categoria ${t(product.category)} (Baseado no Censo 2025).`}
+                            >
+                              Top {product.percentile}
+                            </span>
+                          )}
+                          {product.percentile === 'NEW_RISING' && (
+                            <span
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter bg-blue-100 text-blue-800 border border-blue-200 shadow-sm"
+                              title="BSR não disponível no momento. Interesse de mercado estimado via volume de busca mensal."
+                            >
+                              New/Rising
+                            </span>
+                          )}
+                          <span className="text-gray-900 font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? 'BSR indisponível. Vendas estimadas baseadas no interesse de mercado.' : `Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
+                            {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : (product.percentile === 'NEW_RISING' ? 'Emergente' : '-')}
+                          </span>
+                          {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
+                        </div>
+                      </td>
+                      <td className="py-4 pr-5 pl-0 text-left align-top min-w-[300px]">
+                        <div className="flex flex-col gap-2 text-xs">
+                          {product.salesRanks && product.salesRanks.length > 0 ? (
+                            product.salesRanks.map((sr: any, idx: number) => (
+                              <div key={idx} className="flex flex-col gap-1.5">
+                                {sr.displayGroupRanks?.map((dgr: any, i: number) => (
+                                  <div key={`dgr-${i}`} className="text-gray-900 leading-snug">
+                                    <span className="font-bold">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline font-medium">{dgr.title}</a>
+                                  </div>
+                                ))}
+                                {sr.classificationRanks?.map((cr: any, i: number) => (
+                                  <div key={`cr-${i}`} className="text-gray-900 leading-snug">
+                                    <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-800 hover:underline">{cr.title}</a>
+                                  </div>
+                                ))}
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-right font-bold text-gray-900 tabular-nums">
+                        {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'de-DE', {
+                          style: 'currency',
+                          currency: product.currency || 'USD',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        }).format(product.revenue) : '-'}
+                      </td>
+
+                      <td className="px-5 py-4 text-right text-red-600 font-bold">
+                        {product.fbaFees ? (
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span
+                              className="cursor-help"
+                              title={`Referral (${Math.round((product.fbaBreakdown?.referral || 0) / (product.price || 1) * 100)}%): ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30% Fallback)' : ''}`}
+                            >
+                              -{new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
+                            </span>
+                          </div>
+                        ) : '-'}
+                      </td>
+                      <td className="px-5 py-4 text-center text-gray-600">
+                        {(product.activeSellers !== undefined && product.activeSellers !== null) ? product.activeSellers : '-'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {/* Load More Button */}
+            {products.length > 0 && (
+              <div className="p-4 border-t border-gray-100 flex flex-col items-center gap-2 bg-gray-50">
+                <button
+                  onClick={() => handleSearch(true)}
+                  disabled={isSearching || !nextToken}
+                  className="px-6 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSearching ? 'Loading...' : (nextToken ? 'Load More Results' : 'No More Results')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
       {/* Camera Capture Modal */}
       <CameraModal
         isOpen={isCameraModalOpen}
@@ -1085,7 +1103,7 @@ export const ProductFinder: React.FC = () => {
               handleSearch(false, analysis.description);
             }
           } catch (err: any) {
-            setError(err.message || "Erro ao analisar imagem");
+            setError(err.message || 'Erro ao analisar imagem');
           } finally {
             setIsAnalyzingImage(false);
           }
@@ -1094,4 +1112,3 @@ export const ProductFinder: React.FC = () => {
     </div>
   );
 };
-

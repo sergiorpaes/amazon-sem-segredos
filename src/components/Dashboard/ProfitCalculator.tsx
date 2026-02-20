@@ -210,40 +210,39 @@ export const ProfitCalculator: React.FC = () => {
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-12">
             {/* Search Header */}
-            <div className="bg-white dark:bg-dark-900 rounded-xl p-6 border border-gray-200 dark:border-dark-700 shadow-sm">
+            <div className="bg-white dark:bg-dark-900 rounded-2xl p-6 border border-gray-100 shadow-sm transition-all hover:shadow-md">
                 <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('sim.search_placeholder')}
-                            className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg outline-none focus:ring-2 focus:ring-[#007185]/20"
+                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white text-base shadow-inner transition-all text-gray-900 placeholder:text-gray-400"
                         />
                     </div>
-                    <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg px-3 py-2 text-sm font-semibold outline-none max-w-[150px]">
+                    <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none max-w-[150px] shadow-inner focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all cursor-pointer">
                         {SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id)).map(m => (
                             <option key={m.id} value={m.id}>{m.flag} {m.code}</option>
                         ))}
                     </select>
-                    <button type="submit" disabled={isSearching} className="bg-[#007185] hover:bg-[#005a6a] text-white px-6 py-2 rounded-lg font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                        {isSearching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    <button type="submit" disabled={isSearching} className="bg-brand-600 hover:bg-brand-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        {isSearching ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Search className="w-5 h-5" />}
                         {t('sim.search_button')}
                     </button>
                 </form>
 
-                {product && (
-                    <div className="mt-6 flex gap-6 items-start border-t dark:border-dark-700 pt-6 animate-in fade-in duration-500">
-                        {product.image && <img src={product.image} className="w-20 h-20 object-contain border dark:border-dark-700 rounded p-1 bg-white" alt="" />}
-                        <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 dark:text-gray-100 line-clamp-1">{product.title}</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-xs">
-                                <div><span className="text-gray-400">ASIN:</span> <span className="font-bold">{product.id}</span></div>
-                                <div><span className="text-gray-400">Weight:</span> <span className="font-bold">{product.weight ? `${product.weight.value} ${product.weight.unit}` : 'N/A'}</span></div>
-                                <div><span className="text-gray-400">Sales Rank:</span> <span className="font-bold">#{product.bsr?.toLocaleString()}</span></div>
-                                <div className="flex gap-4">
-                                    <button onClick={() => setProduct(null)} className="text-[#007185] hover:underline font-bold text-[11px]">{t('sim.search_another')}</button>
+                {product ? (
+                    <div className="mt-8 flex gap-6 items-start border-t border-gray-100 pt-8 animate-in fade-in duration-500">
+                        {product.image && <div className="w-24 h-24 flex-shrink-0 bg-white border border-gray-100 rounded-xl p-2 shadow-sm"><img src={product.image} className="w-full h-full object-contain" alt="" /></div>}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug">{product.title}</h3>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">ASIN</span> <span className="font-mono text-sm font-medium text-gray-900 bg-gray-50 px-2 py-0.5 rounded w-fit select-all">{product.id}</span></div>
+                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Weight</span> <span className="font-bold text-gray-900">{product.weight ? `${product.weight.value} ${product.weight.unit}` : '-'}</span></div>
+                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">BSR (Sales Rank)</span> <span className="font-bold text-gray-900">#{product.bsr?.toLocaleString() || '-'}</span></div>
+                                <div className="flex flex-col items-start gap-2 lg:items-end justify-center">
                                     <div className="flex gap-2">
                                         {Object.entries(getSupplierLinks(product.title, product.brand)).map(([key, url]) => (
                                             <a
@@ -251,16 +250,26 @@ export const ProfitCalculator: React.FC = () => {
                                                 href={url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 hover:bg-gray-200 dark:bg-dark-800 dark:hover:bg-dark-700 rounded text-[10px] font-bold text-gray-700 dark:text-gray-300 transition-colors border border-gray-200 dark:border-dark-700"
+                                                className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 hover:bg-gray-100 rounded-lg text-xs font-bold text-gray-700 transition-colors border border-gray-200"
                                             >
-                                                <Search className="w-2.5 h-2.5" />
+                                                <Search className="w-3 h-3" />
                                                 {t(`sourcing.${key}`)}
                                             </a>
                                         ))}
                                     </div>
+                                    <button onClick={() => setProduct(null)} className="text-brand-600 hover:text-brand-800 hover:underline font-bold text-xs mt-1 transition-colors">{t('sim.search_another')}</button>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                ) : (
+                    // Initial State or Empty State
+                    <div className="mt-8 flex flex-col items-center justify-center p-8 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 animate-in fade-in duration-500">
+                        <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-4">
+                            <DollarSign className="w-8 h-8 text-brand-500" />
+                        </div>
+                        <h4 className="text-lg font-bold text-gray-900 mb-2">Simule a Rentabilidade Real</h4>
+                        <p className="text-sm text-gray-500 text-center max-w-sm">Cole um ASIN Amazon acima para analisar todas as taxas FBA, Margem Líquida e ROI em segundos.</p>
                     </div>
                 )}
             </div>
@@ -398,11 +407,28 @@ export const ProfitCalculator: React.FC = () => {
                     </div>
 
                     {/* FBA Results Overlay Footer */}
-                    <div className="bg-[#f0f2f2] p-4 border-t border-[#d5dbdb] grid grid-cols-4 gap-2 text-center mt-auto">
-                        <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Cost/Unit</p><p className="font-bold text-[13px]">{formatCurrency(fbaResults.totalExpenses)}</p></div>
-                        <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Batch ({batchSize})</p><p className="font-bold text-[13px]">{formatCurrency(fbaResults.netProfit * batchSize)}</p></div>
-                        <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Net Profit</p><p className={`font-bold text-[13px] ${fbaResults.netProfit >= 0 ? 'text-[#007185]' : 'text-red-600'}`}>{formatCurrency(fbaResults.netProfit)}</p></div>
-                        <div><p className="text-[9px] text-gray-400 font-bold uppercase">Net Margin</p><p className={`font-bold text-[13px] ${fbaResults.netMargin > 15 ? 'text-emerald-600' : 'text-[#333]'}`}>{fbaResults.netMargin.toFixed(1)}%</p></div>
+                    <div className="bg-gray-50 border-t border-gray-100 p-5 mt-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Custo/Unid.</span>
+                                <span className="font-black text-gray-900 text-sm">{formatCurrency(fbaResults.totalExpenses)}</span>
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lote ({batchSize})</span>
+                                <span className="font-black text-gray-900 text-sm">{formatCurrency(fbaResults.netProfit * batchSize)}</span>
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100 shadow-sm">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lucro Líquido</span>
+                                <span className={`font-black text-lg leading-none ${fbaResults.netProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(fbaResults.netProfit)}</span>
+                            </div>
+                            <div className={`flex flex-col items-center justify-center p-2 rounded-xl border shadow-sm ${fbaResults.netMargin >= 15 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : (fbaResults.netMargin > 0 ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-800')}`}>
+                                <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Margem / ROI</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="font-black text-lg leading-none">{fbaResults.netMargin.toFixed(1)}%</span>
+                                    <span className="text-[10px] font-bold opacity-80">/ {fbaResults.roi.toFixed(0)}% ROI</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -511,11 +537,28 @@ export const ProfitCalculator: React.FC = () => {
                     </div>
 
                     {/* FBM Results Footer Results */}
-                    <div className="bg-[#f0f2f2] p-4 border-t border-[#d5dbdb] grid grid-cols-4 gap-2 text-center mt-auto">
-                        <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Cost/Unit</p><p className="font-bold text-[13px]">{formatCurrency(fbmResults.totalExpenses)}</p></div>
-                        <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Batch ({batchSize})</p><p className="font-bold text-[13px]">{formatCurrency(fbmResults.netProfit * batchSize)}</p></div>
-                        <div className="border-r border-gray-300"><p className="text-[9px] text-gray-400 font-bold uppercase">Net Proceeds</p><p className={`font-bold text-[13px] ${fbmResults.netProfit >= 0 ? 'text-[#007185]' : 'text-red-600'}`}>{formatCurrency(fbmResults.netProfit)}</p></div>
-                        <div><p className="text-[9px] text-gray-400 font-bold uppercase">ROI</p><p className="font-bold text-[13px]">{fbmResults.roi.toFixed(0)}%</p></div>
+                    <div className="bg-gray-50 border-t border-gray-100 p-5 mt-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Custo/Unid.</span>
+                                <span className="font-black text-gray-900 text-sm">{formatCurrency(fbmResults.totalExpenses)}</span>
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lote ({batchSize})</span>
+                                <span className="font-black text-gray-900 text-sm">{formatCurrency(fbmResults.netProfit * batchSize)}</span>
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100 shadow-sm">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lucro Líquido</span>
+                                <span className={`font-black text-lg leading-none ${fbmResults.netProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(fbmResults.netProfit)}</span>
+                            </div>
+                            <div className={`flex flex-col items-center justify-center p-2 rounded-xl border shadow-sm ${fbmResults.netMargin >= 15 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : (fbmResults.netMargin > 0 ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-800')}`}>
+                                <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Margem / ROI</span>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="font-black text-lg leading-none">{fbmResults.netMargin.toFixed(1)}%</span>
+                                    <span className="text-[10px] font-bold opacity-80">/ {fbmResults.roi.toFixed(0)}% ROI</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
