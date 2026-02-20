@@ -25,15 +25,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="AI Suite Logo" className="w-10 h-10 rounded-lg object-cover" />
-              <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">Amazon Sem Segredos IA Suite</span>
+              <span className="font-bold text-xl text-gray-900 dark:text-white tracking-tight hidden sm:block">Amazon Sem Segredos IA Suite</span>
             </div>
-            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">
-              <a href="#features" className="hover:text-brand-600 transition-colors">Funcionalidades</a>
-              <a href="#pricing" className="hover:text-brand-600 transition-colors">Preços</a>
-              <ThemeToggle />
+
+            <div className="flex items-center gap-6">
+              {/* Desktop Links */}
+              <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">
+                <a href="#features" className="hover:text-brand-600 transition-colors">Funcionalidades</a>
+                <a href="#pricing" className="hover:text-brand-600 transition-colors">Preços</a>
+                <ThemeToggle />
+              </div>
+
+              {/* Always Visible Call to Action */}
               <button
                 onClick={() => setIsAuthModalOpen(true)}
-                className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-full transition-all shadow-brand-200 font-bold"
+                className="bg-brand-600 hover:bg-brand-700 text-white px-5 sm:px-6 py-2 sm:py-2.5 rounded-full transition-all shadow-brand-200 font-bold text-sm sm:text-base whitespace-nowrap"
               >
                 Acessar Plataforma
               </button>
