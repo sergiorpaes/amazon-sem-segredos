@@ -100,40 +100,41 @@ export const handler = async (event: any) => {
                 const subscriptionId = invoice.subscription as string;
 
                 if (subscriptionId) {
-                    // 1. Try to find our internal subscription record
-                    let [sub] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.stripe_subscription_id, subscriptionId)).limit(1);
+                    console.log(`[Webhook] Invoice Payment Succeeded for Subscription: ${subscriptionId}`);
+                    // ALWAYS fetch subscription from Stripe to ensure we have the absolute latest metadata (handles upgrades)
+                    const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
+                    const userId = parseInt(subscription.metadata.userId || '0');
+                    const planId = parseInt(subscription.metadata.planId || '0');
 
-                    let userId: number | null = sub?.user_id || null;
-                    let planId: number | null = sub?.plan_id || null;
-
-                    // 2. Fallback: If not in DB, fetch subscription from Stripe to get metadata
-                    if (!userId || !planId) {
-                        console.log(`[Webhook] Subscription ${subscriptionId} not found in DB yet. Fetching from Stripe...`);
-                        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-                        userId = parseInt(subscription.metadata.userId || '0');
-                        planId = parseInt(subscription.metadata.planId || '0');
-                        console.log(`[Webhook] Fetched metadata from Stripe: User=${userId}, Plan=${planId}`);
-                    }
+                    console.log(`[Webhook] Subscription Metadata: User=${userId}, Plan=${planId}`);
 
                     if (userId && planId) {
-                        // Find the plan details
-                        const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1);
+                        // 1. Sync internal subscription record (UPSERT)
+                        const [sub] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.stripe_subscription_id, subscriptionId)).limit(1);
 
-                        if (plan && plan.credit_limit > 0) {
-                            // Grant Monthly Credits
-                            // NOTE: We could add idempotency check here based on invoice ID
-                            await addCredits(userId, plan.credit_limit, 'monthly', `Plano ${plan.name}`);
-                            console.log(`✅ Success: Added monthly credits (${plan.credit_limit}) for user ${userId}`);
-                        }
-
-                        // Update subscription status in DB (only if record exists)
                         if (sub) {
                             await db.update(userSubscriptions)
-                                .set({ status: 'active' })
+                                .set({ plan_id: planId, status: 'active' })
                                 .where(eq(userSubscriptions.id, sub.id));
+                        } else {
+                            // Rare case: invoice arrives before checkout.session.completed
+                            await db.insert(userSubscriptions).values({
+                                user_id: userId,
+                                plan_id: planId,
+                                stripe_subscription_id: subscriptionId,
+                                status: 'active',
+                                current_period_end: new Date(subscription.current_period_end * 1000)
+                            });
+                        }
+
+                        // 2. Grant Plan Credits
+                        const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1);
+                        if (plan && plan.credit_limit > 0) {
+                            await addCredits(userId, plan.credit_limit, 'monthly', `Plano ${plan.name}`);
+                            console.log(`✅ Success: Added monthly credits (${plan.credit_limit}) for user ${userId} (Plan: ${plan.name})`);
                         }
                     } else {
-                        console.warn(`⚠️ Warning: Could not resolve userId/planId for subscription ${subscriptionId}`);
+                        console.warn(`⚠️ Warning: Missing metadata on subscription ${subscriptionId}. No credits granted.`);
                     }
                 }
                 break;
@@ -141,14 +142,24 @@ export const handler = async (event: any) => {
 
             case 'customer.subscription.updated': {
                 const subscription = stripeEvent.data.object as any;
-                // Update status and cancellation info in DB
+                const planId = parseInt(subscription.metadata.planId || '0');
+
+                // Update status, cancellation info AND plan_id in case of upgrade/downgrade
+                const updateData: any = {
+                    status: subscription.status,
+                    current_period_end: new Date(subscription.current_period_end * 1000),
+                    cancel_at_period_end: subscription.cancel_at_period_end || false
+                };
+
+                if (planId > 0) {
+                    updateData.plan_id = planId;
+                }
+
                 await db.update(userSubscriptions)
-                    .set({
-                        status: subscription.status,
-                        current_period_end: new Date(subscription.current_period_end * 1000),
-                        cancel_at_period_end: subscription.cancel_at_period_end || false
-                    })
+                    .set(updateData)
                     .where(eq(userSubscriptions.stripe_subscription_id, subscription.id));
+
+                console.log(`[Webhook] Subscription Updated: ${subscription.id}, Status: ${subscription.status}, PlanId: ${planId}`);
                 break;
             }
 
