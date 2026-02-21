@@ -46,7 +46,7 @@ export const generateListingImages = async (userPrompt: string, imageBase64: str
         }
 
         const analysisData: AnalysisResponse = await analysisRes.json();
-        console.log("Analysis Result:", analysisData);
+        // console.log("Analysis Result:", analysisData);
 
         // 2. Generate Images (Gemini/Imagen)
         const promptKeys = Object.keys(analysisData.prompts || {});

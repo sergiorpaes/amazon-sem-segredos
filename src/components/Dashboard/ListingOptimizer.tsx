@@ -197,7 +197,7 @@ export const ListingOptimizer: React.FC = () => {
 
     if (isAlreadySaved) {
       // alert(t('lo.ui.saved_already') || 'Este listing já está salvo!');
-      console.log('Listing already saved');
+      // console.log('Listing already saved');
       return;
     }
 
@@ -210,7 +210,7 @@ export const ListingOptimizer: React.FC = () => {
 
       setSavedListings(prev => [savedItem, ...prev]);
       // alert(t('lo.ui.save_success') || 'Listing salvo com sucesso!');
-      console.log('Listing saved successfully');
+      // console.log('Listing saved successfully');
     } catch (error) {
       console.error("Failed to save listing", error);
       alert(t('lo.ui.save_error') || 'Erro ao salvar listing.');

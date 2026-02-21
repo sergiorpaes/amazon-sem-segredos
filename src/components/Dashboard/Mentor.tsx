@@ -76,7 +76,7 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
       const agentPrompt = selectedAgent.systemPrompt;
       const fullInstructions = agentPrompt + langInstruction;
 
-      console.log('Sending instructions to Mentor:', fullInstructions); // Debug log
+      // console.log('Sending instructions to Mentor:', fullInstructions); // Debug log
 
       const responseText = await chatWithMentor(textToSend, messages, fullInstructions);
 

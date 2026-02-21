@@ -25,7 +25,7 @@ export const getListings = async (): Promise<SavedListing[]> => {
     }
 
     const data = await res.json();
-    console.log('API getListings RAW:', data);
+    // console.log('API getListings RAW:', data);
 
     // Map backend response (id, product_name, listing_data, generated_images, created_at) 
     // to frontend interface (id, productName, listing_data -> es/pt, generatedImages, createdAt)

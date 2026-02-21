@@ -60,7 +60,7 @@ export const Settings: React.FC = () => {
                 });
             }
         } catch (err) {
-            console.log("Server auth failed, checking local storage...");
+            // console.log("Server auth failed, checking local storage...");
             const saved = loadCredentials(activeRegion);
             if (saved) {
                 setCredentials({
