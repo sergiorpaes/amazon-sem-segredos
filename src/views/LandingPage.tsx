@@ -112,22 +112,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
             {/* Feature 1 */}
             <div className="bg-white dark:bg-dark-800 p-8 rounded-3xl border border-gray-200 dark:border-dark-700 shadow-soft hover:shadow-premium transition-shadow group">
               <div className="w-14 h-14 bg-brand-100 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center mb-6 text-brand-600 group-hover:scale-110 transition-transform">
-                <BarChart3 className="w-7 h-7" />
+                <Search className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Calculadora Reversa de ROI</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Buscador de Produtos</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Descubra o custo máximo de compra (Max Cost) para atingir sua meta de ROI. Todas as taxas FBA, impostos e custos de envio já calculados.
+                Encontre os melhores produtos para vender na Amazon com análise detalhada de taxas FBA, margem de lucro líquida e ROI em segundos.
               </p>
             </div>
 
             {/* Feature 2 */}
             <div className="bg-white dark:bg-dark-800 p-8 rounded-3xl border border-gray-200 dark:border-dark-700 shadow-soft hover:shadow-premium transition-shadow group">
               <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-6 text-emerald-600 group-hover:scale-110 transition-transform">
-                <Search className="w-7 h-7" />
+                <Bot className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Variações Campeãs</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mentor Virtual</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Pare de chutar qual cor ou tamanho vende mais. Analisamos histórico de reviews para te dizer exatamente onde investir seu capital.
+                Tire suas dúvidas 24/7 com nossa inteligência artificial treinada por especialistas para te auxiliar com estratégias, bloqueios e fornecedores europeus.
               </p>
             </div>
 
@@ -136,20 +136,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
               <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 transition-transform">
                 <Globe className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Monitor de Buy Box</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Busca de Fornecedores</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Saiba instantaneamente se a Amazon está na listagem ou se é dominada por FBM. Identifique oportunidades onde você pode ganhar a Buy Box fácil.
+                Pesquise por fornecedores verificados e marcas confiáveis para abastecer seu negócio e vender na Amazon Europa sem dor de cabeça.
               </p>
             </div>
 
             {/* Feature 4 */}
             <div className="bg-white dark:bg-dark-800 p-8 rounded-3xl border border-gray-200 dark:border-dark-700 shadow-soft hover:shadow-premium transition-shadow group">
               <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-7 h-7" />
+                <Sparkles className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Histórico de BSR e Preços</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Criador de Listing</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Acesse dados históricos cruciais para entender se a demanda é sazonal e se o preço atual inflacionou artificialmente.
+                Crie títulos, bullet points e descrições otimizadas com IA, e gere imagens com fundo branco prontas para o padrão da Amazon.
               </p>
             </div>
           </div>
