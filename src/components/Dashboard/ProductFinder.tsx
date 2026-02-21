@@ -566,7 +566,15 @@ export const ProductFinder: React.FC = () => {
 
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Error');
+      let errorMessage = err.message || 'Error';
+      if (errorMessage === 'Insufficient credits' || errorMessage.includes('Insufficient active credits in ledger')) {
+        errorMessage = t('error.insufficient_credits');
+      } else if (errorMessage === 'Internal Server Error' || errorMessage.includes('500')) {
+        errorMessage = t('error.internal_server');
+      } else if (errorMessage.includes('Erro ao buscar produto na Amazon')) {
+        errorMessage = t('error.search_failed');
+      }
+      setError(errorMessage);
     } finally {
       setIsSearching(false);
     }

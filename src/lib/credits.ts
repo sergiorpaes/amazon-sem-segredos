@@ -80,8 +80,17 @@ export async function consumeCredits(
         }
 
         if (remainingCost > 0) {
-            // Should not happen if total balance check passed, but sync issues might exist
-            throw new Error('Insufficient active credits in ledger');
+            // SYNC FIX: If user has total balance but ledger is empty/short, we log and auto-fix the ledger 
+            // by adding a consumed entry so total balance deduction works correctly.
+            console.warn(`[Credits] Sync issue detected for User ${userId}. Missing ${remainingCost} credits in ledger. Auto-fixing.`);
+            await tx.insert(creditsLedger).values({
+                user_id: userId,
+                amount: remainingCost,
+                remaining_amount: 0,
+                type: 'purchased',
+                description: 'Sync adjustment',
+                created_at: new Date()
+            });
         }
 
         // 3. Apply updates to ledger

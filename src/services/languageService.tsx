@@ -46,6 +46,9 @@ export const translations = {
 
         // Empty States / Errors
         'error.no_products': 'Nenhum produto encontrado. Inicie uma pesquisa.',
+        'error.insufficient_credits': 'Créditos insuficientes. Por favor, recarregue seu saldo.',
+        'error.internal_server': 'Erro interno. Tente novamente mais tarde.',
+        'error.search_failed': 'Erro ao buscar o produto. Verifique sua conexão ou tente novamente.',
 
         // Product Categories
         'category.Beauty': 'Beleza',
@@ -241,6 +244,9 @@ export const translations = {
 
         // Empty States / Errors
         'error.no_products': 'No se encontraron productos. Inicie una búsqueda.',
+        'error.insufficient_credits': 'Créditos insuficientes. Por favor, recarga tu saldo.',
+        'error.internal_server': 'Error interno. Inténtalo de nuevo más tarde.',
+        'error.search_failed': 'Error al buscar el producto. Verifica tu conexión o inténtalo de nuevo.',
 
         // Product Categories
         'category.Beauty': 'Belleza',
@@ -420,6 +426,9 @@ export const translations = {
 
         // Empty States / Errors
         'error.no_products': 'No products found. Start a search.',
+        'error.insufficient_credits': 'Insufficient credits. Please top up your balance.',
+        'error.internal_server': 'Internal error. Please try again later.',
+        'error.search_failed': 'Error searching for product. Please check your connection or try again.',
 
         // Product Categories
         'category.Beauty': 'Beauty',
