@@ -129,3 +129,24 @@ export const sendEngagementDay3 = async (email: string, name: string) => {
     `;
     return sendGenericEmail(email, 'Como escalar sem trabalhar 14h por dia 🚀', html);
 };
+
+export const sendEngagementDay5 = async (email: string, name: string) => {
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <p>${name || 'Vendedor(a)'},</p>
+            <p>Sabemos que começar a vender profissionalmente na Amazon é um grande desafio e que dar o passo para um plano de alto nível pode parecer muito no início.</p>
+            <p>Se você quer parar de perder tempo em planilhas, mas ainda não precisa de todas as ferramentas ilimitadas, nós temos a solução ideal para você: o nosso <strong>Plano Starter</strong>.</p>
+            <p>Ele é perfeito para quem está estruturando o negócio. Com o Starter, você tem a segurança das análises automáticas e acesso diário ao <strong>Mentor Virtual</strong> por um valor extremamente acessível.</p>
+            <p>Não deixe a automação para depois. Dê o primeiro passo para profissionalizar sua operação.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="https://amazon-sem-segredos.netlify.app/dashboard/settings" 
+                   style="background-color: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                    Ativar Meu Plano Starter
+                </a>
+            </div>
+            <p>Boas vendas,<br>Equipe Amazon Sem Segredos IA Suite</p>
+        </div>
+    `;
+    return sendGenericEmail(email, 'O primeiro passo para o seu sucesso na Amazon 🌱', html);
+};
+
