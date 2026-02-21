@@ -113,9 +113,9 @@ export const sendEngagementDay3 = async (email: string, name: string) => {
             <p>Se você está pronto para levar seu negócio na Amazon a sério, o plano <strong>PRO</strong> foi feito para você.</p>
             <p>Com ele, você desbloqueia:</p>
             <ul>
-                <li>Buscas em lote ilimitadas.</li>
-                <li>Acesso ao Histórico Completo de BSR.</li>
-                <li>Monitoramento de Buy Box em tempo real.</li>
+                <li><strong>Criador de Listing turbinado:</strong> Gere imagens em fundo branco super profissionais e 10 bullet points otimizados com IA (em vez de apenas 5).</li>
+                <li><strong>Mentor Virtual PRO:</strong> Acesso ilimitado e prioritário à nossa inteligência artificial mais avançada.</li>
+                <li><strong>Suporte VIP:</strong> Atendimento direto e em tempo real com o time Amazon Sem Segredos.</li>
             </ul>
             <p>Você não precisa trabalhar mais duro. Trabalhe mais inteligente.</p>
             <div style="text-align: center; margin: 30px 0;">
