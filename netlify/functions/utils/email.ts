@@ -1,20 +1,38 @@
-
 import nodemailer from 'nodemailer';
 
-export const sendWelcomeEmail = async (email: string, activationUrl: string) => {
-    const transporter = nodemailer.createTransport({
+const createTransporter = () => {
+    return nodemailer.createTransport({
         service: 'gmail',
         auth: {
             user: process.env.GMAIL_USER,
             pass: process.env.GMAIL_PASS
         }
     });
+};
 
+const sendGenericEmail = async (to: string, subject: string, htmlContent: string) => {
+    const transporter = createTransporter();
     const mailOptions = {
         from: '"Amazon Sem Segredos" <sergiorobertopaes@gmail.com>',
+        to,
+        subject,
+        html: htmlContent
+    };
+
+    try {
+        console.log(`📧 Enviando e-mail para ${to}... | Assunto: ${subject}`);
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ E-mail enviado com sucesso para ${to}`);
+        return true;
+    } catch (error) {
+        console.error(`❌ Erro ao enviar e-mail para ${to}:`, error);
+        throw error;
+    }
+};
+
+export const sendWelcomeEmail = async (email: string, activationUrl: string) => {
+    const html = `
         to: email,
-        subject: '🚀 Ative sua conta - Amazon Sem Segredos AI',
-        html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
                 <h2 style="color: #2563eb; text-align: center;">Bem-vindo ao Amazon Sem Segredos AI!</h2>
                 <p>Olá,</p>
@@ -37,16 +55,77 @@ export const sendWelcomeEmail = async (email: string, activationUrl: string) => 
                     &copy; 2026 Amazon Sem Segredos IA Suite
                 </p>
             </div>
-        `
-    };
+        `;
+    return sendGenericEmail(email, '🚀 Ative sua conta - Amazon Sem Segredos AI', html);
+};
 
-    try {
-        console.log(`📧 Enviando e-mail real para ${email}...`);
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ E-mail enviado com sucesso para ${email}`);
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao enviar e-mail via Gmail SMTP:', error);
-        throw error;
-    }
+export const sendEngagementDay1 = async (email: string, name: string) => {
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <p>Olá, ${name || 'Vendedor(a)'}!</p>
+            <p>Bem-vindo(a) ao Amazon Sem Segredos IA Suite. Sabemos que analisar taxas FBA, calcular impostos e prever lucros em planilhas quebrou a cabeça de muitos vendedores de sucesso.</p>
+            <p>O tempo que você gastava tentando adivinhar suas margens de lucro acabou.</p>
+            <p>O Amazon Sem Segredos IA Suite consolida tudo o que você precisa em uma única aba.</p>
+            <p><strong>Sua missão de hoje:</strong></p>
+            <ol>
+                <li>Copie o ASIN de um produto que você está de olho.</li>
+                <li>Cole na nossa barra de busca mágica.</li>
+                <li>Descubra a Margem Líquida Real e o ROI em Segundos.</li>
+            </ol>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="https://amazon-sem-segredos.netlify.app/dashboard/product-finder" 
+                   style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                    Analisar meu primeiro ASIN
+                </a>
+            </div>
+            <p>Boas vendas,<br>Equipe Amazon Sem Segredos IA Suite</p>
+        </div>
+    `;
+    return sendGenericEmail(email, 'Seu primeiro lucro oculto está te esperando 🕵️‍♂️', html);
+};
+
+export const sendEngagementDay2 = async (email: string, name: string) => {
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <p>Oi, ${name || 'Vendedor(a)'},</p>
+            <p>Você sabia que muitos vendedores quebram simplesmente porque compram o estoque da cor ou do tamanho errado?</p>
+            <p>Não precisa ser assim com você.</p>
+            <p>Quando você pesquisa um produto no Amazon Sem Segredos IA Suite que possui variações (como cores de uma garrafa), nossa ferramenta <strong>Análise de Variações Campeãs</strong> mostra exatamente qual "ASIN child" atrai mais atenção e vendas.</p>
+            <p>Em vez de distribuir seu orçamento de compras às cegas, invista 80% do seu capital na variação que já provou ser a vencedora.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="https://amazon-sem-segredos.netlify.app/dashboard/product-finder" 
+                   style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                    Descobrir Variação Campeã
+                </a>
+            </div>
+            <p>Boas vendas,<br>Equipe Amazon Sem Segredos IA Suite</p>
+        </div>
+    `;
+    return sendGenericEmail(email, 'Qual variação vende mais? Não tente adivinhar. 📊', html);
+};
+
+export const sendEngagementDay3 = async (email: string, name: string) => {
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <p>${name || 'Vendedor(a)'},</p>
+            <p>Se você usou o Amazon Sem Segredos IA Suite nos últimos dias, já percebeu quanto tempo economizou na análise de produtos.</p>
+            <p>Automatizar o cálculo do FBA e do ROI já te deu horas livres nesta semana. E com horas livres, você pode focar no que importa: crescimento estratégico.</p>
+            <p>Se você está pronto para levar seu negócio na Amazon a sério, o plano <strong>PRO</strong> foi feito para você.</p>
+            <p>Com ele, você desbloqueia:</p>
+            <ul>
+                <li>Buscas em lote ilimitadas.</li>
+                <li>Acesso ao Histórico Completo de BSR.</li>
+                <li>Monitoramento de Buy Box em tempo real.</li>
+            </ul>
+            <p>Você não precisa trabalhar mais duro. Trabalhe mais inteligente.</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="https://amazon-sem-segredos.netlify.app/dashboard/settings" 
+                   style="background-color: #f59e0b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                    Fazer Upgrade para o Plano PRO
+                </a>
+            </div>
+            <p>Boas vendas,<br>Equipe Amazon Sem Segredos IA Suite</p>
+        </div>
+    `;
+    return sendGenericEmail(email, 'Como escalar sem trabalhar 14h por dia 🚀', html);
 };
