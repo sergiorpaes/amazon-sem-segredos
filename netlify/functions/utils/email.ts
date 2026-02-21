@@ -88,20 +88,20 @@ export const sendEngagementDay2 = async (email: string, name: string) => {
     const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <p>Oi, ${name || 'Vendedor(a)'},</p>
-            <p>Você sabia que muitos vendedores quebram simplesmente porque compram o estoque da cor ou do tamanho errado?</p>
+            <p>Você sabia que muitos vendedores iniciantes desistem simplesmente porque ficam paralisados com dúvidas sobre estratégias, bloqueios de conta ou dificuldades em encontrar fornecedores europeus?</p>
             <p>Não precisa ser assim com você.</p>
-            <p>Quando você pesquisa um produto no Amazon Sem Segredos IA Suite que possui variações (como cores de uma garrafa), nossa ferramenta <strong>Análise de Variações Campeãs</strong> mostra exatamente qual "ASIN child" atrai mais atenção e vendas.</p>
-            <p>Em vez de distribuir seu orçamento de compras às cegas, invista 80% do seu capital na variação que já provou ser a vencedora.</p>
+            <p>O Amazon Sem Segredos IA Suite possui um <strong>Mentor Virtual</strong> inteligente, treinado pelos maiores especialistas do mercado, pronto para te ajudar a qualquer momento. Se você tem dúvidas sobre FBA na Europa, fiscalização, IVA (VAT) ou se não sabe por onde começar, nosso Mentor está online 24 horas por dia.</p>
+            <p>Em vez de passar horas pesquisando no Google ou no YouTube, converse com seu mentor particular e tenha respostas diretas, estratégicas e seguras em segundos.</p>
             <div style="text-align: center; margin: 30px 0;">
-                <a href="https://amazon-sem-segredos.netlify.app/dashboard/product-finder" 
+                <a href="https://amazon-sem-segredos.netlify.app/dashboard/mentor" 
                    style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                    Descobrir Variação Campeã
+                    Conversar com o Mentor Virtual
                 </a>
             </div>
             <p>Boas vendas,<br>Equipe Amazon Sem Segredos IA Suite</p>
         </div>
     `;
-    return sendGenericEmail(email, 'Qual variação vende mais? Não tente adivinhar. 📊', html);
+    return sendGenericEmail(email, 'As respostas para destravar suas vendas na Amazon estão aqui 🤖', html);
 };
 
 export const sendEngagementDay3 = async (email: string, name: string) => {
