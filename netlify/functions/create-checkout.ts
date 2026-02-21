@@ -70,27 +70,7 @@ export const handler = async (event: any) => {
             'bulk': { priceId: getPriceId('BULK'), credits: 300 }
         };
 
-        // --- SESSION CREATION WITH AUTO-HEALING FOR INVALID CUSTOMER IDs ---
-        const createSession = async (customerId: string) => {
-            const commonParams = {
-                customer: customerId,
-                payment_method_types: ['card'],
-                success_url: SUCCESS_URL,
-                cancel_url: CANCEL_URL,
-            };
-
-            if (type === 'credits') {
-                // ... (Credits Logic from above) ...
-                // Refetch or use closure values, but for simplicity let's assume params are prepared
-                // Actually, better to restructure. Let's keep the logic simple.
-                // We will define the session config based on type OUTSIDE, then just pass customerId
-                return null; // Placeholder to indicate we need to restructure slightly
-            }
-            return null;
-        };
-
-        // Let's restructure to prepare params first, then try/catch the create call.
-
+        // Preparation for parameters
         let priceId: string | undefined;
         let sessionParams: any = {
             payment_method_types: ['card'],
@@ -130,7 +110,6 @@ export const handler = async (event: any) => {
             priceId = body.priceId || query.priceId;
             let planId = body.planId || query.planId;
 
-            // ... (Plan resolution logic - kept same) ...
             if (priceId && !planId) {
                 const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
                 if (plan) planId = plan.id;
@@ -179,67 +158,110 @@ export const handler = async (event: any) => {
             };
         }
 
-        // Helper to resolve price from product if needed
+        // --- RESILIENCE HELPERS ---
+
         const resolvePriceFromProduct = async (productId: string, planDbId?: number) => {
-            console.log(`Auto-healing: Resolving Price ID for Product ${productId} in ${stripeMode} mode...`);
-            const prices = await stripe.prices.list({ product: productId, active: true, limit: 1 });
-            if (prices.data.length > 0) {
-                const newPriceId = prices.data[0].id;
-                if (planDbId) {
-                    await db.update(plans).set({ stripe_price_id: newPriceId }).where(eq(plans.id, planDbId));
+            try {
+                console.log(`Auto-healing: Resolving Price ID for Product ${productId} in ${stripeMode} mode...`);
+                const prices = await stripe.prices.list({ product: productId, active: true, limit: 1 });
+                if (prices.data.length > 0) {
+                    const newPriceId = prices.data[0].id;
+                    if (planDbId) {
+                        await db.update(plans).set({ stripe_price_id: newPriceId }).where(eq(plans.id, planDbId));
+                    }
+                    return newPriceId;
                 }
-                return newPriceId;
+            } catch (e) {
+                console.warn(`Could not resolve price from product ID ${productId}. Product might be missing in ${stripeMode} mode.`);
             }
             return null;
         };
 
-        // Preparation for creation
+        const resolvePriceByPlanName = async (planName: string, planDbId: number) => {
+            try {
+                console.log(`Ultimate Fallback: Searching for product named "${planName}" in Stripe...`);
+                const products = await stripe.products.search({ query: `name:'${planName}' AND active:'true'` });
+                const product = products.data[0];
+
+                if (product) {
+                    console.log(`Found product ${product.id} for plan ${planName}. Resolving Price...`);
+                    const prices = await stripe.prices.list({ product: product.id, active: true, limit: 1 });
+                    if (prices.data.length > 0) {
+                        const newPriceId = prices.data[0].id;
+                        await db.update(plans).set({
+                            stripe_product_id: product.id,
+                            stripe_price_id: newPriceId
+                        }).where(eq(plans.id, planDbId));
+                        return newPriceId;
+                    }
+                }
+            } catch (e: any) {
+                console.error(`Failed to resolve plan by name "${planName}":`, e.message);
+            }
+            return null;
+        };
+
         const tryCreateSession = async (pId: string, cId: string) => {
             sessionParams.customer = cId;
             sessionParams.line_items = [{ price: pId, quantity: 1 }];
             return await stripe.checkout.sessions.create(sessionParams);
         };
 
-        // Try to create session, retry if price or customer not found
+        // --- EXECUTION WITH RETRY ---
+
         try {
-            session = await tryCreateSession(priceId, customerId);
+            session = await tryCreateSession(priceId!, customerId!);
         } catch (err: any) {
-            // 1. Check for "No such price" error
-            if (err.message?.toLowerCase().includes('no such price') || err.code === 'resource_missing' && err.param === 'line_items[0][price]') {
-                console.warn(`Price ID ${priceId} not found in ${stripeMode} mode. Attempting to auto-resolve from Product ID...`);
+            // Check for missing resource (price or product)
+            const isMissingResource =
+                err.message?.toLowerCase().includes('no such price') ||
+                err.message?.toLowerCase().includes('no such product') ||
+                (err.code === 'resource_missing' && (err.param === 'line_items[0][price]' || err.param === 'product'));
 
-                // Find the plan to get product ID
-                const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
-                const productId = plan?.stripe_product_id;
+            if (isMissingResource) {
+                console.warn(`Stripe resource error: ${err.message}. Attempting to auto-resolve...`);
 
-                if (productId) {
-                    const resolvedPriceId = await resolvePriceFromProduct(productId, plan?.id);
+                let plan;
+                if (priceId) {
+                    const results = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
+                    plan = results[0];
+                }
+
+                // Fallback 1: Resolve by Product ID
+                if (plan?.stripe_product_id) {
+                    const resolvedPriceId = await resolvePriceFromProduct(plan.stripe_product_id, plan.id);
                     if (resolvedPriceId) {
-                        console.log(`Auto-healing success: Retrying with resolved Price ID ${resolvedPriceId}`);
-                        session = await tryCreateSession(resolvedPriceId, customerId);
+                        console.log(`Auto-healing success (ID): Retrying with Price ID ${resolvedPriceId}`);
+                        session = await tryCreateSession(resolvedPriceId, customerId!);
                         return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
                     }
                 }
-                throw new Error(`O plano selecionado não está configurado corretamente para o modo ${stripeMode}. (Preço não encontrado)`);
+
+                // Fallback 2: Ultimate fallback - Search by Name
+                const planToFix = plan || (await db.select().from(plans).where(eq(plans.name, 'Pro')).limit(1))[0];
+                if (planToFix) {
+                    const resolvedPriceId = await resolvePriceByPlanName(planToFix.name, planToFix.id);
+                    if (resolvedPriceId) {
+                        console.log(`Auto-healing success (NAME): Retrying with Price ID ${resolvedPriceId}`);
+                        session = await tryCreateSession(resolvedPriceId, customerId!);
+                        return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
+                    }
+                }
+
+                throw new Error(`Configuração do Stripe incompleta para o modo ${stripeMode}. Verifique se o produto "${planToFix?.name || 'Pro'}" está criado no Stripe Dashboard.`);
             }
 
-            // 2. Check for specific Stripe error "No such customer"
+            // Customer not found
             if (err.code === 'resource_missing' && err.param === 'customer') {
                 console.log(`Customer ${customerId} not found in ${stripeMode} mode. Creating new customer...`);
-
-                // Create new customer
                 const newCustomer = await stripe.customers.create({
                     email: user.email,
                     metadata: { userId: user.id.toString() }
                 });
-
-                // Update DB
                 customerId = newCustomer.id;
                 await db.update(users).set({ stripe_customer_id: customerId }).where(eq(users.id, userId));
-
-                // Retry session creation
                 sessionParams.customer = customerId;
-                session = await stripe.checkout.sessions.create(sessionParams);
+                session = await tryCreateSession(priceId!, customerId);
             } else {
                 throw err;
             }
