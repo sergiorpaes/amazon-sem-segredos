@@ -192,7 +192,7 @@ export const searchProducts = async (query: string, marketplaceId?: string, page
     const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
     const region = getRegionFromMarketplaceId(targetMarketplace);
 
-    console.log(`Searching in Marketplace: ${targetMarketplace} -> Region: ${region}`);
+    // console.log(`Searching in Marketplace: ${targetMarketplace} -> Region: ${region}`);
 
     const token = await getValidAccessToken(region);
 
@@ -210,10 +210,10 @@ export const searchProducts = async (query: string, marketplaceId?: string, page
 
     // Smart detection: ASIN or Keyword?
     if (isLikelyAsin(query)) {
-        console.log(`Detectado ASIN: ${query}`);
+        // console.log(`Detectado ASIN: ${query}`);
         payload.asin = query;
     } else {
-        console.log(`Detectada Palavra-chave: ${query}`);
+        // console.log(`Detectada Palavra-chave: ${query}`);
         payload.keywords = query;
     }
 
@@ -408,7 +408,7 @@ export const getItemOffers = async (asin: string, marketplaceId?: string): Promi
 
         // Debugging for specific ASIN
         if (asin === 'B00005BP05' || asin === 'B0D73SSWMX') {
-            console.log(`[Pricing Debug] Payload for ${asin}:`, JSON.stringify(summary, null, 2));
+            // console.log(`[Pricing Debug] Payload for ${asin}:`, JSON.stringify(summary, null, 2));
         }
 
         // Helper to extract amount from price object (Landed or Listing)

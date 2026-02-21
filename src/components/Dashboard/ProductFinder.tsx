@@ -455,7 +455,7 @@ export const ProductFinder: React.FC = () => {
       const tokenToUse = isLoadMore ? nextToken : undefined;
 
       const result = await searchProducts(query, selectedMarketplace, tokenToUse);
-      console.log("Amazon Search Result:", result);
+      // console.log("Amazon Search Result:", result);
 
       // Refresh credit balance since searching consumes credits
       refreshUser();
@@ -489,7 +489,7 @@ export const ProductFinder: React.FC = () => {
           const asins = mappedProducts.map(p => p.id);
           if (asins.length === 0) return;
 
-          console.log(`Starting Batch Pricing Fetch for ${asins.length} ASINs`);
+          // console.log(`Starting Batch Pricing Fetch for ${asins.length} ASINs`);
           const batchResults = await getBatchOffers(asins, selectedMarketplace);
 
           if (Object.keys(batchResults).length > 0) {
