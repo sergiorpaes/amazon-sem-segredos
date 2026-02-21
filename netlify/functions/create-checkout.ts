@@ -91,6 +91,7 @@ export const handler = async (event: any) => {
 
         // Let's restructure to prepare params first, then try/catch the create call.
 
+        let priceId: string | undefined;
         let sessionParams: any = {
             payment_method_types: ['card'],
             success_url: SUCCESS_URL,
@@ -98,7 +99,7 @@ export const handler = async (event: any) => {
         };
 
         if (type === 'credits') {
-            let priceId = body.priceId;
+            priceId = body.priceId;
             let creditsAmount = 0;
 
             if (body.pack && CREDIT_PACKS[body.pack]) {
@@ -126,7 +127,7 @@ export const handler = async (event: any) => {
             };
         } else {
             // Subscription
-            let priceId = body.priceId || query.priceId;
+            priceId = body.priceId || query.priceId;
             let planId = body.planId || query.planId;
 
             // ... (Plan resolution logic - kept same) ...
@@ -178,12 +179,51 @@ export const handler = async (event: any) => {
             };
         }
 
-        // Try to create session, retry if customer not found
+        // Helper to resolve price from product if needed
+        const resolvePriceFromProduct = async (productId: string, planDbId?: number) => {
+            console.log(`Auto-healing: Resolving Price ID for Product ${productId} in ${stripeMode} mode...`);
+            const prices = await stripe.prices.list({ product: productId, active: true, limit: 1 });
+            if (prices.data.length > 0) {
+                const newPriceId = prices.data[0].id;
+                if (planDbId) {
+                    await db.update(plans).set({ stripe_price_id: newPriceId }).where(eq(plans.id, planDbId));
+                }
+                return newPriceId;
+            }
+            return null;
+        };
+
+        // Preparation for creation
+        const tryCreateSession = async (pId: string, cId: string) => {
+            sessionParams.customer = cId;
+            sessionParams.line_items = [{ price: pId, quantity: 1 }];
+            return await stripe.checkout.sessions.create(sessionParams);
+        };
+
+        // Try to create session, retry if price or customer not found
         try {
-            sessionParams.customer = customerId;
-            session = await stripe.checkout.sessions.create(sessionParams);
+            session = await tryCreateSession(priceId, customerId);
         } catch (err: any) {
-            // Check for specific Stripe error "No such customer"
+            // 1. Check for "No such price" error
+            if (err.message?.toLowerCase().includes('no such price') || err.code === 'resource_missing' && err.param === 'line_items[0][price]') {
+                console.warn(`Price ID ${priceId} not found in ${stripeMode} mode. Attempting to auto-resolve from Product ID...`);
+
+                // Find the plan to get product ID
+                const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
+                const productId = plan?.stripe_product_id;
+
+                if (productId) {
+                    const resolvedPriceId = await resolvePriceFromProduct(productId, plan?.id);
+                    if (resolvedPriceId) {
+                        console.log(`Auto-healing success: Retrying with resolved Price ID ${resolvedPriceId}`);
+                        session = await tryCreateSession(resolvedPriceId, customerId);
+                        return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
+                    }
+                }
+                throw new Error(`O plano selecionado não está configurado corretamente para o modo ${stripeMode}. (Preço não encontrado)`);
+            }
+
+            // 2. Check for specific Stripe error "No such customer"
             if (err.code === 'resource_missing' && err.param === 'customer') {
                 console.log(`Customer ${customerId} not found in ${stripeMode} mode. Creating new customer...`);
 
