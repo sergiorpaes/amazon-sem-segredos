@@ -149,7 +149,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin }) => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Criador de Listing</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Crie títulos, bullet points e descrições otimizadas com IA, e gere imagens com fundo branco prontas para o padrão da Amazon.
+                Crie títulos, bullet points e descrições otimizadas com IA, e gere imagens profissionais prontas para o padrão da Amazon.
               </p>
             </div>
           </div>
