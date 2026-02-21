@@ -26,7 +26,7 @@ export const handler: Handler = async (event) => {
         // So GET should be accessible.
 
         if (event.httpMethod === 'GET') {
-            const keysToFetch = ['global_features', 'enabled_marketplaces'];
+            const keysToFetch = ['global_features', 'enabled_marketplaces', 'support_email', 'support_whatsapp'];
             const results = await db.select().from(systemConfig).where(inArray(systemConfig.key, keysToFetch));
 
             const config: Record<string, any> = {};
@@ -76,7 +76,7 @@ export const handler: Handler = async (event) => {
             }
 
             // Validate key
-            if (!['global_features', 'enabled_marketplaces'].includes(key)) {
+            if (!['global_features', 'enabled_marketplaces', 'support_email', 'support_whatsapp'].includes(key)) {
                 return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid setting key' }) };
             }
 

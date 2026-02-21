@@ -7,13 +7,21 @@ import { AdminDashboard } from '../../views/Admin/Dashboard';
 import { AdminUsers } from '../../views/Admin/Users';
 import { Suppliers as AdminSuppliers } from '../../views/Admin/Suppliers';
 
-type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'ADMIN_SUPPLIERS' | 'FEATURES' | 'MARKETPLACES';
+type SettingsTab = 'AMAZON_API' | 'ADMIN_STATS' | 'ADMIN_USERS' | 'ADMIN_SUPPLIERS' | 'FEATURES' | 'MARKETPLACES' | 'SUPPORT';
 
 export const Settings: React.FC = () => {
     const { user } = useAuth();
-    const { features, toggleFeature, enabledMarketplaces, toggleMarketplace } = useSettings();
+    const { features, toggleFeature, enabledMarketplaces, toggleMarketplace, supportEmail, supportWhatsapp, updateSupportSettings } = useSettings();
     const [activeTab, setActiveTab] = useState<SettingsTab>('AMAZON_API');
     const [activeRegion, setActiveRegion] = useState<Region>('EU');
+
+    const [tempSupportEmail, setTempSupportEmail] = useState(supportEmail);
+    const [tempSupportWhatsapp, setTempSupportWhatsapp] = useState(supportWhatsapp);
+
+    useEffect(() => {
+        setTempSupportEmail(supportEmail);
+        setTempSupportWhatsapp(supportWhatsapp);
+    }, [supportEmail, supportWhatsapp]);
 
     const [credentials, setCredentials] = useState<AmazonCredentials>({
         clientId: '',
@@ -183,6 +191,16 @@ export const Settings: React.FC = () => {
                         >
                             <Globe2 size={18} />
                             Marketplaces
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('SUPPORT')}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${activeTab === 'SUPPORT'
+                                ? 'bg-white dark:bg-dark-800 text-brand-600 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'
+                                }`}
+                        >
+                            <AlertCircle size={18} />
+                            Suporte
                         </button>
                     </div>
                 )}
@@ -384,6 +402,54 @@ export const Settings: React.FC = () => {
                                     </label>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'SUPPORT' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-white dark:bg-dark-800 rounded-xl border border-gray-100 dark:border-dark-700 shadow-sm p-8 max-w-2xl">
+                        <div className="mb-6">
+                            <h2 className="text-lg font-bold text-gray-800 dark:text-white">Configurações de Suporte</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm">Defina para onde os e-mails de tickets serão encaminhados e o número do WhatsApp para os clientes PRO.</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail de Recebimento de Tickets (Plano Starter/Free)</label>
+                                <input
+                                    type="email"
+                                    value={tempSupportEmail}
+                                    onChange={(e) => setTempSupportEmail(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none rounded-lg"
+                                    placeholder="ex: suporte@seudominio.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número do WhatsApp (Plano PRO/Premium)</label>
+                                <input
+                                    type="text"
+                                    value={tempSupportWhatsapp}
+                                    onChange={(e) => setTempSupportWhatsapp(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none rounded-lg"
+                                    placeholder="ex: 5511999999999 (Apenas números, com DDI e DDD)"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Coloque apenas os números numéricos contínuos (DDI + DDD + Número). Ex: 5511999999999 para o Brasil.</p>
+                            </div>
+
+                            <div className="pt-4">
+                                <button
+                                    onClick={() => {
+                                        updateSupportSettings(tempSupportEmail, tempSupportWhatsapp);
+                                        alert('Configurações de suporte salvas com sucesso!');
+                                    }}
+                                    className="flex items-center gap-2 bg-brand-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    Salvar Configurações
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

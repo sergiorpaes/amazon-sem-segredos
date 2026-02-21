@@ -17,6 +17,7 @@ import { ChangePasswordModal } from '../components/Auth/ChangePasswordModal';
 import { BuyCreditsModal } from '../components/Dashboard/BuyCreditsModal';
 import { ChangePlanModal } from '../components/Dashboard/ChangePlanModal';
 import { CreditGuard } from '../components/Dashboard/CreditGuard';
+import { SupportWidget } from '../components/Support/SupportWidget';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -343,6 +344,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         currentPlan="free"
         loading={loadingCheckout}
       />
+
+      {/* Global Support Widget floating on all dashboard screens */}
+      <SupportWidget />
     </div>
   );
 };

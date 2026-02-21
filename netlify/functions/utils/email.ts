@@ -30,6 +30,39 @@ const sendGenericEmail = async (to: string, subject: string, htmlContent: string
     }
 };
 
+export const sendAdminTicketEmail = async (adminEmail: string, replyToEmail: string, userName: string, subject: string, message: string) => {
+    const transporter = createTransporter();
+    const mailOptions = {
+        from: '"Amazon Sem Segredos IA Suporte" <sergiorobertopaes@gmail.com>',
+        to: adminEmail,
+        replyTo: replyToEmail,
+        subject: `[TICKET DE SUPORTE] ${subject}`,
+        html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #2563eb; border-bottom: 2px solid #eee; padding-bottom: 10px;">Novo Ticket de Suporte</h2>
+                <p><strong>Usuário:</strong> ${userName}</p>
+                <p><strong>E-mail:</strong> ${replyToEmail}</p>
+                <p><strong>Assunto:</strong> ${subject}</p>
+                
+                <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                    <p style="white-space: pre-wrap; margin: 0;">${message}</p>
+                </div>
+
+                <p style="font-size: 12px; color: #999;">Dica: Você pode responder diretamente a este e-mail para falar com o usuário (${replyToEmail}).</p>
+            </div>
+        `
+    };
+
+    try {
+        console.log(`📧 Enviando Ticket de Suporte para Admin (${adminEmail})...`);
+        await transporter.sendMail(mailOptions);
+        return true;
+    } catch (error) {
+        console.error(`❌ Erro ao enviar ticket de suporte para ${adminEmail}:`, error);
+        throw error;
+    }
+};
+
 export const sendWelcomeEmail = async (email: string, activationUrl: string) => {
     const html = `
         to: email,

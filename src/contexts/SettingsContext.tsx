@@ -15,6 +15,9 @@ interface SettingsContextType {
     setFeature: (feature: keyof AppFeatures, value: boolean) => void;
     enabledMarketplaces: string[];
     toggleMarketplace: (id: string) => void;
+    supportEmail: string;
+    supportWhatsapp: string;
+    updateSupportSettings: (email: string, whatsapp: string) => void;
 }
 
 const defaultFeatures: AppFeatures = {
@@ -40,6 +43,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'A1VC38T7YXB528', 'A39IBJ37TRP1C6', 'A19VAU5U5O7RUS'
     ]);
 
+    const [supportEmail, setSupportEmail] = useState<string>('sergiorobertopaes@gmail.com');
+    const [supportWhatsapp, setSupportWhatsapp] = useState<string>('');
+
     // Load Global Settings
     useEffect(() => {
         const fetchSettings = async () => {
@@ -49,6 +55,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     const data = await response.json();
                     if (data.global_features) setFeatures(data.global_features);
                     if (data.enabled_marketplaces) setEnabledMarketplaces(data.enabled_marketplaces);
+                    if (data.support_email) setSupportEmail(data.support_email);
+                    if (data.support_whatsapp) setSupportWhatsapp(data.support_whatsapp);
                 }
             } catch (error) {
                 console.error('Failed to load global settings:', error);
@@ -110,8 +118,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
     };
 
+    const updateSupportSettings = (email: string, whatsapp: string) => {
+        setSupportEmail(email);
+        setSupportWhatsapp(whatsapp);
+        if (user?.role === 'ADMIN') {
+            saveSetting('support_email', email);
+            saveSetting('support_whatsapp', whatsapp);
+        }
+    };
+
     return (
-        <SettingsContext.Provider value={{ features, toggleFeature, setFeature, enabledMarketplaces, toggleMarketplace }}>
+        <SettingsContext.Provider value={{ features, toggleFeature, setFeature, enabledMarketplaces, toggleMarketplace, supportEmail, supportWhatsapp, updateSupportSettings }}>
             {children}
         </SettingsContext.Provider>
     );
