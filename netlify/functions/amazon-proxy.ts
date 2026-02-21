@@ -145,7 +145,7 @@ export const handler: Handler = async (event, context) => {
         }
 
         // --- CREDIT CONSUMPTION (Only if not cached and not Pricing) ---
-        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && userId && userRole !== 'ADMIN') {
+        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && intent !== 'update_cache' && userId && userRole !== 'ADMIN') {
             try {
                 await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords, asin });
                 console.log(`[Proxy] Credit consumed for UserID: ${userId}`);
