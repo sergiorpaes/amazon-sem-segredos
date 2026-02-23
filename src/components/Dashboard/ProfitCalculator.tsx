@@ -59,7 +59,7 @@ export const ProfitCalculator: React.FC = () => {
     const prepTotal = prepLabor + prepMaterial + prepInbound;
 
     // FBA State
-    const [fbaPrice, setFbaPrice] = useState<number>(100.00);
+    const [fbaPrice, setFbaPrice] = useState<number>(0);
     const [fbaReferral, setFbaReferral] = useState<number>(15.00);
     const [fbaFixedClosing, setFbaFixedClosing] = useState<number>(0.00);
     const [fbaVariableClosing, setFbaVariableClosing] = useState<number>(0.00);
@@ -75,7 +75,7 @@ export const ProfitCalculator: React.FC = () => {
     const [fbaAdsCost, setFbaAdsCost] = useState<number>(10.00); // Ads cost per unit
 
     // FBM State
-    const [fbmPrice, setFbmPrice] = useState<number>(100.00);
+    const [fbmPrice, setFbmPrice] = useState<number>(0);
     const [fbmShippingOut, setFbmShippingOut] = useState<number>(0); // Portes de envio
     const [fbmReferral, setFbmReferral] = useState<number>(15.00);
     const [fbmFixedClosing, setFbmFixedClosing] = useState<number>(0.00);
