@@ -108,7 +108,7 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
   const AgentIcon = selectedAgent.icon;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 rounded-xl shadow-2xl border border-dark-700 overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-200 dark:border-dark-700 overflow-hidden">
       {/* Chat Header */}
       <div className="p-4 border-b border-gray-200 dark:border-dark-700 bg-gray-50 dark:bg-dark-900 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
@@ -117,7 +117,7 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
               <AgentIcon className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-lg">{selectedAgent.name}</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">{selectedAgent.name}</h3>
               <p className="text-xs text-gray-400">{t('mentor.specialized_agent')}</p>
             </div>
           </div>

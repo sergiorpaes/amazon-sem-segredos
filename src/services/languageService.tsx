@@ -39,7 +39,7 @@ export const translations = {
         'problem.title': 'Taxas escondidas roubando seu lucro?',
         'problem.bad.title': 'Planilhas complexas que quebram',
         'problem.bad.desc': 'Horas perdidas atualizando taxas de FBA manualmente e torcendo para a fórmula estar certa.',
-        'problem.good.tag': 'La Solução',
+        'problem.good.tag': 'A Solução',
         'problem.good.title': 'Amazon Sem Segredos IA Suite',
         'problem.good.desc': 'Cálculo reverso em tempo real. Cole um ASIN e veja seu ROI e lucro líquido instantaneamente.',
         'features.title': 'Tudo o que você precisa para dominar a Buy Box',
@@ -301,6 +301,7 @@ export const translations = {
         'analyze.credits_info': 'Consome 1 crédito premium',
         'analyze.recent_reviews': 'Últimos Reviews',
         'summary.feb_2026': 'Fev 2026',
+        'sim.pdf_recs_title': 'Recomendações Estratégicas',
         'lock.title': 'Limite de Créditos Atingido',
 
         // Profit Simulator
@@ -682,6 +683,7 @@ export const translations = {
         'analyze.credits_info': 'Consume 1 crédito premium',
         'analyze.recent_reviews': 'Últimas Reseñas',
         'summary.feb_2026': 'Feb 2026',
+        'sim.pdf_recs_title': 'Recomendaciones Estratégicas',
         'lock.title': 'Límite de Créditos Alcanzado',
 
         // Profit Simulator
@@ -1052,6 +1054,7 @@ export const translations = {
         'analyze.credits_info': 'Consumes 1 premium credit',
         'analyze.recent_reviews': 'Latest Reviews',
         'summary.feb_2026': 'Feb 2026',
+        'sim.pdf_recs_title': 'Strategic Recommendations',
         'lock.title': 'Credit Limit Reached',
 
         // Profit Simulator

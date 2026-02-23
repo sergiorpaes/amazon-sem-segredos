@@ -353,18 +353,18 @@ export const ProfitCalculator: React.FC = () => {
         doc.setFontSize(10);
         setResultColor(fbaResults.netMargin);
         doc.text(`${t('sim.net_profit')}:`, col1X, y);
-        doc.text(fmt(fbaResults.netProfit), col1X + 50, y, { align: 'right' });
+        doc.text(fmt(fbaResults.netProfit), col1X + 76, y, { align: 'right' });
         setResultColor(fbmResults.netMargin);
         doc.text(`${t('sim.net_profit')}:`, col2X, y);
-        doc.text(fmt(fbmResults.netProfit), col2X + 50, y, { align: 'right' });
+        doc.text(fmt(fbmResults.netProfit), col2X + 76, y, { align: 'right' });
         y += 6;
 
         setResultColor(fbaResults.netMargin);
         doc.text(`${t('sim.net_margin')}: ${pct(fbaResults.netMargin)}`, col1X, y);
-        doc.text(`${t('sim.roi')}: ${fbaResults.roi.toFixed(0)}%`, col1X + 50, y, { align: 'right' });
+        doc.text(`${t('sim.roi')}: ${fbaResults.roi.toFixed(0)}%`, col1X + 76, y, { align: 'right' });
         setResultColor(fbmResults.netMargin);
         doc.text(`${t('sim.net_margin')}: ${pct(fbmResults.netMargin)}`, col2X, y);
-        doc.text(`${t('sim.roi')}: ${fbmResults.roi.toFixed(0)}%`, col2X + 50, y, { align: 'right' });
+        doc.text(`${t('sim.roi')}: ${fbmResults.roi.toFixed(0)}%`, col2X + 76, y, { align: 'right' });
         y += 6;
 
         doc.setTextColor(50, 50, 50);

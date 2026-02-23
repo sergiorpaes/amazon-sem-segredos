@@ -179,7 +179,7 @@ const LandingPage = () => {
               </div>
             </div>
 
-            <div className="p-8 bg-white dark:bg-dark-900 rounded-[40px] shadow-2xl shadow-brand-500/10 border border-brand-100 dark:border-dark-700 transform rotate-1">
+            <div className="p-8 bg-white dark:bg-dark-900 rounded-[40px] shadow-2xl shadow-brand-500/10 border border-brand-100 dark:border-dark-700">
               <div className="inline-flex px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold mb-4 uppercase tracking-wider">
                 {t('problem.good.tag')}
               </div>
