@@ -47,10 +47,16 @@ export const ProfitCalculator: React.FC = () => {
     // Seasonal State
     const [season, setSeason] = useState<'jan-sep' | 'oct-dec'>('jan-sep');
 
-    // --- Common Inputs ---
+    // --- Common Inputs (Synced between FBA/FBM) ---
     const [cogs, setCogs] = useState<number>(30.00);
     const [taxRate, setTaxRate] = useState<number>(21); // Default ES VAT
     const [batchSize, setBatchSize] = useState<number>(100);
+
+    // Prep Service (Synced)
+    const [prepLabor, setPrepLabor] = useState<number>(0.00);
+    const [prepMaterial, setPrepMaterial] = useState<number>(0.00);
+    const [prepInbound, setPrepInbound] = useState<number>(0.00);
+    const prepTotal = prepLabor + prepMaterial + prepInbound;
 
     // FBA State
     const [fbaPrice, setFbaPrice] = useState<number>(100.00);
@@ -88,7 +94,8 @@ export const ProfitCalculator: React.FC = () => {
     // --- Calculations ---
     const calculateStorage = (monthlyRate: number, avgInv: number, estSales: number) => {
         if (!estSales || estSales === 0) return 0;
-        return (monthlyRate * avgInv) / estSales;
+        const rateMultiplier = season === 'oct-dec' ? 3 : 1;
+        return (monthlyRate * rateMultiplier * avgInv) / estSales;
     };
 
     const calculateTotalFees = (referral: number, fixed: number, variable: number, digital: number) => {
@@ -104,18 +111,20 @@ export const ProfitCalculator: React.FC = () => {
     const calcResults = (price: number, shipping: number, fees: number, fulfilment: number, storage: number, misc: number, ads: number) => {
         const totalSales = price + shipping;
         const taxAmount = totalSales * (taxRate / 100);
-        const totalExpenses = fees + fulfilment + storage + misc + cogs + taxAmount + ads;
+
+        // Final Expenses: Includes synchronized COGS and Prep costs
+        const totalExpenses = fees + fulfilment + storage + misc + cogs + prepTotal + taxAmount + ads;
         const netProfit = totalSales - totalExpenses;
         const netMargin = totalSales ? (netProfit / totalSales) * 100 : 0;
-        const roi = cogs > 0 ? (netProfit / cogs) * 100 : 0;
+
+        // ROI: Net Profit / Total Direct Investment (COGS + Prep)
+        const totalInvestment = cogs + prepTotal;
+        const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
 
         // Break-even logic (approximate including variable taxes and referral %)
-        // referral_rate = referral / price
         const referralRate = price > 0 ? fees / price : 0.15;
         const taxRateNormalized = taxRate / 100;
-        // Break-even Price: (Other Fixed Costs) / (1 - Variable Rates)
-        // Fixed = fulfilment + storage + misc + cogs + ads
-        const fixedCosts = fulfilment + storage + misc + cogs + ads;
+        const fixedCosts = fulfilment + storage + misc + cogs + prepTotal + ads;
         const breakEven = fixedCosts / (1 - (referralRate + taxRateNormalized));
 
         return { netProfit, netMargin, roi, totalExpenses, taxAmount, totalSales, breakEven };
@@ -123,6 +132,18 @@ export const ProfitCalculator: React.FC = () => {
 
     const fbaResults = calcResults(fbaPrice, 0, fbaTotalAmazonFees, fbaFulfilment, fbaUnitStorage, fbaMiscCost, fbaAdsCost);
     const fbmResults = calcResults(fbmPrice, fbmShippingOut, fbmTotalAmazonFees, fbmFulfilment, fbmUnitStorage, fbmMiscCost, fbmAdsCost);
+
+    const getMarginColor = (margin: number) => {
+        if (margin >= 20) return 'text-emerald-600 dark:text-emerald-400';
+        if (margin >= 10) return 'text-amber-500 dark:text-amber-400';
+        return 'text-red-500 dark:text-red-400';
+    };
+
+    const getMarginBg = (margin: number) => {
+        if (margin >= 20) return 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30';
+        if (margin >= 10) return 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/30';
+        return 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/30';
+    };
 
     const formatCurrency = (amount: number) => {
         const curr = product?.currency || (marketplace === 'A2Q3Y263D00KWC' ? 'BRL' : 'EUR');
@@ -195,9 +216,19 @@ export const ProfitCalculator: React.FC = () => {
                 if (price > 0) {
                     setFbaPrice(price);
                     setFbmPrice(price);
-                    const estRef = price * 0.15;
-                    setFbaReferral(estRef);
-                    setFbmReferral(estRef);
+
+                    // Use Real Data from SP-API if available (Referral and Fulfillment)
+                    const realFees = (item as any).spapi_fees;
+                    if (realFees) {
+                        setFbaReferral(realFees.referral);
+                        setFbmReferral(realFees.referral);
+                        setFbaFulfilment(realFees.fulfillment);
+                        console.log(`[Calculator] Using REAL SP-API Fees: ${realFees.referral} (Ref) / ${realFees.fulfillment} (FBA Full)`);
+                    } else {
+                        const estRef = price * 0.15;
+                        setFbaReferral(estRef);
+                        setFbmReferral(estRef);
+                    }
                 }
 
             }
@@ -329,7 +360,7 @@ export const ProfitCalculator: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">{t('sim.vat')} (%)</span>
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">IVA (%)</span>
                     <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-14 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1 text-sm font-bold text-center" />
                 </div>
                 <div className="flex items-center gap-2">
@@ -337,6 +368,35 @@ export const ProfitCalculator: React.FC = () => {
                     <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1">
                         <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="w-14 bg-transparent outline-none text-sm font-bold text-center" />
                         <span className="text-[10px] text-gray-400 font-bold uppercase">Unid.</span>
+                    </div>
+                </div>
+
+                {/* Prep Service Section */}
+                <div className="h-8 w-px bg-emerald-200 dark:bg-emerald-900/30 hidden md:block mx-2" />
+                <div className="flex flex-wrap gap-4 items-center">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">Prep Service</span>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase">Labor</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 rounded px-2 py-0.5">
+                                <span className="text-[10px] text-gray-400">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
+                                <input type="number" value={prepLabor} onChange={(e) => setPrepLabor(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase">Material</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 rounded px-2 py-0.5">
+                                <span className="text-[10px] text-gray-400">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
+                                <input type="number" value={prepMaterial} onChange={(e) => setPrepMaterial(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center" />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-gray-500 uppercase">Inbound</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 rounded px-2 py-0.5">
+                                <span className="text-[10px] text-gray-400">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
+                                <input type="number" value={prepInbound} onChange={(e) => setPrepInbound(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -452,25 +512,25 @@ export const ProfitCalculator: React.FC = () => {
                     </div>
 
                     {/* FBA Results Overlay Footer */}
-                    <div className="bg-gray-50 border-t border-gray-100 p-5 mt-auto">
+                    <div className={`p-5 mt-auto border-t transition-colors ${getMarginBg(fbaResults.netMargin)}`}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Custo/Unid.</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/50 backdrop-blur-sm border border-white/50">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Custo Total</span>
                                 <span className="font-black text-gray-900 text-sm">{formatCurrency(fbaResults.totalExpenses)}</span>
                             </div>
-                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lote ({batchSize})</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/50 backdrop-blur-sm border border-white/50">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Lucro por Lote</span>
                                 <span className="font-black text-gray-900 text-sm">{formatCurrency(fbaResults.netProfit * batchSize)}</span>
                             </div>
-                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100 shadow-sm">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lucro Líquido</span>
-                                <span className={`font-black text-lg leading-none ${fbaResults.netProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(fbaResults.netProfit)}</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white shadow-sm border border-white">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-none">Lucro Líquido</span>
+                                <span className={`font-black text-xl leading-none ${getMarginColor(fbaResults.netMargin)}`}>{formatCurrency(fbaResults.netProfit)}</span>
                             </div>
-                            <div className={`flex flex-col items-center justify-center p-2 rounded-xl border shadow-sm ${fbaResults.netMargin >= 15 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : (fbaResults.netMargin > 0 ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-800')}`}>
-                                <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Margem / ROI</span>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="font-black text-lg leading-none">{fbaResults.netMargin.toFixed(1)}%</span>
-                                    <span className="text-[10px] font-bold opacity-80">/ {fbaResults.roi.toFixed(0)}% ROI</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white shadow-sm border border-white">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-none">Margem / ROI</span>
+                                <div className="flex flex-col items-center">
+                                    <span className={`font-black text-xl leading-none ${getMarginColor(fbaResults.netMargin)}`}>{fbaResults.netMargin.toFixed(1)}%</span>
+                                    <span className="text-[10px] font-bold opacity-60">ROI: {fbaResults.roi.toFixed(0)}%</span>
                                 </div>
                             </div>
                         </div>
@@ -582,25 +642,25 @@ export const ProfitCalculator: React.FC = () => {
                     </div>
 
                     {/* FBM Results Footer Results */}
-                    <div className="bg-gray-50 border-t border-gray-100 p-5 mt-auto">
+                    <div className={`p-5 mt-auto border-t transition-colors ${getMarginBg(fbmResults.netMargin)}`}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Custo/Unid.</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/50 backdrop-blur-sm border border-white/50">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Custo Total</span>
                                 <span className="font-black text-gray-900 text-sm">{formatCurrency(fbmResults.totalExpenses)}</span>
                             </div>
-                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lote ({batchSize})</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/50 backdrop-blur-sm border border-white/50">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Lucro por Lote</span>
                                 <span className="font-black text-gray-900 text-sm">{formatCurrency(fbmResults.netProfit * batchSize)}</span>
                             </div>
-                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-gray-100 shadow-sm">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lucro Líquido</span>
-                                <span className={`font-black text-lg leading-none ${fbmResults.netProfit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatCurrency(fbmResults.netProfit)}</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white shadow-sm border border-white">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-none">Lucro Líquido</span>
+                                <span className={`font-black text-xl leading-none ${getMarginColor(fbmResults.netMargin)}`}>{formatCurrency(fbmResults.netProfit)}</span>
                             </div>
-                            <div className={`flex flex-col items-center justify-center p-2 rounded-xl border shadow-sm ${fbmResults.netMargin >= 15 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : (fbmResults.netMargin > 0 ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-800')}`}>
-                                <span className="text-[10px] font-bold opacity-70 uppercase tracking-widest mb-1">Margem / ROI</span>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="font-black text-lg leading-none">{fbmResults.netMargin.toFixed(1)}%</span>
-                                    <span className="text-[10px] font-bold opacity-80">/ {fbmResults.roi.toFixed(0)}% ROI</span>
+                            <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white shadow-sm border border-white">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 leading-none">Margem / ROI</span>
+                                <div className="flex flex-col items-center">
+                                    <span className={`font-black text-xl leading-none ${getMarginColor(fbmResults.netMargin)}`}>{fbmResults.netMargin.toFixed(1)}%</span>
+                                    <span className="text-[10px] font-bold opacity-60">ROI: {fbmResults.roi.toFixed(0)}%</span>
                                 </div>
                             </div>
                         </div>

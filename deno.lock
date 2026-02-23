@@ -24,7 +24,7 @@
         "npm:bcryptjs@^3.0.3",
         "npm:cookie@^1.1.1",
         "npm:dotenv-cli@11",
-        "npm:dotenv@^17.2.4",
+        "npm:dotenv@^17.3.1",
         "npm:drizzle-kit@~0.31.9",
         "npm:drizzle-orm@~0.45.1",
         "npm:jsonwebtoken@^9.0.3",

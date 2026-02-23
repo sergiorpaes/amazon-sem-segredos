@@ -398,6 +398,59 @@ export const handler: Handler = async (event, context) => {
             }
         }
 
+        // --- PRODUCT FEES API CALL (If single ASIN) ---
+        let feesMap: Record<string, { referral: number, fulfillment: number, currency: string }> = {};
+        if (intent !== 'get_offers' && finalAsin && catalogData.items && catalogData.items.length > 0) {
+            try {
+                const targetAsin = catalogData.items[0].asin;
+                const priceForFees = pricingMap[targetAsin]?.price || 0;
+
+                if (priceForFees > 0) {
+                    console.log(`[Proxy] Fetching Real Fees for ${targetAsin} at price ${priceForFees}`);
+                    const feesUrl = `${apiBaseUrl}/products/fees/v0/items/${targetAsin}/feesEstimate`;
+                    const feesPayload = {
+                        FeesEstimateRequest: {
+                            MarketplaceId: targetMarketplace,
+                            PriceToEstimateFees: {
+                                ListingPrice: { Amount: priceForFees, CurrencyCode: pricingMap[targetAsin]?.currency || 'BRL' },
+                                Shipping: { Amount: 0, CurrencyCode: pricingMap[targetAsin]?.currency || 'BRL' }
+                            },
+                            Identifier: targetAsin,
+                            IsAmazonFulfilled: true
+                        }
+                    };
+
+                    const feesResponse = await fetch(feesUrl, {
+                        method: 'POST',
+                        headers: {
+                            "x-amz-access-token": access_token,
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(feesPayload)
+                    });
+
+                    if (feesResponse.ok) {
+                        const feesData = await feesResponse.json();
+                        const feeList = feesData.payload?.FeesEstimateResult?.FeesEstimate?.FeeDetailList;
+                        if (feeList) {
+                            let referral = 0;
+                            let fulfillment = 0;
+                            feeList.forEach((f: any) => {
+                                if (f.FeeType === 'ReferralFee') referral = f.FeeAmount?.Amount || 0;
+                                if (f.FeeType === 'FBAFulfillmentFee') fulfillment = f.FeeAmount?.Amount || 0;
+                            });
+                            feesMap[targetAsin] = { referral, fulfillment, currency: pricingMap[targetAsin]?.currency || 'BRL' };
+                        }
+                    } else {
+                        const errBody = await feesResponse.text();
+                        console.warn(`[Proxy] Fees API Failed for ${targetAsin}: ${feesResponse.status}`, errBody);
+                    }
+                }
+            } catch (err) {
+                console.error("[Proxy] Fees API Error:", err);
+            }
+        }
+
         // --- PROCESS & INJECT SALES DATA ---
         if (intent !== 'get_offers' && catalogData.items && Array.isArray(catalogData.items)) {
             const processedItems = await Promise.all(catalogData.items.map(async (item: any) => {
@@ -505,7 +558,12 @@ export const handler: Handler = async (event, context) => {
                     net_profit: net_profit / 100,
                     sales_percentile,
                     category_total,
-                    is_list_price: isListPrice
+                    is_list_price: isListPrice,
+                    spapi_fees: feesMap[item.asin] ? {
+                        referral: feesMap[item.asin].referral,
+                        fulfillment: feesMap[item.asin].fulfillment,
+                        currency: feesMap[item.asin].currency
+                    } : null
                 };
             }));
 
