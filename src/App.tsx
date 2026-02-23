@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LandingPage } from './views/LandingPage';
+import LandingPage from './views/LandingPage';
 import { Dashboard } from './views/Dashboard';
 import { AppView } from './types';
 import { LanguageProvider } from './services/languageService';

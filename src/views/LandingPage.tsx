@@ -15,7 +15,7 @@ import {
   CreditCard,
   Rocket
 } from 'lucide-react';
-import AuthModal from '../components/Auth/AuthModal';
+import { AuthModal } from '../components/Auth/AuthModal';
 import { useLanguage } from '../services/languageService';
 import { ThemeToggle } from '../components/Layout/ThemeToggle';
 
