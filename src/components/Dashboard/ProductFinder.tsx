@@ -1186,9 +1186,9 @@ export const ProductFinder: React.FC = () => {
           setIsAnalyzingImage(true);
           try {
             const analysis = await analyzeImage(base64Image);
-            if (analysis && analysis.description) {
-              setSearchTerm(analysis.description);
-              handleSearch(false, analysis.description);
+            if (analysis && analysis.amazon_optimized_query) {
+              setSearchTerm(analysis.amazon_optimized_query);
+              handleSearch(false, analysis.amazon_optimized_query);
             }
           } catch (err: any) {
             setError(err.message || 'Erro ao analisar imagem');

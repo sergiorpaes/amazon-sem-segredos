@@ -190,7 +190,7 @@ export const handler = async (event: any) => {
 
             Return the result as a STRICT JSON object with these keys:
             {
-              "amazon_optimized_query": "[MARCA] + [MODELO EXATO] + [PRINCIPAL CARACTERÍSTICA] + [COR/TAMANHO]",
+              "amazon_optimized_query": "EXTREMELY CONCISE. MAX 2 OR 3 WORDS. Focus on core product name and brand. Examples: 'capa iphone', 'fone sony', 'caneca termica'",
               "detected_brand": "Nome da Marca",
               "product_category": "Categoria sugerida para o SearchIndex",
               "technical_details": ["detalhe 1", "detalhe 2"],
