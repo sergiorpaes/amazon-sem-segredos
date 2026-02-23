@@ -563,7 +563,9 @@ export const handler: Handler = async (event, context) => {
                         referral: feesMap[item.asin].referral,
                         fulfillment: feesMap[item.asin].fulfillment,
                         currency: feesMap[item.asin].currency
-                    } : null
+                    } : null,
+                    price: priceValue,
+                    currency: currencyCode
                 };
             }));
 
