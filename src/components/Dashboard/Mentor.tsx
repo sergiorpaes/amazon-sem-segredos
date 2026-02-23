@@ -157,11 +157,22 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
                     <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed prose-p:my-1 prose-strong:text-brand-600 dark:prose-strong:text-brand-400">
                       {msg.text.split('\n').map((line, i) => {
                         // Special handling for YouTube links
-                        if (line.includes('watch?v=') || line.includes('youtu.be/')) {
-                          const videoId = line.includes('watch?v=') ? line.split('v=')[1]?.split('&')[0] : line.split('youtu.be/')[1]?.split('?')[0];
-                          if (videoId) {
-                            return (
-                              <div key={i} className="my-4 bg-gray-50 dark:bg-dark-900 rounded-xl overflow-hidden border border-gray-200 dark:border-dark-700 shadow-lg group">
+                        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                        const ytMatch = line.match(youtubeRegex);
+
+                        if (ytMatch) {
+                          const videoId = ytMatch[1];
+                          // Remove the link from the text to avoid double rendering
+                          const textWithoutLink = line.replace(youtubeRegex, '').trim();
+
+                          return (
+                            <div key={i} className="space-y-2">
+                              {textWithoutLink && (
+                                <p className="mb-2" dangerouslySetInnerHTML={{
+                                  __html: textWithoutLink.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                }} />
+                              )}
+                              <div className="my-4 bg-gray-50 dark:bg-dark-900 rounded-xl overflow-hidden border border-gray-200 dark:border-dark-700 shadow-lg group">
                                 <div className="p-3 border-b border-gray-200 dark:border-dark-700 bg-white dark:bg-dark-800 flex items-center gap-2">
                                   <Youtube className="w-4 h-4 text-red-600" />
                                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t('mentor.video_rec')}</span>
@@ -176,8 +187,8 @@ export const Mentor: React.FC<MentorProps> = ({ onNavigate }) => {
                                   />
                                 </div>
                               </div>
-                            );
-                          }
+                            </div>
+                          );
                         }
 
                         // Special handling for internal route links
