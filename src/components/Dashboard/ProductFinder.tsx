@@ -603,7 +603,7 @@ export const ProductFinder: React.FC = () => {
 
   return (
 
-    <div className="space-y-4 h-full bg-gray-50 relative"> {/* Compact spacing, relative for modal */}
+    <div className="space-y-4 h-full bg-gray-50 dark:bg-dark-900 transition-colors duration-200 relative"> {/* Compact spacing, relative for modal */}
       {/* Sales Graph Modal */}
       <SalesDetailModal
         isOpen={!!selectedProductForGraph}
@@ -625,7 +625,7 @@ export const ProductFinder: React.FC = () => {
       {/* Removed Top Header with Local Language Selector */}
 
       {/* Search Header - Compacted */}
-      <div className="flex flex-col gap-6 items-center bg-white p-5 md:p-8 rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md mx-2 sm:mx-0">
+      <div className="flex flex-col gap-6 items-center bg-white dark:bg-dark-800 p-5 md:p-8 rounded-3xl border border-gray-100 dark:border-dark-700 shadow-sm transition-all hover:shadow-md mx-2 sm:mx-0">
         <div className="w-full max-w-4xl">
           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full">
             <div className="relative flex-1 group w-full">
@@ -633,7 +633,7 @@ export const ProductFinder: React.FC = () => {
               <input
                 type="text"
                 placeholder={t('search.placeholder')}
-                className="w-full pl-12 pr-24 py-4 bg-gray-50 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white text-sm md:text-base shadow-inner transition-all text-gray-900 placeholder:text-gray-400"
+                className="w-full pl-12 pr-24 py-4 bg-gray-50 dark:bg-dark-700 border-none rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white dark:focus:bg-dark-600 text-sm md:text-base shadow-inner transition-all text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && onSearchClick()}
@@ -680,7 +680,7 @@ export const ProductFinder: React.FC = () => {
               <div className="relative flex-1 md:flex-none" ref={marketplaceRef}>
                 <button
                   onClick={() => setIsMarketplaceOpen(!isMarketplaceOpen)}
-                  className="flex justify-center items-center gap-2 w-full h-[54px] md:h-[58px] px-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all md:min-w-[120px]"
+                  className="flex justify-center items-center gap-2 w-full h-[54px] md:h-[58px] px-4 bg-gray-50 dark:bg-dark-700 border-none rounded-2xl text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-600 transition-all md:min-w-[120px]"
                 >
                   <span className="text-xl">{selectedFlag}</span>
                   <span className="flex-1 md:flex-none text-left">{selectedCode}</span>
@@ -688,7 +688,7 @@ export const ProductFinder: React.FC = () => {
                 </button>
 
                 {isMarketplaceOpen && (
-                  <div className="absolute top-full right-0 mt-3 w-full md:w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-full right-0 mt-3 w-full md:w-64 bg-white dark:bg-dark-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-700 z-50 overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
                     <div className="p-2 grid gap-1">
                       {availableMarketplaces.map((m) => (
                         <button
@@ -699,7 +699,7 @@ export const ProductFinder: React.FC = () => {
                           }}
                           className={`
                             flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors
-                            ${selectedMarketplace === m.id ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-50 text-gray-700'}
+                            ${selectedMarketplace === m.id ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400' : 'hover:bg-gray-50 dark:hover:bg-dark-700 text-gray-700 dark:text-gray-300'}
                           `}
                         >
                           <span className="text-xl">{m.flag}</span>
@@ -761,7 +761,7 @@ export const ProductFinder: React.FC = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {selectedProductIds.size > 0 && (
-          <div className="lg:col-span-4 bg-brand-50 border border-brand-100 rounded-xl px-4 py-2 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="lg:col-span-4 bg-brand-50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-900/30 rounded-xl px-4 py-2 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2 text-brand-700 font-bold text-xs uppercase tracking-wider">
               <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
               {t('pf.selected_analysis')} ({selectedProductIds.size})
@@ -775,39 +775,39 @@ export const ProductFinder: React.FC = () => {
           </div>
         )}
         {/* Total Niche Sales */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl border border-gray-100 dark:border-dark-700 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('summary.search_volume')}</div>
-            <span className="bg-brand-100 text-brand-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter">
+            <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('summary.search_volume')}</div>
+            <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter">
               {t('summary.feb_2026')}
             </span>
           </div>
           <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-gray-900">{totalNicheSales.toLocaleString()}</span>
+            <span className="text-3xl font-bold text-gray-900 dark:text-white">{totalNicheSales.toLocaleString()}</span>
             <Search className="w-5 h-5 text-brand-500 mb-1.5" />
           </div>
-          <div className="text-[10px] text-gray-500 mt-1">{t('pf.est_sales_month')}</div>
+          <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{t('pf.est_sales_month')}</div>
         </div>
 
         {/* Avg Net Margin */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('pf.avg_net_margin')}</div>
-          <div className="text-2xl font-bold text-gray-900 tracking-tight">
+        <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl border border-gray-100 dark:border-dark-700 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">{t('pf.avg_net_margin')}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
             {new Intl.NumberFormat(undefined, { style: 'currency', currency: products[0]?.currency || 'USD' }).format(avgNetMargin)}
           </div>
-          <div className="h-1.5 w-full bg-green-50 mt-2 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-green-50 dark:bg-green-900/20 mt-2 rounded-full overflow-hidden">
             <div className="h-full bg-green-500 w-[65%]"></div>
           </div>
-          <div className="text-[10px] text-gray-400 mt-1">{t('pf.price_fba_fees')}</div>
+          <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{t('pf.price_fba_fees')}</div>
         </div>
 
         {/* Competition Level */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('pf.comp_level')}</div>
-          <div className="text-2xl font-bold text-gray-900 tracking-tight">{avgCompetition.toFixed(1)}</div>
+        <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl border border-gray-100 dark:border-dark-700 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2">{t('pf.comp_level')}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{avgCompetition.toFixed(1)}</div>
           <div className="flex items-center gap-1 mt-2">
             <Activity className={`w-4 h-4 ${avgCompetition > 10 ? 'text-red-500' : 'text-green-500'}`} />
-            <span className="text-[10px] text-gray-500 font-medium">{t('pf.active_sellers_per_listing')}</span>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">{t('pf.active_sellers_per_listing')}</span>
           </div>
         </div>
 
@@ -833,12 +833,12 @@ export const ProductFinder: React.FC = () => {
 
       {/* Product Table or Empty State */}
       {products.length === 0 && !isSearching && !error ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm mt-8 animate-in fade-in zoom-in-95 duration-500">
-          <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-brand-50/50">
-            <Search className="w-10 h-10 text-brand-600" />
+        <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-dark-800 rounded-2xl border border-gray-100 dark:border-dark-700 shadow-sm mt-8 animate-in fade-in zoom-in-95 duration-500">
+          <div className="w-24 h-24 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-brand-50/50 dark:ring-brand-900/10">
+            <Search className="w-10 h-10 text-brand-600 dark:text-brand-500" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('pf.empty_title')}</h3>
-          <p className="text-gray-500 max-w-sm text-center text-lg mb-8">{t('pf.empty_desc')}</p>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('pf.empty_title')}</h3>
+          <p className="text-gray-500 dark:text-gray-400 max-w-sm text-center text-lg mb-8">{t('pf.empty_desc')}</p>
           <button
             onClick={() => {
               setSearchTerm('Curling Iron');
@@ -850,18 +850,18 @@ export const ProductFinder: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mt-4">
-          <div className="p-4 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50/50 gap-4">
+        <div className="bg-white dark:bg-dark-800 rounded-2xl border border-gray-200 dark:border-dark-700 shadow-sm overflow-hidden mt-4">
+          <div className="p-4 border-b border-gray-100 dark:border-dark-700 flex flex-wrap justify-between items-center bg-gray-50/50 dark:bg-dark-900/50 gap-4">
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600 font-medium">
-                {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
+              <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                {t('rows.selected')}: <span className="text-gray-900 dark:text-white font-bold">{selectedProductIds.size}</span>
               </div>
 
               <button
                 onClick={() => setShowFilter(!showFilter)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${showFilter || brandFilter || minPrice || maxPrice
-                  ? 'bg-brand-50 border-brand-200 text-brand-700'
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-400'
+                  : 'bg-white dark:bg-dark-800 border-gray-200 dark:border-dark-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-700'
                   }`}
               >
                 <Filter size={14} />
@@ -877,38 +877,38 @@ export const ProductFinder: React.FC = () => {
 
           {/* Collapsible Filter Bar */}
           {showFilter && (
-            <div className="p-4 bg-white border-b border-gray-100 animate-in slide-in-from-top-2 duration-200">
+            <div className="p-4 bg-white dark:bg-dark-800 border-b border-gray-100 dark:border-dark-700 animate-in slide-in-from-top-2 duration-200">
               <div className="flex flex-wrap items-center gap-6">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('pf.brand')}</label>
+                  <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('pf.brand')}</label>
                   <input
                     type="text"
                     value={brandFilter}
                     onChange={(e) => setBrandFilter(e.target.value)}
                     placeholder="..."
-                    className="px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-48"
+                    className="px-3 py-2 bg-gray-50 dark:bg-dark-700 border border-gray-100 dark:border-dark-600 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-48 text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('pf.min_price')}</label>
+                  <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('pf.min_price')}</label>
                   <input
                     type="number"
                     value={minPrice || ''}
                     onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : null)}
                     placeholder="0.00"
-                    className="px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-28"
+                    className="px-3 py-2 bg-gray-50 dark:bg-dark-700 border border-gray-100 dark:border-dark-600 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-28 text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('pf.max_price')}</label>
+                  <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('pf.max_price')}</label>
                   <input
                     type="number"
                     value={maxPrice || ''}
                     onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : null)}
                     placeholder="999..."
-                    className="px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-28"
+                    className="px-3 py-2 bg-gray-50 dark:bg-dark-700 border border-gray-100 dark:border-dark-600 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-28 text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -933,11 +933,11 @@ export const ProductFinder: React.FC = () => {
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-white text-gray-500 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+              <thead className="bg-white dark:bg-dark-800 text-gray-500 dark:text-gray-400 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                 <tr>
-                  <th className="px-5 py-4 border-b border-gray-100 w-12 text-center">#</th>
+                  <th className="px-5 py-4 border-b border-gray-100 dark:border-dark-700 w-12 text-center">#</th>
 
-                  <th className="px-5 py-4 border-b border-gray-100 min-w-[320px] cursor-pointer hover:bg-gray-50 transition-colors group/head" onClick={() => handleSort('title')}>
+                  <th className="px-5 py-4 border-b border-gray-100 dark:border-dark-700 min-w-[320px] cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors group/head" onClick={() => handleSort('title')}>
                     <div className="flex items-center gap-1">
                       {t('col.product_details')}
                       {sortConfig?.key === 'title' && (
@@ -1015,17 +1015,17 @@ export const ProductFinder: React.FC = () => {
               <tbody className="divide-y divide-gray-100 text-sm">
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-6 py-12 text-center text-gray-500 bg-gray-50/30">
+                    <td colSpan={11} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 bg-gray-50/30 dark:bg-dark-900/30">
                       <div className="flex flex-col items-center gap-2">
-                        <Search className="w-8 h-8 text-gray-300" />
+                        <Search className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                         <p>{t('error.no_products')}</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   sortedProducts.map((product, index) => (
-                    <tr key={product.id} className="hover:bg-blue-50/50 transition-colors group">
-                      <td className="px-5 py-4 text-center text-gray-400 bg-gray-50/30 border-r border-gray-100 font-mono text-xs">
+                    <tr key={product.id} className="hover:bg-blue-50/50 dark:hover:bg-brand-900/10 transition-colors group">
+                      <td className="px-5 py-4 text-center text-gray-400 dark:text-gray-500 bg-gray-50/30 dark:bg-dark-900/30 border-r border-gray-100 dark:border-dark-700 font-mono text-xs">
                         <div className="mb-2">{index + 1}</div>
                         <input
                           type="checkbox"
@@ -1034,13 +1034,13 @@ export const ProductFinder: React.FC = () => {
                           onChange={() => handleSelectRow(product.id)}
                         />
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 text-gray-700 dark:text-gray-300">
                         <div className="flex gap-4">
-                          <div className="w-14 h-14 flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
+                          <div className="w-14 h-14 flex-shrink-0 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-1 shadow-sm">
                             {product.image ? (
                               <img src={product.image} alt="" className="w-full h-full object-contain" />
                             ) : (
-                              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
+                              <div className="w-full h-full bg-gray-100 dark:bg-dark-700 flex items-center justify-center text-gray-300 dark:text-gray-600">
                                 <Box size={20} />
                               </div>
                             )}
@@ -1048,14 +1048,14 @@ export const ProductFinder: React.FC = () => {
                           <div className="flex-1 min-w-0 py-0.5">
                             <button
                               onClick={() => setSelectedProductForDetail(product)}
-                              className="font-medium text-brand-700 line-clamp-2 mb-1.5 hover:underline cursor-pointer text-base text-left w-full max-w-[400px]"
+                              className="font-medium text-brand-700 dark:text-brand-400 line-clamp-2 mb-1.5 hover:underline cursor-pointer text-base text-left w-full max-w-[400px]"
                               title={product.title}
                             >
                               {product.title}
                             </button>
                             <div className="flex items-center gap-2">
                               {product.category && (
-                                <span className="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 uppercase tracking-wide">
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-dark-700 border border-gray-200 dark:border-dark-600 rounded px-1.5 py-0.5 uppercase tracking-wide">
                                   {t(product.category.startsWith('category.') ? product.category : product.category)}
                                 </span>
                               )}
@@ -1071,14 +1071,14 @@ export const ProductFinder: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="text-gray-900 font-mono text-xs bg-gray-100 px-2 py-1 rounded w-fit select-all">
+                        <div className="text-gray-900 dark:text-gray-200 font-mono text-xs bg-gray-100 dark:bg-dark-700 px-2 py-1 rounded w-fit select-all">
                           {product.id}
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-gray-700 font-medium truncate max-w-[150px]" title={product.brand || ''}>
+                      <td className="px-5 py-4 text-gray-700 dark:text-gray-300 font-medium truncate max-w-[150px]" title={product.brand || ''}>
                         {product.brand || '-'}
                       </td>
-                      <td className="px-5 py-4 text-right font-bold text-gray-900">
+                      <td className="px-5 py-4 text-right font-bold text-gray-900 dark:text-white">
                         <div className="flex items-center justify-end gap-1.5">
                           {product.price ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), {
                             style: 'currency',
@@ -1106,7 +1106,7 @@ export const ProductFinder: React.FC = () => {
                             <span
                               className={`text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter shadow-sm border ${product.percentile === '1%' ? 'bg-green-800 text-white border-green-900' :
                                 product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
-                                  'bg-gray-100 text-gray-600 border-gray-200'
+                                  'bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-dark-600'
                                 }`}
                               title={t('pf.top_percentile_tip').replace('{total}', product.categoryTotal?.toLocaleString() || '').replace('{category}', t(product.category))}
                             >
@@ -1115,13 +1115,13 @@ export const ProductFinder: React.FC = () => {
                           )}
                           {product.percentile === 'NEW_RISING' && (
                             <span
-                              className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter bg-blue-100 text-blue-800 border border-blue-200 shadow-sm"
+                              className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 shadow-sm"
                               title={t('pf.bsr_tool_tip')}
                             >
                               New/Rising
                             </span>
                           )}
-                          <span className="text-gray-900 font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? t('pf.bsr_unavailable_tip') : t('pf.sales_census_tip').replace('{category}', t(product.category))}>
+                          <span className="text-gray-900 dark:text-white font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? t('pf.bsr_unavailable_tip') : t('pf.sales_census_tip').replace('{category}', t(product.category))}>
                             {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : (product.percentile === 'NEW_RISING' ? t('pf.emerging') : '-')}
                           </span>
                           {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">{t('pf.units_month')}</span>}
@@ -1133,13 +1133,13 @@ export const ProductFinder: React.FC = () => {
                             product.salesRanks.map((sr: any, idx: number) => (
                               <div key={idx} className="flex flex-col gap-1.5">
                                 {sr.displayGroupRanks?.map((dgr: any, i: number) => (
-                                  <div key={`dgr-${i}`} className="text-gray-900 leading-snug">
-                                    <span className="font-bold">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline font-medium">{dgr.title}</a>
+                                  <div key={`dgr-${i}`} className="text-gray-900 dark:text-gray-100 leading-snug">
+                                    <span className="font-bold whitespace-nowrap">Nº {dgr.rank.toLocaleString()}</span> em <a href={dgr.link} target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline font-medium">{dgr.title}</a>
                                   </div>
                                 ))}
                                 {sr.classificationRanks?.map((cr: any, i: number) => (
-                                  <div key={`cr-${i}`} className="text-gray-900 leading-snug">
-                                    <span className="font-bold text-gray-700">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-800 hover:underline">{cr.title}</a>
+                                  <div key={`cr-${i}`} className="text-gray-900 dark:text-gray-100 leading-snug">
+                                    <span className="font-bold text-gray-700 dark:text-gray-400 whitespace-nowrap">Nº {cr.rank.toLocaleString()}</span> em <a href={cr.link} target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">{cr.title}</a>
                                   </div>
                                 ))}
                               </div>
@@ -1149,7 +1149,7 @@ export const ProductFinder: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-right font-bold text-gray-900 tabular-nums">
+                      <td className="px-5 py-4 text-right font-bold text-gray-900 dark:text-white tabular-nums">
                         {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'de-DE', {
                           style: 'currency',
                           currency: product.currency || 'USD',
@@ -1174,7 +1174,7 @@ export const ProductFinder: React.FC = () => {
                           </div>
                         ) : '-'}
                       </td>
-                      <td className="px-5 py-4 text-center text-gray-600">
+                      <td className="px-5 py-4 text-center text-gray-600 dark:text-gray-400">
                         {(product.activeSellers !== undefined && product.activeSellers !== null) ? product.activeSellers : '-'}
                       </td>
                     </tr>
@@ -1185,34 +1185,34 @@ export const ProductFinder: React.FC = () => {
           </div>
 
           {/* Mobile Card View */}
-          <div className="lg:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+          <div className="lg:hidden flex flex-col gap-4 p-4 bg-gray-50/50 dark:bg-dark-900/50">
             {products.length === 0 ? (
-              <div className="px-6 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col items-center gap-2">
-                <Search className="w-8 h-8 text-gray-300" />
+              <div className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-dark-800 rounded-xl border border-gray-100 dark:border-dark-700 shadow-sm flex flex-col items-center gap-2">
+                <Search className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                 <p>{t('error.no_products')}</p>
               </div>
             ) : (
               sortedProducts.map((product, index) => (
-                <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm relative flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+                <div key={product.id} className="bg-white dark:bg-dark-800 rounded-xl border border-gray-200 dark:border-dark-700 p-4 shadow-sm relative flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3 border-b border-gray-100 dark:border-dark-700 pb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 flex-shrink-0 bg-white border border-gray-200 rounded-lg p-1">
+                      <div className="w-16 h-16 flex-shrink-0 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-1">
                         {product.image ? (
                           <img src={product.image} alt="" className="w-full h-full object-contain" />
                         ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
+                          <div className="w-full h-full bg-gray-100 dark:bg-dark-700 flex items-center justify-center text-gray-300 dark:text-gray-600">
                             <Box size={20} />
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col">
-                        <button onClick={() => setSelectedProductForDetail(product)} className="font-medium text-brand-700 line-clamp-2 text-sm text-left leading-tight hover:underline">
+                        <button onClick={() => setSelectedProductForDetail(product)} className="font-medium text-brand-700 dark:text-brand-400 line-clamp-2 text-sm text-left leading-tight hover:underline">
                           {product.title}
                         </button>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-500 font-mono bg-gray-100 px-1 rounded">{product.id}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-dark-700 px-1 rounded">{product.id}</span>
                           {product.percentile && product.percentile !== 'NEW_RISING' && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] uppercase bg-green-100 text-green-800">
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-[4px] uppercase bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                               Top {product.percentile}
                             </span>
                           )}
@@ -1229,26 +1229,26 @@ export const ProductFinder: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex flex-col">
-                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.price')}</span>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('col.price')}</span>
+                      <span className="font-bold text-gray-900 dark:text-white">
                         {product.price ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: product.currency || 'USD' }).format(product.price) : '-'}
                       </span>
                     </div>
                     <div className="flex flex-col items-end text-right">
-                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.sales')}</span>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('col.sales')}</span>
+                      <span className="font-bold text-gray-900 dark:text-white">
                         {product.sales ? product.sales.toLocaleString() : '-'}
                       </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.revenue')}</span>
-                      <span className="font-bold text-brand-600">
+                      <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('col.revenue')}</span>
+                      <span className="font-bold text-brand-600 dark:text-brand-400">
                         {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: product.currency || 'USD', maximumFractionDigits: 0 }).format(product.revenue) : '-'}
                       </span>
                     </div>
                     <div className="flex flex-col items-end text-right">
-                      <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider">{t('col.active_sellers')}</span>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('col.active_sellers')}</span>
+                      <span className="font-bold text-gray-900 dark:text-white">
                         {product.activeSellers ?? '-'}
                       </span>
                     </div>
@@ -1256,7 +1256,7 @@ export const ProductFinder: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedProductForDetail(product)}
-                    className="w-full mt-2 py-2.5 bg-brand-50 text-brand-700 text-sm font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-brand-100 transition-colors"
+                    className="w-full mt-2 py-2.5 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 text-sm font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-brand-100 dark:hover:bg-brand-900/30 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" /> {t('analyze.button')}
                   </button>
@@ -1267,18 +1267,18 @@ export const ProductFinder: React.FC = () => {
 
           {/* Load More Button */}
           {products.length > 0 && (
-            <div className="px-6 py-12 text-center bg-gray-50/50 border-t border-gray-100">
+            <div className="px-6 py-12 text-center bg-gray-50/50 dark:bg-dark-900/50 border-t border-gray-100 dark:border-dark-700">
               {showLoadMore ? (
                 <button
                   onClick={() => handleSearch(true)}
                   disabled={isSearching}
-                  className="px-8 py-3 bg-white border-2 border-brand-200 text-brand-700 rounded-2xl font-bold hover:bg-brand-50 transition-all shadow-sm flex items-center gap-2 mx-auto"
+                  className="px-8 py-3 bg-white dark:bg-dark-800 border-2 border-brand-200 dark:border-brand-900/50 text-brand-700 dark:text-brand-400 rounded-2xl font-bold hover:bg-brand-50 dark:hover:bg-dark-700 transition-all shadow-sm flex items-center gap-2 mx-auto"
                 >
                   {isSearching ? <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" /> : <ChevronDown className="w-5 h-5" />}
                   {isSearching ? t('pf.loading_more') : t('pf.load_more')}
                 </button>
               ) : (
-                <div className="text-sm text-gray-400 font-medium">{t('pf.no_more')}</div>
+                <div className="text-sm text-gray-400 dark:text-gray-500 font-medium">{t('pf.no_more')}</div>
               )}
             </div>
           )}

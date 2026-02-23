@@ -53,9 +53,7 @@ const LandingPage = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 dark:bg-dark-900/70 backdrop-blur-xl border-none">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-brand-500/20">
-              <TrendingUp className="w-6 h-6 text-white -rotate-3" />
-            </div>
+            <img src="/logo.png" alt="AI Suite Logo" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-brand-500/20" />
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
               {t('app.title')}
             </span>
