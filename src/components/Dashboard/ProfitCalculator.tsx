@@ -139,12 +139,21 @@ export const ProfitCalculator: React.FC = () => {
 
     const handleSearch = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!searchQuery.trim()) return;
+        const query = searchQuery.trim().toUpperCase();
+        if (!query) return;
+
+        // ASIN Validation: 10 chars, alphanumeric, usually starts with B
+        const isAsin = /^(B\w{9}|\d{9}[0-9X])$/.test(query);
+
+        if (!isAsin) {
+            setError("Por favor, insira um ASIN válido (ex: B086PHS2V8). A calculadora aceita apenas ASINs.");
+            return;
+        }
 
         setIsSearching(true);
         setError(null);
         try {
-            const data = await searchProducts(searchQuery, marketplace);
+            const data = await searchProducts(query, marketplace);
             if (data && data.items && data.items.length > 0) {
                 const item = data.items[0];
                 const summary = item.summaries?.[0];
@@ -223,7 +232,7 @@ export const ProfitCalculator: React.FC = () => {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder={t('sim.search_placeholder')}
+                            placeholder="Insira o ASIN do produto (ex: B086PHS2V8)"
                             className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white text-base shadow-inner transition-all text-gray-900 placeholder:text-gray-400"
                         />
                     </div>

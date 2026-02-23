@@ -2,7 +2,7 @@ import { Handler } from "@netlify/functions";
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { consumeCredits } from '../../src/lib/credits';
+import { consumeCredits, isAlreadyConsumed } from '../../src/lib/credits';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-dev-key';
 
@@ -42,7 +42,14 @@ export const handler: Handler = async (event, context) => {
 
         // Deduct 5 credits for competition analysis
         try {
-            await consumeCredits(userId, 5, 'ANALYZE_COMPETITION', { asin });
+            const alreadyConsumed = await isAlreadyConsumed(userId, 'ANALYZE_COMPETITION', asin);
+
+            if (alreadyConsumed) {
+                console.log(`[AI Analysis] Duplicate analysis detected for UserID: ${userId}, ASIN: ${asin}. Skipping deduction.`);
+            } else {
+                await consumeCredits(userId, 5, 'ANALYZE_COMPETITION', { asin });
+                console.log(`[AI Analysis] Credits consumed for UserID: ${userId}`);
+            }
         } catch (e: any) {
             return {
                 statusCode: 402,

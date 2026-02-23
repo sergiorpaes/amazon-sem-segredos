@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { users, creditsLedger, usageHistory } from '../db/schema';
-import { eq, and, gt, asc } from 'drizzle-orm';
+import { eq, and, gt, asc, desc } from 'drizzle-orm';
 
 export async function consumeCredits(
     userId: number,
@@ -164,5 +164,48 @@ export async function addCredits(
             .returning();
 
         return updatedUser;
+    });
+}
+
+/**
+ * Checks if a user has already consumed credits for a specific feature and ASIN
+ * within their current billing cycle (since the last 'monthly' credit grant).
+ */
+export async function isAlreadyConsumed(
+    userId: number,
+    feature: string,
+    asin: string
+) {
+    if (!asin) return false;
+
+    // 1. Find the date of the most recent 'monthly' credit grant
+    const [lastMonthlyGrant] = await db
+        .select({ created_at: creditsLedger.created_at })
+        .from(creditsLedger)
+        .where(and(
+            eq(creditsLedger.user_id, userId),
+            eq(creditsLedger.type, 'monthly')
+        ))
+        .orderBy(desc(creditsLedger.created_at))
+        .limit(1);
+
+    // If no monthly grant, default to 30 days ago
+    const cycleStartDate = lastMonthlyGrant?.created_at || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    // 2. Check if there's any usage history for this feature and ASIN since that date
+    const history = await db
+        .select()
+        .from(usageHistory)
+        .where(and(
+            eq(usageHistory.user_id, userId),
+            eq(usageHistory.feature_used, feature),
+            gt(usageHistory.created_at, cycleStartDate)
+        ))
+        .orderBy(desc(usageHistory.created_at));
+
+    // Check if any of the history entries match the ASIN in metadata
+    return history.some(h => {
+        const metadata = h.metadata as any;
+        return metadata?.asin === asin || metadata?.keywords === asin;
     });
 }

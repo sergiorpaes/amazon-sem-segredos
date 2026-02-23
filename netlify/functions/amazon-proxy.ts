@@ -2,7 +2,7 @@
 import { Handler } from "@netlify/functions";
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
-import { consumeCredits } from '../../src/lib/credits';
+import { consumeCredits, isAlreadyConsumed } from '../../src/lib/credits';
 import { getCachedProduct, cacheProduct } from './utils/product-cache';
 import { estimateSales } from './utils/sales-estimation';
 import { calculateFBAFees } from './utils/fba-calculator';
@@ -86,12 +86,24 @@ export const handler: Handler = async (event, context) => {
             }
         }
 
-        // --- CACHE CHECK (Only for Search/GetItem, not Pricing) ---
-        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && asin && !keywords) {
-            const cached = await getCachedProduct(asin);
-            if (cached) {
-                console.log(`[Proxy] Cache hit for ASIN: ${asin}`);
+        // --- PRE-PROCESSING: ASIN Detection ---
+        // Auto-detect ASIN in keywords (e.g., B01I3A16DI or 123456789X)
+        let finalKeywords = keywords;
+        let finalAsin = asin;
 
+        if (!finalAsin && finalKeywords && /^(B\w{9}|\d{9}[0-9X])$/.test(finalKeywords)) {
+            console.log(`[Proxy] Detected ASIN in keywords: ${finalKeywords}. Switching to identifiers search.`);
+            finalAsin = finalKeywords;
+            finalKeywords = undefined;
+        }
+
+        // --- CACHE CHECK (Only for Search/GetItem, not Pricing) ---
+        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && finalAsin && !finalKeywords) {
+            const cached = await getCachedProduct(finalAsin);
+            if (cached) {
+                console.log(`[Proxy] Cache hit for ASIN: ${finalAsin}`);
+
+                // ... (rest of cache hit logic)
                 // Re-calculate FBA fees to ensure they follow the latest logic
                 let fba_fees = (cached.fba_fees || 0) * 100; // stored in cents logic for re-calc
                 let fba_breakdown = {
@@ -147,8 +159,15 @@ export const handler: Handler = async (event, context) => {
         // --- CREDIT CONSUMPTION (Only if not cached and not Pricing) ---
         if (intent !== 'get_offers' && intent !== 'get_batch_offers' && intent !== 'update_cache' && userId && userRole !== 'ADMIN') {
             try {
-                await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords, asin });
-                console.log(`[Proxy] Credit consumed for UserID: ${userId}`);
+                // Deduplication Check
+                const alreadyConsumed = await isAlreadyConsumed(userId, 'SEARCH_PRODUCT', finalAsin || finalKeywords);
+
+                if (alreadyConsumed) {
+                    console.log(`[Proxy] Duplicate consultation detected for UserID: ${userId}, ASIN/Keywords: ${finalAsin || finalKeywords}. Skipping deduction.`);
+                } else {
+                    await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords: finalKeywords, asin: finalAsin });
+                    console.log(`[Proxy] Credit consumed for UserID: ${userId}`);
+                }
             } catch (e: any) {
                 if (e.message === 'Insufficient credits') {
                     return {
@@ -169,15 +188,6 @@ export const handler: Handler = async (event, context) => {
         let method = "GET";
         let requestBody = null;
 
-        // Auto-detect ASIN in keywords (e.g., B01I3A16DI or 123456789X)
-        let finalKeywords = keywords;
-        let finalAsin = asin;
-
-        if (!finalAsin && finalKeywords && /^(B\w{9}|\d{9}[0-9X])$/.test(finalKeywords)) {
-            console.log(`[Proxy] Detected ASIN in keywords: ${finalKeywords}. Switching to identifiers search.`);
-            finalAsin = finalKeywords;
-            finalKeywords = undefined;
-        }
 
         if (intent === 'update_cache' && asin && body.price) {
             await cacheProduct({
@@ -254,7 +264,9 @@ export const handler: Handler = async (event, context) => {
             if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
         }
 
-        console.log(`Proxying request: ${url} (Method: ${method})`);
+        console.log(`[Proxy] Final URL: ${url}`);
+        console.log(`[Proxy] Region: ${region}, Marketplace: ${targetMarketplace}`);
+        console.log(`[Proxy] Token Prefix: ${access_token?.substring(0, 10)}...`);
 
         const amazonResponse = await fetch(url, {
             method: method,
@@ -268,10 +280,21 @@ export const handler: Handler = async (event, context) => {
         const catalogData = await amazonResponse.json();
 
         if (!amazonResponse.ok) {
+            console.error(`[Proxy] Amazon SP-API Error ${amazonResponse.status} for URL: ${url}`);
+            console.error(`[Proxy] Payload:`, JSON.stringify(catalogData));
+
             return {
                 statusCode: amazonResponse.status,
                 headers,
-                body: JSON.stringify(catalogData),
+                body: JSON.stringify({
+                    ...catalogData,
+                    _debug: {
+                        url,
+                        region,
+                        marketplaceId: targetMarketplace,
+                        intent
+                    }
+                }),
             };
         }
 
