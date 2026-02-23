@@ -114,7 +114,7 @@ export const translations = {
         'mentor.subtitle': 'Cada um é preparado para lidar com desafios específicos.',
 
         // Listing Optimizer
-        'lo.intro': 'Olá! Sou seu especialista em Amazon. Vamos criar um anúncio vencedor para a Amazon Espanha? Primeiro, qual é o nome do seu produto?',
+        'lo.intro': 'Olá! Sou seu especialista em Amazon. Vamos criar um anúncio vencedor para a Amazon? Primeiro, qual é o nome do seu produto?',
         'lo.q.productName': 'Qual é o nome do seu produto?',
         'lo.q.category': 'Qual a categoria dele? (Ex: Cozinha, Esportes, Eletrônicos)',
         'lo.q.material': 'De qual material ele é feito? (Ex: Aço Inox, Algodão Orgânico)',
@@ -284,7 +284,7 @@ export const translations = {
         'mentor.subtitle': 'Cada uno está preparado para enfrentar desafíos específicos.',
 
         // Listing Optimizer
-        'lo.intro': '¡Hola! Soy tu experto en Amazon. ¿Vamos a crear un anuncio ganador para Amazon España? Primero, ¿cuál es el nombre de tu producto?',
+        'lo.intro': '¡Hola! Soy tu experto en Amazon. ¿Vamos a crear un anuncio ganador para Amazon? Primero, ¿cuál es el nombre de tu producto?',
         'lo.q.productName': '¿Cuál es el nombre de tu producto?',
         'lo.q.category': '¿Cuál es su categoría? (Ej: Cocina, Deportes, Electrónica)',
         'lo.q.material': '¿De qué material está hecho? (Ej: Acero Inoxidable, Algodón Orgánico)',
@@ -466,7 +466,7 @@ export const translations = {
         'mentor.subtitle': 'Each agent is trained to solve specific business challenges.',
 
         // Listing Optimizer
-        'lo.intro': 'Hello! I am your Amazon expert. Let\'s create a winning listing for Amazon Spain? First, what is the name of your product?',
+        'lo.intro': 'Hello! I am your Amazon expert. Let\'s create a winning listing for Amazon? First, what is the name of your product?',
         'lo.q.productName': 'What is the name of your product?',
         'lo.q.category': 'What is its category? (Ex: Kitchen, Sports, Electronics)',
         'lo.q.material': 'What material is it made of? (Ex: Stainless Steel, Organic Cotton)',

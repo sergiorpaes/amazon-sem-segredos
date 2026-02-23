@@ -282,10 +282,10 @@ export const ProfitCalculator: React.FC = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Insira o ASIN do produto (ex: B086PHS2V8)"
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white text-base shadow-inner transition-all text-gray-900 placeholder:text-gray-400"
+                            className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-dark-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white dark:focus:bg-dark-700 text-base shadow-inner transition-all text-gray-900 dark:text-white placeholder:text-gray-400"
                         />
                     </div>
-                    <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none max-w-[150px] shadow-inner focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all cursor-pointer">
+                    <select value={marketplace} onChange={(e) => setMarketplace(e.target.value)} className="bg-gray-50 dark:bg-dark-800 border-none rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 outline-none max-w-[150px] shadow-inner focus:ring-2 focus:ring-brand-500/20 focus:bg-white dark:focus:bg-dark-700 transition-all cursor-pointer">
                         {SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id)).map(m => (
                             <option key={m.id} value={m.id}>{m.flag} {m.code}</option>
                         ))}
@@ -338,10 +338,10 @@ export const ProfitCalculator: React.FC = () => {
             </div>
 
             {/* Global Settings Bar */}
-            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-4 flex flex-wrap gap-6 items-center justify-center shadow-sm">
+            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-700/50 rounded-xl p-4 flex flex-wrap gap-6 items-center justify-center shadow-sm">
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">{t('sim.cogs')}</span>
-                    <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900 rounded px-2 py-1">
+                    <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1">
                         <span className="text-xs text-emerald-600 dark:text-emerald-400">{product?.currency === 'USD' ? '$' : (product?.currency === 'BRL' ? 'R$' : '€')}</span>
                         <input type="number" value={cogs} onChange={(e) => setCogs(Number(e.target.value))} className="w-16 bg-transparent outline-none text-sm font-bold text-center dark:text-white" />
                     </div>
@@ -352,7 +352,7 @@ export const ProfitCalculator: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Lote</span>
-                    <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1">
+                    <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1">
                         <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="w-14 bg-transparent outline-none text-sm font-bold text-center" />
                         <span className="text-[10px] text-gray-400 font-bold uppercase">Unid.</span>
                     </div>
@@ -392,7 +392,7 @@ export const ProfitCalculator: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* LOGÍSTICA DA AMAZON (FBA) */}
-                <div className="bg-white dark:bg-dark-900 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div className="bg-white dark:bg-dark-800 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
                     <div className="px-4 py-2 border-b border-[#d5dbdb] flex justify-between items-center bg-[#f0f2f2]">
                         <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-200 flex items-center gap-2">
                             <Box className="w-4 h-4 text-[#007185]" />
@@ -427,7 +427,7 @@ export const ProfitCalculator: React.FC = () => {
 
                         {/* Storage Section */}
                         <div className="border-t border-gray-100 pt-3">
-                            <button onClick={() => setFbaStorageExpanded(!fbaStorageExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-[#333] dark:text-white py-1 mb-2">
+                            <button onClick={() => setFbaStorageExpanded(!fbaStorageExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-[#333] dark:text-gray-200 py-1 mb-2">
                                 <span className="flex items-center gap-1">
                                     {t('sim.storage_cost')} {formatCurrency(fbaUnitStorage)}
                                     {fbaStorageExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -435,9 +435,9 @@ export const ProfitCalculator: React.FC = () => {
                             </button>
                             {fbaStorageExpanded && (
                                 <div className="space-y-3 animate-in slide-in-from-top-1">
-                                    <div className="flex rounded overflow-hidden border border-[#d5dbdb] text-[10px] font-bold">
+                                    <div className="flex rounded overflow-hidden border border-[#d5dbdb] dark:border-dark-700 text-[10px] font-bold">
                                         <button onClick={() => setSeason('jan-sep')} className={`flex-1 py-1.5 transition-colors ${season === 'jan-sep' ? 'bg-[#007185] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>{t('sim.jan_sep')}</button>
-                                        <button onClick={() => setSeason('oct-dec')} className={`flex-1 py-1.5 transition-colors ${season === 'oct-dec' ? 'bg-[#007185] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>{t('sim.oct_dec')}</button>
+                                        <button onClick={() => setSeason('oct-dec')} className={`flex-1 py-1.5 transition-colors ${season === 'oct-dec' ? 'bg-[#007185] text-white' : 'bg-white dark:bg-dark-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700'}`}>{t('sim.oct_dec')}</button>
                                     </div>
                                     <InputRow label={t('sim.storage_per_unit')} value={fbaMonthlyStoragePrice} onChange={setFbaMonthlyStoragePrice} />
                                     <InputRow label={t('sim.avg_inventory')} value={fbaAvgInventory} onChange={setFbaAvgInventory} />
@@ -525,7 +525,7 @@ export const ProfitCalculator: React.FC = () => {
                 </div>
 
                 {/* O SEU TIPO DE LOGÍSTICA (FBM) */}
-                <div className="bg-white dark:bg-dark-900 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+                <div className="bg-white dark:bg-dark-800 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
                     <div className="px-4 py-2 border-b border-[#d5dbdb] flex justify-between items-center bg-[#f0f2f2]">
                         <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-200 flex items-center gap-2">
                             <Package className="w-4 h-4 text-[#007185]" />
@@ -539,13 +539,13 @@ export const ProfitCalculator: React.FC = () => {
                             <InputRow label={t('sim.item_price')} value={fbmPrice} onChange={setFbmPrice} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
                             <InputRow label={t('sim.shipping_out')} value={fbmShippingOut} onChange={setFbmShippingOut} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
                         </div>
-                        <div className="bg-gray-50 dark:bg-dark-800 p-2 rounded border border-dashed border-gray-200 flex justify-between">
-                            <span className="text-sm font-bold text-gray-600">{t('sim.total_sales_price')}</span>
+                        <div className="bg-gray-50 dark:bg-dark-900/50 p-2 rounded border border-dashed border-gray-200 dark:border-dark-700 flex justify-between">
+                            <span className="text-sm font-bold text-gray-600 dark:text-gray-300">{t('sim.total_sales_price')}</span>
                             <span className="text-sm font-black text-[#007185]">{formatCurrency(fbmResults.totalSales)}</span>
                         </div>
 
                         <div className="border-t border-gray-100 pt-3">
-                            <button onClick={() => setFbmFeesExpanded(!fbmFeesExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-[#333] py-1 mb-2">
+                            <button onClick={() => setFbmFeesExpanded(!fbmFeesExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-[#333] dark:text-gray-200 py-1 mb-2">
                                 <span className="flex items-center gap-1">
                                     {t('sim.amazon_fees')} {formatCurrency(fbmTotalAmazonFees)}
                                     {fbmFeesExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -567,7 +567,7 @@ export const ProfitCalculator: React.FC = () => {
                         </div>
 
                         <div className="border-t border-gray-100 pt-3">
-                            <button onClick={() => setFbmStorageExpanded(!fbmStorageExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-[#333] py-1 mb-2">
+                            <button onClick={() => setFbmStorageExpanded(!fbmStorageExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-[#333] dark:text-gray-200 py-1 mb-2">
                                 <span className="flex items-center gap-1">
                                     {t('sim.storage_cost')} {formatCurrency(fbmUnitStorage)}
                                     {fbmStorageExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}

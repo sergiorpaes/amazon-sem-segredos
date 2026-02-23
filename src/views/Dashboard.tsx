@@ -197,7 +197,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-dark-900 overflow-hidden transition-colors duration-200">
       <Sidebar
         currentModule={currentModule}
         onModuleChange={setCurrentModule}
@@ -208,7 +208,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
       <main className="flex-1 flex flex-col h-full relative overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-30 shrink-0">
+        <header className="h-16 bg-white dark:bg-dark-900 border-b border-gray-200 dark:border-dark-700 flex items-center justify-between px-6 z-30 shrink-0">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -216,12 +216,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-bold text-gray-800">{getTitle()}</h1>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white">{getTitle()}</h1>
           </div>
 
           <div className="flex items-center gap-4 relative">
             {/* Credit Badge */}
-            <div className="hidden md:flex items-center gap-2 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100 mr-2">
+            <div className="hidden md:flex items-center gap-2 bg-brand-50 dark:bg-brand-900/20 px-3 py-1.5 rounded-lg border border-brand-100 dark:border-brand-700/50 mr-2">
               <Coins className="w-4 h-4 text-brand-600" />
               <span className="font-bold text-brand-700">{user?.credits_balance || 0}</span>
               <span className="text-xs text-brand-500 font-medium">Créditos</span>
@@ -236,10 +236,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-xl transition-colors text-right group"
+              className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 p-2 rounded-xl transition-colors text-right group"
             >
               <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-semibold text-gray-700 group-hover:text-brand-600 transition-colors">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-brand-600 transition-colors">
                   {user?.full_name || user?.email || 'Usuário'}
                 </span>
                 <span className="text-xs text-brand-600 font-medium">
@@ -247,7 +247,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                     user?.plan_name ? t(`plans.${user.plan_name.toLowerCase()}`) : t('plans.free')}
                 </span>
               </div>
-              <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center text-brand-700 font-bold border border-brand-200 uppercase group-hover:bg-brand-200 transition-all overflow-hidden">
+              <div className="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-full flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold border border-brand-200 dark:border-brand-700/50 uppercase group-hover:bg-brand-200 dark:group-hover:bg-brand-900/50 transition-all overflow-hidden">
                 {user?.profile_image ? (
                   <img src={user.profile_image} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -264,10 +264,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                   className="fixed inset-0 z-40"
                   onClick={() => setIsProfileOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-dark-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-700 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 py-3 border-b border-gray-50 mb-1">
                     <p className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">{t('profile.welcome')}</p>
-                    <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.email}</p>
                   </div>
 
                   <button
@@ -288,7 +288,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
                   <button
                     onClick={() => { setCurrentModule(DashboardModule.ACCOUNT); setIsProfileOpen(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-800 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <CreditCard className="w-4 h-4" />
                     {t('profile.buy_credits')}
@@ -296,16 +296,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
 
                   <button
                     onClick={() => { setCurrentModule(DashboardModule.ACCOUNT); setIsProfileOpen(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-800 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
                     {t('profile.change_plan')}
                   </button>
 
-                  <div className="border-t border-gray-50 mt-1 pt-1">
+                  <div className="border-t border-gray-50 dark:border-dark-700 mt-1 pt-1">
                     <button
                       onClick={onLogout}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-3 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
                       {t('module.logout')}

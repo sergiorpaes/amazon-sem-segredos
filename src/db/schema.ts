@@ -9,15 +9,14 @@ export const users = pgTable('amz_users', {
     credits_balance: integer('credits_balance').default(30).notNull(),
     stripe_customer_id: text('stripe_customer_id'),
 
-    // Extended Profile (Not in current DB migration)
-    // full_name: text('full_name'),
-    // profile_image: text('profile_image'), // Base64 or URL
-    // phone: text('phone'),
-    // company_name: text('company_name'),
-    // address_street: text('address_street'),
-    // address_city: text('address_city'),
-    // address_state: text('address_state'),
-    // address_zip: text('address_zip'),
+    full_name: text('full_name'),
+    profile_image: text('profile_image'), // Base64 or URL
+    phone: text('phone'),
+    company_name: text('company_name'),
+    address_street: text('address_street'),
+    address_city: text('address_city'),
+    address_state: text('address_state'),
+    address_zip: text('address_zip'),
 
     created_at: timestamp('created_at').defaultNow(),
     banned_at: timestamp('banned_at'),
