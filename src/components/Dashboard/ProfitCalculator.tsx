@@ -48,48 +48,48 @@ export const ProfitCalculator: React.FC = () => {
     const [season, setSeason] = useState<'jan-sep' | 'oct-dec'>('jan-sep');
 
     // --- Common Inputs (Synced between FBA/FBM) ---
-    const [cogs, setCogs] = useState<number>(30.00);
-    const [taxRate, setTaxRate] = useState<number>(21); // Default ES VAT
-    const [batchSize, setBatchSize] = useState<number>(100);
+    const [cogs, setCogs] = useState<number>(0);
+    const [taxRate, setTaxRate] = useState<number>(21); // Default ES VAT (Amazon fixed)
+    const [batchSize, setBatchSize] = useState<number>(1);
 
     // Prep Service (Synced)
-    const [prepLabor, setPrepLabor] = useState<number>(0.00);
-    const [prepMaterial, setPrepMaterial] = useState<number>(0.00);
-    const [prepInbound, setPrepInbound] = useState<number>(0.00);
+    const [prepLabor, setPrepLabor] = useState<number>(0);
+    const [prepMaterial, setPrepMaterial] = useState<number>(0);
+    const [prepInbound, setPrepInbound] = useState<number>(0);
     const prepTotal = prepLabor + prepMaterial + prepInbound;
 
     // FBA State
     const [fbaPrice, setFbaPrice] = useState<number>(0);
-    const [fbaReferral, setFbaReferral] = useState<number>(15.00);
-    const [fbaFixedClosing, setFbaFixedClosing] = useState<number>(0.00);
-    const [fbaVariableClosing, setFbaVariableClosing] = useState<number>(0.00);
-    const [fbaDigitalServices, setFbaDigitalServices] = useState<number>(0.30);
-    const [fbaFulfilment, setFbaFulfilment] = useState<number>(5.50);
+    const [fbaReferral, setFbaReferral] = useState<number>(15.00);     // Amazon fee (kept)
+    const [fbaFixedClosing, setFbaFixedClosing] = useState<number>(0);
+    const [fbaVariableClosing, setFbaVariableClosing] = useState<number>(0);
+    const [fbaDigitalServices, setFbaDigitalServices] = useState<number>(0.30); // Amazon fee (kept)
+    const [fbaFulfilment, setFbaFulfilment] = useState<number>(5.50);  // Amazon fee (kept)
 
     // FBA Storage Detailed
-    const [fbaMonthlyStoragePrice, setFbaMonthlyStoragePrice] = useState<number>(0.80);
-    const [fbaAvgInventory, setFbaAvgInventory] = useState<number>(50);
-    const [fbaEstSales, setFbaEstSales] = useState<number>(100);
+    const [fbaMonthlyStoragePrice, setFbaMonthlyStoragePrice] = useState<number>(0.80); // Amazon rate (kept)
+    const [fbaAvgInventory, setFbaAvgInventory] = useState<number>(0);
+    const [fbaEstSales, setFbaEstSales] = useState<number>(0);
 
-    const [fbaMiscCost, setFbaMiscCost] = useState<number>(0.50);
-    const [fbaAdsCost, setFbaAdsCost] = useState<number>(10.00); // Ads cost per unit
+    const [fbaMiscCost, setFbaMiscCost] = useState<number>(0);
+    const [fbaAdsCost, setFbaAdsCost] = useState<number>(0);
 
     // FBM State
     const [fbmPrice, setFbmPrice] = useState<number>(0);
-    const [fbmShippingOut, setFbmShippingOut] = useState<number>(0); // Portes de envio
-    const [fbmReferral, setFbmReferral] = useState<number>(15.00);
-    const [fbmFixedClosing, setFbmFixedClosing] = useState<number>(0.00);
-    const [fbmVariableClosing, setFbmVariableClosing] = useState<number>(0.00);
-    const [fbmDigitalServices, setFbmDigitalServices] = useState<number>(0.30);
-    const [fbmFulfilment, setFbmFulfilment] = useState<number>(4.50);
+    const [fbmShippingOut, setFbmShippingOut] = useState<number>(0);
+    const [fbmReferral, setFbmReferral] = useState<number>(15.00);     // Amazon fee (kept)
+    const [fbmFixedClosing, setFbmFixedClosing] = useState<number>(0);
+    const [fbmVariableClosing, setFbmVariableClosing] = useState<number>(0);
+    const [fbmDigitalServices, setFbmDigitalServices] = useState<number>(0.30); // Amazon fee (kept)
+    const [fbmFulfilment, setFbmFulfilment] = useState<number>(0);     // User's own logistics cost
 
     // FBM Storage Detailed
     const [fbmMonthlyStoragePrice, setFbmMonthlyStoragePrice] = useState<number>(0);
     const [fbmAvgInventory, setFbmAvgInventory] = useState<number>(0);
-    const [fbmEstSales, setFbmEstSales] = useState<number>(100);
+    const [fbmEstSales, setFbmEstSales] = useState<number>(0);
 
-    const [fbmMiscCost, setFbmMiscCost] = useState<number>(0.50);
-    const [fbmAdsCost, setFbmAdsCost] = useState<number>(8.00); // Ads cost per unit
+    const [fbmMiscCost, setFbmMiscCost] = useState<number>(0);
+    const [fbmAdsCost, setFbmAdsCost] = useState<number>(0);
 
     // --- Calculations ---
     const calculateStorage = (monthlyRate: number, avgInv: number, estSales: number) => {
