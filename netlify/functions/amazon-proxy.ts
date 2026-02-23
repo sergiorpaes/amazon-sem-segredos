@@ -102,7 +102,7 @@ export const handler: Handler = async (event, context) => {
 
         // --- CACHE CHECK (Only for Search/GetItem, not Pricing) ---
         if (intent !== 'get_offers' && intent !== 'get_batch_offers' && finalAsin && !finalKeywords) {
-            const cached = await getCachedProduct(finalAsin, targetMarketplace);
+            const cached = await getCachedProduct(finalAsin);
             if (cached) {
                 console.log(`[Proxy] Cache hit for ASIN: ${finalAsin}`);
 

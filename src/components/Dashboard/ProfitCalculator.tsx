@@ -7,7 +7,7 @@ import {
 import { useLanguage } from '../../services/languageService';
 import { jsPDF } from 'jspdf';
 import { getRecommendations } from '../../lib/strategicRecommendations';
-import { searchProducts, getItemOffers, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
+import { searchProducts, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { ProductMetadata } from '../../types';
@@ -17,12 +17,26 @@ export const ProfitCalculator: React.FC = () => {
     const { t, language } = useLanguage();
     const { enabledMarketplaces } = useSettings();
 
+    // Filter marketplaces based on settings
+    const availableMarketplaces = SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id));
+
+    // Default to Brazil if available, otherwise first available
+    const defaultMarketplace = availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [marketplace, setMarketplace] = useState('A1RKKUPIHCS9HS'); // ES Default
+    const [marketplace, setMarketplace] = useState<string>(defaultMarketplace);
     const [product, setProduct] = useState<ProductMetadata | null>(null);
+
+    // Effect to ensure selected marketplace is valid when settings change
+    React.useEffect(() => {
+        if (!enabledMarketplaces.includes(marketplace)) {
+            const fallback = availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+            setMarketplace(fallback);
+        }
+    }, [enabledMarketplaces, marketplace, availableMarketplaces]);
     const [fbaFeesExpanded, setFbaFeesExpanded] = useState(true);
     const [fbmFeesExpanded, setFbmFeesExpanded] = useState(true);
     const [fbaStorageExpanded, setFbaStorageExpanded] = useState(true);
@@ -160,7 +174,9 @@ export const ProfitCalculator: React.FC = () => {
                 const attributes = item.attributes;
                 const dims = attributes?.item_dimensions?.[0];
                 const weight = attributes?.item_weight?.[0];
-                const price = summary?.price?.amount || 0;
+                // Robust price extraction matching Product Finder
+                const price = summary?.price?.amount || attributes?.list_price?.[0]?.value_with_tax || 0;
+                const currency = summary?.price?.currencyCode || attributes?.list_price?.[0]?.currency || (marketplace === 'A2Q3Y263D00KWC' ? 'BRL' : 'EUR');
 
                 setProduct({
                     id: item.asin,
@@ -169,7 +185,7 @@ export const ProfitCalculator: React.FC = () => {
                     brand: summary?.brandName || summary?.brand,
                     category: summary?.websiteDisplayGroupName,
                     price: price,
-                    currency: summary?.price?.currencyCode,
+                    currency: currency,
                     bsr: (data.items[0] as any)?.salesRanks?.[0]?.rank,
                     offers: (data.items[0] as any)?.activeSellers,
                     dimensions: dims ? { length: dims.length, width: dims.width, height: dims.height, unit: dims.unit } : undefined,
@@ -184,22 +200,6 @@ export const ProfitCalculator: React.FC = () => {
                     setFbmReferral(estRef);
                 }
 
-                // --- Background Pricing Fetch for accurate Real-time data ---
-                getItemOffers(item.asin, marketplace).then(offers => {
-                    if (offers && offers.price > 0) {
-                        setFbaPrice(offers.price);
-                        setFbmPrice(offers.price);
-                        const newRef = offers.price * 0.15;
-                        setFbaReferral(newRef);
-                        setFbmReferral(newRef);
-                        setProduct(prev => prev ? {
-                            ...prev,
-                            price: offers.price,
-                            currency: offers.currency,
-                            offers: offers.activeSellers
-                        } : null);
-                    }
-                }).catch(err => console.error("Pricing fetch failed:", err));
             }
         } catch (err: any) {
             console.error(err);
