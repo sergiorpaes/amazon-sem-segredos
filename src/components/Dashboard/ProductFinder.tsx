@@ -279,13 +279,9 @@ export const ProductFinder: React.FC = () => {
           // Compress large photos to avoid 504 errors on serverless functions 
           const compressedBase64 = await compressImage(base64Image, 800, 800, 0.7);
           const analysis = await analyzeImage(compressedBase64);
-          if (analysis) {
-            const term = analysis.amazon_optimized_query || analysis.searchKeywords || analysis.description;
-            if (term) {
-              setSearchTerm(term);
-              // Trigger search with the new term
-              handleSearch(false, term);
-            }
+          if (analysis && analysis.amazon_optimized_query) {
+            setSearchTerm(analysis.amazon_optimized_query);
+            handleSearch(false, analysis.amazon_optimized_query);
           }
         } catch (err: any) {
           setError(err.message || "Erro ao analisar imagem");
