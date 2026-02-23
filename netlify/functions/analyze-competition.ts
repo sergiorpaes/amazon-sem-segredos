@@ -19,7 +19,19 @@ export const handler: Handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body || "{}");
-        const { asin, marketplaceId } = body;
+        const {
+            asin,
+            marketplaceId,
+            productTitle,
+            productBrand,
+            productCategory,
+            productPrice,
+            productBsr,
+            productSales,
+            productReviews,
+            productActiveSellers,
+            productCurrency,
+        } = body;
 
         if (!asin) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: "Missing ASIN" }) };
@@ -58,100 +70,134 @@ export const handler: Handler = async (event, context) => {
             };
         }
 
-        // 2. Fetch Reviews (Scraping)
-        // Marketplace detection (default BR if not specified)
-        const domain = marketplaceId === 'A1RKKUPIHCS9HS' ? 'amazon.com.br' : 'amazon.com';
+        // 2. Try to fetch Reviews (Scraping - best effort, may be blocked by Amazon)
+        const domain = (() => {
+            const domainMap: Record<string, string> = {
+                'A1RKKUPIHCS9HS': 'amazon.es',
+                'A1PA6795UKMFR9': 'amazon.de',
+                'A13V1IB3VIYZZH': 'amazon.fr',
+                'APJ6JRA9NG5V4': 'amazon.it',
+                'A1F83G8C2ARO7P': 'amazon.co.uk',
+                'A2Q3Y263D00KWC': 'amazon.com.br',
+                'A1RKKUPIHCS9HS': 'amazon.es',
+            };
+            return domainMap[marketplaceId] || 'amazon.com';
+        })();
+
         const reviewsUrl = `https://www.${domain}/product-reviews/${asin}/ref=cm_cr_arp_d_viewopt_sr?sortBy=recent`;
-
-        console.log(`[AI Analysis] Scraping reviews from: ${reviewsUrl}`);
-
-        const response = await fetch(reviewsUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache',
-                'Referer': `https://www.${domain}/dp/${asin}`
-            }
-        });
-
-        const html = await response.text();
-        const isBlocked = html.includes('captcha') || html.includes('Robot Check') || html.includes('api-services-support@amazon.com');
-
-        // Resilient Extraction: Try multiple common selectors
-        const selectors = [
-            /<span data-hook="review-body"[^>]*>([\s\S]*?)<\/span>/g,
-            /<div data-hook="review-collapsed"[^>]*>([\s\S]*?)<\/div>/g,
-            /<span class="a-size-base review-text review-text-content"[^>]*>([\s\S]*?)<\/span>/g
-        ];
+        console.log(`[AI Analysis] Attempting to scrape reviews from: ${reviewsUrl}`);
 
         const reviews: string[] = [];
-        for (const selector of selectors) {
-            let match;
-            while ((match = selector.exec(html)) !== null && reviews.length < 10) {
-                const cleanText = match[1].replace(/<[^>]*>?/gm, '').trim();
-                if (cleanText && !reviews.includes(cleanText)) reviews.push(cleanText);
+        try {
+            const response = await fetch(reviewsUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Cache-Control': 'no-cache',
+                    'Referer': `https://www.${domain}/dp/${asin}`
+                }
+            });
+
+            const html = await response.text();
+            const isBlocked = html.includes('captcha') || html.includes('Robot Check') || html.includes('api-services-support@amazon.com');
+
+            if (!isBlocked) {
+                const selectors = [
+                    /<span data-hook="review-body"[^>]*>([\s\S]*?)<\/span>/g,
+                    /class="a-size-base review-text review-text-content"[^>]*>([\s\S]*?)<\/span>/g,
+                ];
+                for (const selector of selectors) {
+                    let match;
+                    while ((match = selector.exec(html)) !== null && reviews.length < 10) {
+                        const cleanText = match[1].replace(/<[^>]*>?/gm, '').trim();
+                        if (cleanText && cleanText.length > 20 && !reviews.includes(cleanText)) {
+                            reviews.push(cleanText);
+                        }
+                    }
+                    if (reviews.length > 0) break;
+                }
             }
-            if (reviews.length > 0) break;
+            console.log(`[AI Analysis] Extracted ${reviews.length} reviews. Blocked: ${isBlocked}`);
+        } catch (scrapeError) {
+            console.warn('[AI Analysis] Review scraping failed, proceeding with product data only.', scrapeError);
         }
 
-        console.log(`[AI Analysis] Extracted ${reviews.length} reviews for ASIN: ${asin}. Blocked: ${isBlocked}`);
-
-        // 3. AI Analysis with Gemini
+        // 3. Build a rich, product-specific AI prompt
         const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
         if (!apiKey) throw new Error("Missing Gemini API Key");
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
-        const prompt = reviews.length > 0
-            ? `Analyze these ${reviews.length} recent customer reviews for Amazon product ASIN ${asin}:
-            
-            REVIEWS:
-            ${reviews.join('\n---\n')}
-            
-            IDENTIFY:
-            1. Top 3 recurring complaints (Fraquezas da Concorrência).
-            2. Suggest how a new seller can improve this product or listing to beat this competitor (Sua Oportunidade de Melhoria).
-            
-            RESPONSE FORMAT (JSON):
-            {
-                "weaknesses": ["Complaint 1", "Complaint 2", "Complaint 3"],
-                "improvements": ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
-                "summary": "Short overview based on real feedback."
-            }
-            
-            Language: Portuguese BR.`
-            : `I have no current customer reviews for Amazon product ASIN ${asin} (it might be new or scraping was unavailable).
-            
-            TASK: 
-            Based on the fact that this is an Amazon product, provide a general competitive analysis for a listing in this category:
-            1. Common weaknesses for similar items (Fraquezas típicas da categoria).
-            2. Standard improvement opportunities (Melhorias sugeridas).
-            
-            RESPONSE FORMAT (JSON):
-            {
-                "weaknesses": ["General Weakness 1", "General Weakness 2", "General Weakness 3"],
-                "improvements": ["Standard Improvement 1", "Standard Improvement 2", "Standard Improvement 3"],
-                "summary": "Nenhuma avaliação real foi encontrada para este ASIN no momento. Esta análise é baseada em tendências gerais da categoria."
-            }
-            
-            Language: Portuguese BR.`;
+        const currency = productCurrency || 'EUR';
+        const productContext = `
+PRODUTO ANALISADO:
+- ASIN: ${asin}
+- Título: ${productTitle || 'Desconhecido'}
+- Marca: ${productBrand || 'Sem marca'}
+- Categoria: ${productCategory || 'Geral'}
+- Preço: ${productPrice ? `${productPrice} ${currency}` : 'Desconhecido'}
+- BSR (Ranking de Vendas): ${productBsr ? `#${productBsr.toLocaleString()}` : 'Desconhecido'}
+- Vendas Estimadas/mês: ${productSales ? `${productSales} unidades` : 'Desconhecido'}
+- Avaliações: ${productReviews ? `${productReviews} reviews` : 'Desconhecido'}
+- Vendedores Ativos: ${productActiveSellers || 'Desconhecido'}
+- Marketplace: ${domain}
+`.trim();
+
+        const reviewContext = reviews.length > 0
+            ? `\nREVIEWS REAIS DOS CLIENTES (${reviews.length} extraídas):\n${reviews.map((r, i) => `${i + 1}. "${r}"`).join('\n')}`
+            : `\nNota: Não foi possível extrair reviews em tempo real. Baseie a análise exclusivamente nos dados do produto acima.`;
+
+        const prompt = `Você é um especialista em marketplace Amazon com profundo conhecimento em análise competitiva, copy de listings e psicologia do comprador online.
+
+${productContext}
+${reviewContext}
+
+SUA TAREFA: Faz uma análise competitiva ESPECÍFICA e ACIONÁVEL para este produto exato. As respostas devem ser 100% personalizadas para este produto, sua categoria, faixa de preço e concorrência. NUNCA dê respostas genéricas.
+
+INSTRUCÇÕES:
+${reviews.length > 0
+                ? `- Analise as reviews reais para identificar padrões de insatisfação recorrentes específicos deste produto/categoria.
+- Identifique os 3 pontos fracos mais mencionados pelos compradores.
+- Baseie as oportunidades de melhoria diretamente nos problemas identificados.`
+                : `- Com base no preço (${productPrice ? `${productPrice} ${currency}` : 'N/A'}), BSR #${productBsr || 'N/A'} e categoria "${productCategory || 'Geral'}", infira os pontos fracos típicos desta faixa de mercado.
+- Considera o perfil do comprador que compra nesta categoria e neste preço.
+- Gera oportunidades de melhoria estratégicas e específicas para superar concorrentes com este tipo de produto.`}
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "weaknesses": [
+    "Fraqueza específica 1 relacionada a ${productCategory || 'este produto'}",
+    "Fraqueza específica 2 relacionada a ${productTitle?.split(' ').slice(0, 4).join(' ') || 'este produto'}",
+    "Fraqueza específica 3"
+  ],
+  "improvements": [
+    "Oportunidade concreta 1 para vencer este concorrente nesta categoria",
+    "Oportunidade concreta 2",
+    "Oportunidade concreta 3"
+  ],
+  "summary": "Resumo de 2 linhas sobre o posicionamento competitivo deste produto específico."
+}
+
+Idioma: Português do Brasil. Seja específico, direto e acionável.`;
 
         const result = await model.generateContent(prompt);
         const aiText = result.response.text();
 
         // Extract JSON from AI response (handle potential markdown fences)
         const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-        const analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : { error: "Failed to parse AI response", raw: aiText };
+        const analysis = jsonMatch
+            ? JSON.parse(jsonMatch[0])
+            : { error: "Failed to parse AI response", raw: aiText };
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 ...analysis,
-                rawReviews: reviews.slice(0, 5)
+                rawReviews: reviews.slice(0, 5),
+                usedRealReviews: reviews.length > 0,
             })
         };
 

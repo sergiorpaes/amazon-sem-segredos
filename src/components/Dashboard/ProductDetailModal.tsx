@@ -62,7 +62,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
             const response = await fetch('/.netlify/functions/analyze-competition', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ asin: product.id, marketplaceId: product.marketplace_id })
+                body: JSON.stringify({
+                    asin: product.id,
+                    marketplaceId: product.marketplace_id,
+                    productTitle: product.title,
+                    productBrand: product.brand,
+                    productCategory: product.category,
+                    productPrice: product.price,
+                    productBsr: product.bsr,
+                    productSales: product.sales,
+                    productReviews: product.reviews,
+                    productActiveSellers: product.activeSellers,
+                    productCurrency: product.currency,
+                })
+
             });
 
             const data = await response.json();
