@@ -31,6 +31,7 @@ export const handler: Handler = async (event, context) => {
             productReviews,
             productActiveSellers,
             productCurrency,
+            language = 'pt',
         } = body;
 
         if (!asin) {
@@ -79,7 +80,6 @@ export const handler: Handler = async (event, context) => {
                 'APJ6JRA9NG5V4': 'amazon.it',
                 'A1F83G8C2ARO7P': 'amazon.co.uk',
                 'A2Q3Y263D00KWC': 'amazon.com.br',
-                'A1RKKUPIHCS9HS': 'amazon.es',
             };
             return domainMap[marketplaceId] || 'amazon.com';
         })();
@@ -168,19 +168,19 @@ ${reviews.length > 0
 FORMATO DE RESPOSTA (JSON):
 {
   "weaknesses": [
-    "Fraqueza específica 1 relacionada a ${productCategory || 'este produto'}",
-    "Fraqueza específica 2 relacionada a ${productTitle?.split(' ').slice(0, 4).join(' ') || 'este produto'}",
+    "Fraqueza específica 1",
+    "Fraqueza específica 2",
     "Fraqueza específica 3"
   ],
   "improvements": [
-    "Oportunidade concreta 1 para vencer este concorrente nesta categoria",
+    "Oportunidade concreta 1",
     "Oportunidade concreta 2",
     "Oportunidade concreta 3"
   ],
-  "summary": "Resumo de 2 linhas sobre o posicionamento competitivo deste produto específico."
+  "summary": "Resumo de 2 linhas sobre o posicionamento competitivo."
 }
 
-Idioma: Português do Brasil. Seja específico, direto e acionável.`;
+Idioma da resposta: ${language === 'pt' ? 'Português do Brasil' : language === 'es' ? 'Espanhol' : 'Inglês'}. Seja específico, direto e acionável.`;
 
         const result = await model.generateContent(prompt);
         const aiText = result.response.text();

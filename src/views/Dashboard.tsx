@@ -109,12 +109,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <div className="bg-brand-50 p-6 rounded-full mb-6">
               <span className="text-4xl">🚀</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Ads Manager AI (Premium)</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('module.ads_manager')} (Premium)</h2>
             <p className="text-gray-500 max-w-md">
-              Este módulo utiliza Reinforcement Learning para otimizar seus lances e palavras-chave automaticamente. Disponível no plano Premium.
+              {t('ads.premium_desc')}
             </p>
             <button className="mt-6 px-6 py-2 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700">
-              Fazer Upgrade
+              {t('profile.upgrade')}
             </button>
           </div>
         );
@@ -160,7 +160,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.PROFIT_CALCULATOR: return t('module.profit_calculator');
       case DashboardModule.ADS_MANAGER: return t('module.ads_manager');
       case DashboardModule.SETTINGS: return t('module.settings');
-      case DashboardModule.ACCOUNT: return "Minha Conta";
+      case DashboardModule.ACCOUNT: return t('module.account');
       default: return t('module.product_finder');
     }
   };
@@ -186,11 +186,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         window.location.href = data.url;
       } else {
         console.error('Erro ao criar checkout:', data.error);
-        alert('Erro ao iniciar checkout. Tente novamente.');
+        alert(t('checkout.error_base'));
       }
     } catch (error) {
       console.error('Erro ao processar checkout:', error);
-      alert('Erro de conexão. Verifique sua internet.');
+      alert(t('checkout.error_conn'));
     } finally {
       setLoadingCheckout(false);
     }
@@ -224,7 +224,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <div className="hidden md:flex items-center gap-2 bg-brand-50 dark:bg-brand-900/20 px-3 py-1.5 rounded-lg border border-brand-100 dark:border-brand-700/50 mr-2">
               <Coins className="w-4 h-4 text-brand-600" />
               <span className="font-bold text-brand-700">{user?.credits_balance || 0}</span>
-              <span className="text-xs text-brand-500 font-medium">Créditos</span>
+              <span className="text-xs text-brand-500 font-medium">{t('profile.credits')}</span>
               <button
                 onClick={() => setIsBuyCreditsOpen(true)}
                 className="ml-2 w-5 h-5 flex items-center justify-center bg-brand-600 text-white rounded-full hover:bg-brand-700 transition-colors"
@@ -240,7 +240,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             >
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-brand-600 transition-colors">
-                  {user?.full_name || user?.email || 'Usuário'}
+                  {user?.full_name || user?.email || t('profile.user_placeholder')}
                 </span>
                 <span className="text-xs text-brand-600 font-medium">
                   {user?.role === 'ADMIN' ? t('profile.admin_label') :
@@ -275,7 +275,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-600 flex items-center gap-3 transition-colors"
                   >
                     <User className="w-4 h-4" />
-                    Minha Conta
+                    {t('module.account')}
                   </button>
 
                   <button

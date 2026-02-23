@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag, Sparkles, Camera, Upload } from 'lucide-react';
+import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag, Sparkles, Camera, Upload, Filter, DollarSign } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { searchProducts, getItemOffers, getBatchOffers, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
@@ -318,6 +318,11 @@ export const ProductFinder: React.FC = () => {
   const [selectedProductForGraph, setSelectedProductForGraph] = useState<ProductDisplay | null>(null); // Modal State
   const [selectedProductForDetail, setSelectedProductForDetail] = useState<ProductDisplay | null>(null); // Detail Modal State
 
+  // Filter States
+  const [brandFilter, setBrandFilter] = useState('');
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+
   // Sorting
   type SortConfig = {
     key: keyof ProductDisplay;
@@ -333,34 +338,37 @@ export const ProductFinder: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  // 1. First, apply filters (Brand, Price)
+  const filteredProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const matchBrand = !brandFilter || p.brand.toLowerCase().includes(brandFilter.toLowerCase());
+      const matchMin = minPrice === null || (p.price || 0) >= minPrice;
+      const matchMax = maxPrice === null || (p.price || 0) <= maxPrice;
+      return matchBrand && matchMin && matchMax;
+    });
+  }, [products, brandFilter, minPrice, maxPrice]);
+
+  // 2. Sorting based on filtered results
   const sortedProducts = React.useMemo(() => {
-    let sortableItems = [...products];
+    let sortableItems = [...filteredProducts];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        // Handle nested or special cases if needed, but simple key access works for top-level
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
-
-        // Push null/undefined to the bottom
         if (aValue === null || aValue === undefined) return 1;
         if (bValue === null || bValue === undefined) return -1;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
     return sortableItems;
-  }, [products, sortConfig]);
+  }, [filteredProducts, sortConfig]);
 
-  // Selection Handlers
+  // 3. Selection Handlers
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedProductIds(new Set(products.map(p => p.id)));
+      setSelectedProductIds(new Set(filteredProducts.map(p => p.id)));
     } else {
       setSelectedProductIds(new Set());
     }
@@ -376,16 +384,25 @@ export const ProductFinder: React.FC = () => {
     setSelectedProductIds(newSelected);
   };
 
-  // Summary Metrics Calculation (based on current products)
-  const totalNicheSales = products.reduce((acc, curr) => acc + (curr.sales || 0), 0);
-  const avgNetMargin = products.length > 0
-    ? products.reduce((acc, curr) => acc + ((curr.price || 0) - (curr.fbaFees || 0)), 0) / products.length
+  // 4. Analyzed Products (Used for Summary Metrics)
+  // Logic: Use selected items if any, otherwise use all filtered items.
+  const analyzedProducts = React.useMemo(() => {
+    if (selectedProductIds.size > 0) {
+      return products.filter(p => selectedProductIds.has(p.id));
+    }
+    return filteredProducts;
+  }, [products, filteredProducts, selectedProductIds]);
+
+  // Summary Metrics Calculation
+  const totalNicheSales = analyzedProducts.reduce((acc, curr) => acc + (curr.sales || 0), 0);
+  const avgNetMargin = analyzedProducts.length > 0
+    ? analyzedProducts.reduce((acc, curr) => acc + ((curr.price || 0) - (curr.fbaFees || 0)), 0) / analyzedProducts.length
     : 0;
-  const avgCompetition = products.length > 0
-    ? products.reduce((acc, curr) => acc + (curr.activeSellers || 0), 0) / products.length
+  const avgCompetition = analyzedProducts.length > 0
+    ? analyzedProducts.reduce((acc, curr) => acc + (curr.activeSellers || 0), 0) / analyzedProducts.length
     : 0;
-  const topPerformers = products.filter(p => p.percentile === '1%' || p.percentile === '3%').length;
-  const opportunityScore = products.length > 0 ? (topPerformers / products.length) * 100 : 0;
+  const topPerformers = analyzedProducts.filter(p => p.percentile === '1%' || p.percentile === '3%').length;
+  const opportunityScore = analyzedProducts.length > 0 ? (topPerformers / analyzedProducts.length) * 100 : 0;
 
 
   /* Helper to map API items to display items */
@@ -743,6 +760,20 @@ export const ProductFinder: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {selectedProductIds.size > 0 && (
+          <div className="lg:col-span-4 bg-brand-50 border border-brand-100 rounded-xl px-4 py-2 flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2 text-brand-700 font-bold text-xs uppercase tracking-wider">
+              <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+              {t('pf.selected_analysis')} ({selectedProductIds.size})
+            </div>
+            <button
+              onClick={() => setSelectedProductIds(new Set())}
+              className="text-[10px] font-bold text-brand-600 hover:text-brand-800 underline underline-offset-2"
+            >
+              {t('pf.clear_filters')}
+            </button>
+          </div>
+        )}
         {/* Total Niche Sales */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
@@ -755,37 +786,37 @@ export const ProductFinder: React.FC = () => {
             <span className="text-3xl font-bold text-gray-900">{totalNicheSales.toLocaleString()}</span>
             <Search className="w-5 h-5 text-brand-500 mb-1.5" />
           </div>
-          <div className="text-[10px] text-gray-500 mt-1">unidades estimadas / mês</div>
+          <div className="text-[10px] text-gray-500 mt-1">{t('pf.est_sales_month')}</div>
         </div>
 
         {/* Avg Net Margin */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Margem Líquida Média</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('pf.avg_net_margin')}</div>
           <div className="text-2xl font-bold text-gray-900 tracking-tight">
             {new Intl.NumberFormat(undefined, { style: 'currency', currency: products[0]?.currency || 'USD' }).format(avgNetMargin)}
           </div>
           <div className="h-1.5 w-full bg-green-50 mt-2 rounded-full overflow-hidden">
             <div className="h-full bg-green-500 w-[65%]"></div>
           </div>
-          <div className="text-[10px] text-gray-400 mt-1">Preço - Taxas FBA</div>
+          <div className="text-[10px] text-gray-400 mt-1">{t('pf.price_fba_fees')}</div>
         </div>
 
         {/* Competition Level */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nível de Competição</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('pf.comp_level')}</div>
           <div className="text-2xl font-bold text-gray-900 tracking-tight">{avgCompetition.toFixed(1)}</div>
           <div className="flex items-center gap-1 mt-2">
             <Activity className={`w-4 h-4 ${avgCompetition > 10 ? 'text-red-500' : 'text-green-500'}`} />
-            <span className="text-[10px] text-gray-500 font-medium">sellers ativos por listing</span>
+            <span className="text-[10px] text-gray-500 font-medium">{t('pf.active_sellers_per_listing')}</span>
           </div>
         </div>
 
         {/* Opportunity Score */}
         <div className="bg-gradient-to-br from-brand-600 to-brand-700 p-5 rounded-2xl shadow-lg shadow-brand-200 text-white flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold text-brand-100 uppercase tracking-widest mb-2">Opportunity Score</div>
+            <div className="text-[10px] font-bold text-brand-100 uppercase tracking-widest mb-2">{t('pf.opportunity_score')}</div>
             <div className="text-3xl font-bold mb-1">{opportunityScore.toFixed(0)}%</div>
-            <div className="text-[10px] text-brand-100 font-medium">% de produtos Top 1% ou 3%</div>
+            <div className="text-[10px] text-brand-100 font-medium">{t('pf.opportunity_score_desc')}</div>
           </div>
           <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl font-bold border border-white/30">
             {Math.min(10, Math.floor(opportunityScore / 10))}
@@ -804,27 +835,100 @@ export const ProductFinder: React.FC = () => {
       {products.length === 0 && !isSearching && !error ? (
         <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-gray-100 shadow-sm mt-8 animate-in fade-in zoom-in-95 duration-500">
           <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-8 ring-brand-50/50">
-            <Search className="w-10 h-10 text-brand-500" />
+            <Search className="w-10 h-10 text-brand-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Onde está o lucro hoje?</h3>
-          <p className="text-gray-500 max-w-md text-center mb-8">
-            Cole um ASIN ou pesquise por palavra-chave para começar a descobrir produtos altamente lucrativos.
-          </p>
-          <button onClick={() => {
-            const el = document.querySelector('input[type="text"]') as HTMLInputElement;
-            if (el) el.focus();
-          }} className="px-6 py-2.5 bg-brand-100 text-brand-700 hover:bg-brand-200 rounded-xl font-bold transition-colors">
-            Fazer Primeira Busca
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('pf.empty_title')}</h3>
+          <p className="text-gray-500 max-w-sm text-center text-lg mb-8">{t('pf.empty_desc')}</p>
+          <button
+            onClick={() => {
+              setSearchTerm('Curling Iron');
+              onSearchClick();
+            }}
+            className="px-8 py-3 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 transition-all shadow-lg shadow-brand-200"
+          >
+            {t('pf.first_search')}
           </button>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mt-4">
-          <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <div className="text-sm text-gray-600 font-medium">
-              {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
+          <div className="p-4 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50/50 gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600 font-medium">
+                {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
+              </div>
+
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${showFilter || brandFilter || minPrice || maxPrice
+                  ? 'bg-brand-50 border-brand-200 text-brand-700'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+              >
+                <Filter size={14} />
+                {t('pf.filter')}
+                {(brandFilter || minPrice || maxPrice) && <div className="w-1.5 h-1.5 rounded-full bg-brand-500 ml-0.5" />}
+              </button>
             </div>
 
+            <div className="flex items-center gap-2">
+              {/* Any other action buttons can go here */}
+            </div>
           </div>
+
+          {/* Collapsible Filter Bar */}
+          {showFilter && (
+            <div className="p-4 bg-white border-b border-gray-100 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('pf.brand')}</label>
+                  <input
+                    type="text"
+                    value={brandFilter}
+                    onChange={(e) => setBrandFilter(e.target.value)}
+                    placeholder="..."
+                    className="px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-48"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('pf.min_price')}</label>
+                  <input
+                    type="number"
+                    value={minPrice || ''}
+                    onChange={(e) => setMinPrice(e.target.value ? Number(e.target.value) : null)}
+                    placeholder="0.00"
+                    className="px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-28"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('pf.max_price')}</label>
+                  <input
+                    type="number"
+                    value={maxPrice || ''}
+                    onChange={(e) => setMaxPrice(e.target.value ? Number(e.target.value) : null)}
+                    placeholder="999..."
+                    className="px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-1 focus:ring-brand-500 outline-none w-28"
+                  />
+                </div>
+
+                <div className="flex items-end h-full pt-5">
+                  {(brandFilter || minPrice || maxPrice) && (
+                    <button
+                      onClick={() => {
+                        setBrandFilter('');
+                        setMinPrice(null);
+                        setMaxPrice(null);
+                      }}
+                      className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      {t('pf.clear_filters')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
@@ -888,8 +992,6 @@ export const ProductFinder: React.FC = () => {
                       )}
                     </div>
                   </th>
-
-
 
                   <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('fbaFees')}>
                     <div className="flex items-center justify-end gap-1">
@@ -986,14 +1088,14 @@ export const ProductFinder: React.FC = () => {
                             <Tag
                               size={14}
                               className="text-amber-500 cursor-help"
-                              title="Preço baseado na menor oferta disponível (Professional Seller)"
+                              title={t('pf.price_fallback_tip')}
                             />
                           )}
                           {product.isListPrice && (
                             <Tag
                               size={14}
                               className="text-red-500 cursor-help"
-                              title="Preço de Tabela (MSRP). O preço real de venda pode ser menor."
+                              title={t('pf.msrp_tip')}
                             />
                           )}
                         </div>
@@ -1006,7 +1108,7 @@ export const ProductFinder: React.FC = () => {
                                 product.percentile === '3%' ? 'bg-green-100 text-green-800 border-green-200' :
                                   'bg-gray-100 text-gray-600 border-gray-200'
                                 }`}
-                              title={`Este produto está entre os top ${product.categoryTotal?.toLocaleString()} itens da categoria ${t(product.category)} (Baseado no Censo 2025).`}
+                              title={t('pf.top_percentile_tip').replace('{total}', product.categoryTotal?.toLocaleString() || '').replace('{category}', t(product.category))}
                             >
                               Top {product.percentile}
                             </span>
@@ -1014,15 +1116,15 @@ export const ProductFinder: React.FC = () => {
                           {product.percentile === 'NEW_RISING' && (
                             <span
                               className="text-[9px] font-bold px-2 py-0.5 rounded-[4px] uppercase tracking-tighter bg-blue-100 text-blue-800 border border-blue-200 shadow-sm"
-                              title="BSR não disponível no momento. Interesse de mercado estimado via volume de busca mensal."
+                              title={t('pf.bsr_tool_tip')}
                             >
                               New/Rising
                             </span>
                           )}
-                          <span className="text-gray-900 font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? 'BSR indisponível. Vendas estimadas baseadas no interesse de mercado.' : `Vendas estimadas nos últimos 30 dias baseadas no Censo BSR 2025 para ${t(product.category)}.`}>
-                            {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : (product.percentile === 'NEW_RISING' ? 'Emergente' : '-')}
+                          <span className="text-gray-900 font-bold text-base leading-none" title={product.percentile === 'NEW_RISING' ? t('pf.bsr_unavailable_tip') : t('pf.sales_census_tip').replace('{category}', t(product.category))}>
+                            {product.sales ? (product.sales < 10 ? '< 10' : product.sales.toLocaleString()) : (product.percentile === 'NEW_RISING' ? t('pf.emerging') : '-')}
                           </span>
-                          {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">unidades/mês</span>}
+                          {product.sales && <span className="text-[11px] text-gray-400 font-medium leading-none">{t('pf.units_month')}</span>}
                         </div>
                       </td>
                       <td className="py-4 pr-5 pl-0 text-left align-top min-w-[300px]">
@@ -1061,7 +1163,11 @@ export const ProductFinder: React.FC = () => {
                           <div className="flex flex-col items-end gap-0.5">
                             <span
                               className="cursor-help"
-                              title={`Referral (${Math.round((product.fbaBreakdown?.referral || 0) / (product.price || 1) * 100)}%): ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0)} | Fulfillment: ${new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0)}${product.fbaBreakdown?.is_estimate ? ' (Estimado 30% Fallback)' : ''}`}
+                              title={t('pf.fba_breakdown_tip')
+                                .replace('{rate}', Math.round((product.fbaBreakdown?.referral || 0) / (product.price || 1) * 100).toString())
+                                .replace('{referral}', new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.referral || 0))
+                                .replace('{fulfillment}', new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaBreakdown?.fulfillment || 0))
+                                .replace('{estimate}', product.fbaBreakdown?.is_estimate ? ' (Estimado 30% Fallback)' : '')}
                             >
                               -{new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : (product.currency === 'EUR' ? 'es-ES' : 'en-US'), { style: 'currency', currency: product.currency || 'USD' }).format(product.fbaFees)}{product.fbaBreakdown?.is_estimate ? '*' : ''}
                             </span>
@@ -1161,14 +1267,19 @@ export const ProductFinder: React.FC = () => {
 
           {/* Load More Button */}
           {products.length > 0 && (
-            <div className="p-4 border-t border-gray-100 flex flex-col items-center gap-2 bg-gray-50 w-full">
-              <button
-                onClick={() => handleSearch(true)}
-                disabled={isSearching || !nextToken}
-                className="px-6 py-2 bg-white border border-gray-300 shadow-sm text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSearching ? 'Loading...' : (nextToken ? 'Load More Results' : 'No More Results')}
-              </button>
+            <div className="px-6 py-12 text-center bg-gray-50/50 border-t border-gray-100">
+              {showLoadMore ? (
+                <button
+                  onClick={() => handleSearch(true)}
+                  disabled={isSearching}
+                  className="px-8 py-3 bg-white border-2 border-brand-200 text-brand-700 rounded-2xl font-bold hover:bg-brand-50 transition-all shadow-sm flex items-center gap-2 mx-auto"
+                >
+                  {isSearching ? <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" /> : <ChevronDown className="w-5 h-5" />}
+                  {isSearching ? t('pf.loading_more') : t('pf.load_more')}
+                </button>
+              ) : (
+                <div className="text-sm text-gray-400 font-medium">{t('pf.no_more')}</div>
+              )}
             </div>
           )}
         </div>

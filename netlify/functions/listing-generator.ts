@@ -66,7 +66,7 @@ export const handler = async (event: any) => {
         }
 
         const body = JSON.parse(event.body || '{}');
-        const { productName, category, material, benefits, differentiators, audience, problem, usage } = body;
+        const { productName, category, material, benefits, differentiators, audience, problem, usage, language = 'pt' } = body;
 
         if (!productName || !category) {
             return { statusCode: 400, body: JSON.stringify({ error: 'Product Name and Category are required.' }) };
@@ -111,37 +111,35 @@ export const handler = async (event: any) => {
         const model = genAI.getGenerativeModel({ model: aiModel });
 
         // --- SINGLE OPTIMIZED PROMPT ---
-        const prompt = `
-        Você é um especialista em SEO para Amazon, copywriting de alta conversão e marketplaces europeus.
-        Seu foco é criar anúncios otimizados para a Amazon Espanha (Amazon.es), respeitando as boas práticas da plataforma e os limites de caracteres.
+        const targetLangName = language === 'pt' ? 'Português (Portugal)' : language === 'es' ? 'Espanhol' : 'Inglês';
 
-        Crie um anúncio COMPLETO e OTIMIZADO para Amazon, contendo:
+        const prompt = `
+        Você é um especialista em SEO para Amazon, copywriting de alta conversão e marketplaces globais.
+        Seu foco é criar anúncios otimizados para a Amazon, respeitando as boas práticas da plataforma e os limites de caracteres.
+
+        Crie um anúncio COMPLETO e OTIMIZADO para Amazon no idioma: **${targetLangName}**.
+
+        ESTRUTURA DO ANÚNCIO:
 
         1️⃣ TÍTULO DO PRODUTO (máx. 200 caracteres)
-        - Em ESPANHOL
+        - No idioma ${targetLangName}
         - Com as principais palavras-chave no início
         - Otimizado para SEO da Amazon
 
         2️⃣ BULLET POINTS / CARACTERÍSTICAS (${bulletCount} bullets)
-        - Em ESPANHOL
-        - ${isPro ? 'Como você é um usuário ELITE (PRO/Premium), gere 10 bullet points extremamente detalhados.' : 'Gere 5 bullet points focados em benefícios.'}
+        - No idioma ${targetLangName}
+        - ${isPro ? `Como você é um usuário ELITE (PRO/Premium), gere ${bulletCount} bullet points extremamente detalhados.` : `Gere ${bulletCount} bullet points focados em benefícios.`}
         - Focados em benefícios + diferenciais
         - Linguagem clara, objetiva e persuasiva
 
         3️⃣ DESCRIÇÃO LONGA
-        - Em ESPANHOL
+        - No idioma ${targetLangName}
         - Estrutura escaneável
         - Foco em solução de problema, benefícios e uso prático
 
-        4️⃣ VERSÃO EM PORTUGUÊS (PORTUGAL)
-        - Título
-        - Bullet points (${bulletCount} bullets)
-        - Descrição
-        - Linguagem adaptada para português europeu (PT-PT)
-
-        5️⃣ PALAVRAS-CHAVE BACKEND (SEARCH TERMS)
+        4️⃣ PALAVRAS-CHAVE BACKEND (SEARCH TERMS)
         - Lista separada por espaço
-        - Otimizada para Amazon ES
+        - Otimizada para o marketplace alvo
         
         📌 INFORMAÇÕES DO PRODUTO:
         - Nome do produto: ${productName}
@@ -155,13 +153,7 @@ export const handler = async (event: any) => {
         
         Retorne APENAS o JSON com a estrutura estrita abaixo (sem markdown, sem code blocks):
         {
-            "es": { 
-                "title": "...", 
-                "bullets": ["...", ...], 
-                "description": "...",
-                "keywords": "..." 
-            },
-            "pt": { 
+            "target": { 
                 "title": "...", 
                 "bullets": ["...", ...], 
                 "description": "...",

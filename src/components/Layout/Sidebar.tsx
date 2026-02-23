@@ -91,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation */}
         <nav className="flex-1 px-3 space-y-2 mt-4">
-          {!isCollapsed && <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Ferramentas</p>}
+          {!isCollapsed && <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('sidebar.tools')}</p>}
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentModule === item.id;

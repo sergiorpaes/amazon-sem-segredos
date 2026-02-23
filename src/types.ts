@@ -49,13 +49,19 @@ export interface OptimizationResult {
 }
 
 export interface ListingGeneratorResult {
-  es: {
+  target?: {
     title: string;
     bullets: string[];
     description: string;
     keywords: string;
   };
-  pt: {
+  es?: {
+    title: string;
+    bullets: string[];
+    description: string;
+    keywords: string;
+  };
+  pt?: {
     title: string;
     bullets: string[];
     description: string;

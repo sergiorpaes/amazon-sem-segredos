@@ -13,12 +13,7 @@ interface ProductDetailModalProps {
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, onClose, product }) => {
-    const { language } = useLanguage();
-    // Helper to access translations safely
-    const t = (key: string) => {
-        // @ts-ignore
-        return translations[language][key] || key;
-    };
+    const { t, language } = useLanguage();
 
     const [activeTab, setActiveTab] = useState<'details' | 'sourcing'>('details');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -84,12 +79,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                     productReviews: product.reviews,
                     productActiveSellers: product.activeSellers,
                     productCurrency: product.currency,
+                    language: language // Pass current language
                 })
 
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to analyze');
+            if (!response.ok) throw new Error(data.error || t('analyze.error'));
 
             setAnalysisResult(data);
         } catch (err: any) {
@@ -125,7 +121,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                     <div className="pr-4 flex-1">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-brand-100 text-brand-800 uppercase tracking-wide">
-                                {t(product.category) || product.category || 'Product'}
+                                {t(`category.${product.category}`) || product.category || t('common.product')}
                             </span>
                             {product.bsr && (
                                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500">
@@ -295,7 +291,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-blue-900">{t('sourcing.find_suppliers')}</h4>
-                                    <p className="text-sm text-blue-800 leading-tight">Pesquisamos automaticamente fornecedores de atacado para este produto.</p>
+                                    <p className="text-sm text-blue-800 leading-tight">{t('sourcing.desc')}</p>
                                 </div>
                             </div>
 
@@ -327,10 +323,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                     <Info className="w-4 h-4" /> {t('sourcing.estimated_cost')}
                                 </h4>
                                 <div className="text-3xl font-black text-amber-900 mb-2">
-                                    ~ {formatCurrency((product.price || 100) * 0.3)} <span className="text-sm font-normal text-amber-700">/ unidade</span>
+                                    ~ {formatCurrency((product.price || 100) * 0.3)} <span className="text-sm font-normal text-amber-700">/ {t('common.unit')}</span>
                                 </div>
                                 <p className="text-xs text-amber-800 leading-relaxed italic">
-                                    * Estimativa baseada na regra de ouro de 30% do preço de venda para produtos private label. Verifique sempre com fornecedores reais.
+                                    {t('sourcing.rule_of_thumb')}
                                 </p>
                             </div>
                         </div>

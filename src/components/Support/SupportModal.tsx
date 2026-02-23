@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Send, AlertCircle, CheckCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
+import { useLanguage } from '../../services/languageService';
 
 interface SupportModalProps {
     isOpen: boolean;
@@ -10,6 +11,7 @@ interface SupportModalProps {
 
 export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const { supportWhatsapp } = useSettings();
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
@@ -24,7 +26,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
     const handleWhatsappClick = () => {
         if (supportWhatsapp) {
             const cleanNumber = String(supportWhatsapp).replace(/\D/g, '');
-            const text = "Olá! Gostaria de uma ajuda com a plataforma Amazon Sem Segredos IA Suite.";
+            const text = t('support.whatsapp_text');
             window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`, '_blank');
         }
     };
@@ -47,13 +49,13 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                     subject,
                     message,
                     userEmail: user?.email,
-                    userName: user?.full_name || 'Usuário'
+                    userName: user?.full_name || t('profile.user_placeholder')
                 })
             });
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || 'Erro ao enviar ticket.');
+                throw new Error(data.error || t('support.error_send'));
             }
 
             setStatus('success');
@@ -66,7 +68,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
         } catch (error: any) {
             console.error('Support ticket error:', error);
             setStatus('error');
-            setErrorMessage(error.message || 'Houve um erro de comunicação. Tente novamente.');
+            setErrorMessage(error.message || t('support.error_default'));
         }
     };
 
@@ -75,8 +77,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
             <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-dark-700">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Central de Suporte</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Como podemos ajudar você hoje?</p>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('support.modal_title')}</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('support.modal_subtitle')}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -92,9 +94,9 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mb-4">
                                 <CheckCircle size={32} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Ticket Enviado!</h3>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('support.success_title')}</h3>
                             <p className="text-gray-600 dark:text-gray-400">
-                                Nossa equipe recebeu sua mensagem e responderá em breve.
+                                {t('support.success_desc')}
                             </p>
                         </div>
                     ) : (
@@ -106,8 +108,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                                             <MessageCircle size={20} />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-green-800 dark:text-green-300">Suporte VIP WhatsApp</h3>
-                                            <p className="text-xs text-green-700 dark:text-green-400">Atendimento prioritário para você.</p>
+                                            <h3 className="font-bold text-green-800 dark:text-green-300">{t('support.vip_title')}</h3>
+                                            <p className="text-xs text-green-700 dark:text-green-400">{t('support.vip_desc')}</p>
                                         </div>
                                     </div>
                                     <button
@@ -115,7 +117,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                                         className="w-full py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                                     >
                                         <MessageCircle size={18} />
-                                        Chamar no WhatsApp
+                                        {t('support.whatsapp_button')}
                                     </button>
 
                                     <div className="relative my-6">
@@ -123,7 +125,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                                             <span className="w-full border-t border-gray-100 dark:border-dark-600"></span>
                                         </div>
                                         <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-green-50 dark:bg-dark-800 px-2 text-gray-400 font-medium">Ou envie um ticket abaixo</span>
+                                            <span className="bg-green-50 dark:bg-dark-800 px-2 text-gray-400 font-medium">{t('support.or_ticket')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -131,23 +133,23 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assunto</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('support.subject_label')}</label>
                                     <input
                                         type="text"
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
-                                        placeholder="Resumo do problema"
+                                        placeholder={t('support.subject_placeholder')}
                                         className="w-full px-4 py-2 border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none rounded-lg"
                                         required
                                         disabled={status === 'loading'}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mensagem</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('support.message_label')}</label>
                                     <textarea
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
-                                        placeholder="Descreva seu problema ou dúvida em detalhes..."
+                                        placeholder={t('support.message_placeholder')}
                                         className="w-full px-4 py-2 border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none rounded-lg h-32 resize-none"
                                         required
                                         disabled={status === 'loading'}
@@ -168,7 +170,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                                         className="px-6 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 dark:hover:bg-dark-700 rounded-lg transition-colors"
                                         disabled={status === 'loading'}
                                     >
-                                        Cancelar
+                                        {t('support.cancel')}
                                     </button>
                                     <button
                                         type="submit"
@@ -180,7 +182,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                                         ) : (
                                             <>
                                                 <Send size={18} />
-                                                Enviar Ticket
+                                                {t('support.send')}
                                             </>
                                         )}
                                     </button>

@@ -181,7 +181,7 @@ export const ProfitCalculator: React.FC = () => {
         const isAsin = /^(B\w{9}|\d{9}[0-9X])$/.test(query);
 
         if (!isAsin) {
-            setError("Por favor, insira um ASIN válido (ex: B086PHS2V8). A calculadora aceita apenas ASINs.");
+            setError(t('sim.asin_error'));
             return;
         }
 
@@ -235,7 +235,7 @@ export const ProfitCalculator: React.FC = () => {
             }
         } catch (err: any) {
             console.error(err);
-            setError(err.message || "Erro ao buscar produto na Amazon.");
+            setError(err.message || t('sim.search_failed'));
         } finally { setIsSearching(false); }
     };
 
@@ -258,11 +258,11 @@ export const ProfitCalculator: React.FC = () => {
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('Relatório Estratégico AI', margin, 13);
+        doc.text(t('sim.report_title'), margin, 13);
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, margin, 21);
-        doc.text('Amazon Sem Segredos IA Suite', pageW - margin, 21, { align: 'right' });
+        doc.text(`${t('sim.generated_at')}: ${new Date().toLocaleString(language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-US'))}`, margin, 21);
+        doc.text(t('sim.suite_name'), pageW - margin, 21, { align: 'right' });
 
         // ---- Product Info ----
         y = 36;
@@ -271,7 +271,7 @@ export const ProfitCalculator: React.FC = () => {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 113, 133);
-            doc.text('Produto Analisado', margin, y);
+            doc.text(t('sim.analyzed_product'), margin, y);
             y += 6;
             doc.setTextColor(50, 50, 50);
             doc.setFontSize(9);
@@ -296,7 +296,7 @@ export const ProfitCalculator: React.FC = () => {
             doc.setFontSize(9);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(150, 150, 150);
-            doc.text('Nenhum produto pesquisado. Análise baseada nos valores manuais inseridos.', margin, y);
+            doc.text(t('sim.no_product_search'), margin, y);
             y += 8;
         }
 
@@ -310,8 +310,8 @@ export const ProfitCalculator: React.FC = () => {
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 113, 133);
-        doc.text('FBA — Logística da Amazon', col1X, y);
-        doc.text('FBM — Logística do Vendedor', col2X, y);
+        doc.text(t('sim.fba_title'), col1X, y);
+        doc.text(t('sim.fbm_title'), col2X, y);
         y += 5;
 
         doc.setFontSize(9);
@@ -352,19 +352,19 @@ export const ProfitCalculator: React.FC = () => {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         setResultColor(fbaResults.netMargin);
-        doc.text('Lucro Líquido:', col1X, y);
+        doc.text(`${t('sim.net_profit')}:`, col1X, y);
         doc.text(fmt(fbaResults.netProfit), col1X + 50, y, { align: 'right' });
         setResultColor(fbmResults.netMargin);
-        doc.text('Lucro Líquido:', col2X, y);
+        doc.text(`${t('sim.net_profit')}:`, col2X, y);
         doc.text(fmt(fbmResults.netProfit), col2X + 50, y, { align: 'right' });
         y += 6;
 
         setResultColor(fbaResults.netMargin);
-        doc.text(`Margem: ${pct(fbaResults.netMargin)}`, col1X, y);
-        doc.text(`ROI: ${fbaResults.roi.toFixed(0)}%`, col1X + 50, y, { align: 'right' });
+        doc.text(`${t('sim.net_margin')}: ${pct(fbaResults.netMargin)}`, col1X, y);
+        doc.text(`${t('sim.roi')}: ${fbaResults.roi.toFixed(0)}%`, col1X + 50, y, { align: 'right' });
         setResultColor(fbmResults.netMargin);
-        doc.text(`Margem: ${pct(fbmResults.netMargin)}`, col2X, y);
-        doc.text(`ROI: ${fbmResults.roi.toFixed(0)}%`, col2X + 50, y, { align: 'right' });
+        doc.text(`${t('sim.net_margin')}: ${pct(fbmResults.netMargin)}`, col2X, y);
+        doc.text(`${t('sim.roi')}: ${fbmResults.roi.toFixed(0)}%`, col2X + 50, y, { align: 'right' });
         y += 6;
 
         doc.setTextColor(50, 50, 50);
@@ -386,7 +386,7 @@ export const ProfitCalculator: React.FC = () => {
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 113, 133);
-        doc.text('Recomendações Estratégicas (FBA)', margin, y);
+        doc.text(`${t('sim.pdf_recs_title')} (FBA)`, margin, y);
         y += 5;
 
         doc.setFontSize(9);
@@ -403,7 +403,7 @@ export const ProfitCalculator: React.FC = () => {
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text(
-            `Relatório gerado pela Amazon Sem Segredos IA Suite | IVA: ${taxRate}% | Os valores são estimativas e podem variar.`,
+            t('sim.pdf_footer', { taxRate: taxRate.toString() }),
             pageW / 2, footerY, { align: 'center' }
         );
 
@@ -454,7 +454,7 @@ export const ProfitCalculator: React.FC = () => {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Insira o ASIN do produto (ex: B086PHS2V8)"
+                            placeholder={t('sim.search_placeholder')}
                             className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-dark-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white dark:focus:bg-dark-700 text-base shadow-inner transition-all text-gray-900 dark:text-white placeholder:text-gray-400"
                         />
                     </div>
@@ -476,7 +476,7 @@ export const ProfitCalculator: React.FC = () => {
                             <p>{error}</p>
                             {error.includes('403') && (
                                 <p className="mt-1 text-xs opacity-80">
-                                    Verifique se as suas credenciais da API na aba "Configurações" estão corretas e se têm permissão para a região selecionada.
+                                    {t('sim.api_403_hint')}
                                 </p>
                             )}
                         </div>
@@ -490,8 +490,8 @@ export const ProfitCalculator: React.FC = () => {
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2 leading-snug">{product.title}</h3>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
                                 <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mb-1">ASIN</span> <span className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-dark-800 px-2 py-0.5 rounded w-fit select-all">{product.id}</span></div>
-                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mb-1">Weight</span> <span className="font-bold text-gray-900 dark:text-gray-100">{product.weight ? `${product.weight.value} ${product.weight.unit}` : '-'}</span></div>
-                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mb-1">BSR (Sales Rank)</span> <span className="font-bold text-gray-900 dark:text-gray-100">#{product.bsr?.toLocaleString() || '-'}</span></div>
+                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mb-1">{t('sim.weight')}</span> <span className="font-bold text-gray-900 dark:text-gray-100">{product.weight ? `${product.weight.value} ${product.weight.unit}` : '-'}</span></div>
+                                <div className="flex flex-col"><span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest leading-none mb-1">{t('sim.sales_rank')}</span> <span className="font-bold text-gray-900 dark:text-gray-100">#{product.bsr?.toLocaleString() || '-'}</span></div>
                                 <div className="flex flex-col items-start gap-2 lg:items-end justify-center">
                                     <button onClick={() => setProduct(null)} className="text-brand-600 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300 hover:underline font-bold text-xs transition-colors">{t('sim.search_another')}</button>
                                 </div>
@@ -504,8 +504,8 @@ export const ProfitCalculator: React.FC = () => {
                         <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-4">
                             <DollarSign className="w-8 h-8 text-brand-500" />
                         </div>
-                        <h4 className="text-lg font-bold text-gray-900 mb-2">Simule a Rentabilidade Real</h4>
-                        <p className="text-sm text-gray-500 text-center max-w-sm">Cole um ASIN Amazon acima para analisar todas as taxas FBA, Margem Líquida e ROI em segundos.</p>
+                        <h4 className="text-lg font-bold text-gray-900 mb-2">{t('sim.simulate_rentability')}</h4>
+                        <p className="text-sm text-gray-500 text-center max-w-sm">{t('sim.simulate_desc')}</p>
                     </div>
                 )}
             </div>
@@ -520,14 +520,14 @@ export const ProfitCalculator: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">IVA (%)</span>
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">{t('sim.iva')} (%)</span>
                     <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-14 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1 text-sm font-bold text-center text-gray-900 dark:text-white" />
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Lote</span>
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">{t('sim.batch')}</span>
                     <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1">
                         <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="w-14 bg-transparent outline-none text-sm font-bold text-center text-gray-900 dark:text-white" />
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase">Unid.</span>
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase">{t('sim.units_abbr')}</span>
                     </div>
                 </div>
 
@@ -537,21 +537,21 @@ export const ProfitCalculator: React.FC = () => {
                     <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Prep Service</span>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Labor</span>
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">{t('sim.labor')}</span>
                             <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded px-2 py-0.5">
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
                                 <input type="number" value={prepLabor} onChange={(e) => setPrepLabor(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center text-gray-900 dark:text-white" />
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Material</span>
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">{t('sim.material')}</span>
                             <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded px-2 py-0.5">
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
                                 <input type="number" value={prepMaterial} onChange={(e) => setPrepMaterial(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center text-gray-900 dark:text-white" />
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Inbound</span>
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">{t('sim.inbound')}</span>
                             <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded px-2 py-0.5">
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
                                 <input type="number" value={prepInbound} onChange={(e) => setPrepInbound(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center text-gray-900 dark:text-white" />
@@ -569,7 +569,7 @@ export const ProfitCalculator: React.FC = () => {
                     <div className="px-4 py-2 border-b border-[#d5dbdb] dark:border-dark-700 flex justify-between items-center bg-[#f0f2f2] dark:bg-dark-900/60">
                         <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-300 flex items-center gap-2">
                             <Box className="w-4 h-4 text-[#007185]" />
-                            Logística da Amazon (FBA)
+                            {t('sim.fba_title')}
                         </h4>
                         <X className="w-4 h-4 text-gray-400 dark:text-gray-600 cursor-pointer" />
                     </div>
@@ -625,7 +625,7 @@ export const ProfitCalculator: React.FC = () => {
                             <button onClick={() => setFbaStrategyExpanded(!fbaStrategyExpanded)} className="flex items-center justify-between w-full text-sm font-bold text-emerald-800 dark:text-emerald-400">
                                 <span className="flex items-center gap-2">
                                     <Target className="w-4 h-4" />
-                                    {t('sim.ads_impact')} & Estratégia
+                                    {t('sim.strategy_advice')}
                                     {fbaStrategyExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                 </span>
                             </button>
@@ -642,7 +642,7 @@ export const ProfitCalculator: React.FC = () => {
 
                                     <div className="bg-white dark:bg-dark-800 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 shadow-sm">
                                         <DataRow label={t('sim.break_even')} value={formatCurrency(fbaResults.breakEven)} isBold colorClass="text-emerald-700" />
-                                        <p className="text-[10px] text-emerald-600/70 mt-1 italic">Preço mínimo para não ter prejuízo considerando todos os custos atuais.</p>
+                                        <p className="text-[10px] text-emerald-600/70 mt-1 italic">{t('sim.break_even_desc')}</p>
                                     </div>
 
                                     <div className="bg-amber-50 dark:bg-amber-900/10 p-3 rounded-lg border border-amber-100 dark:border-amber-900/30">
@@ -667,7 +667,7 @@ export const ProfitCalculator: React.FC = () => {
 
                         <div className="border-t border-[#d5dbdb] dashed pt-4 space-y-2">
                             <InputRow label={t('sim.misc_cost')} value={fbaMiscCost} onChange={setFbaMiscCost} />
-                            <DataRow label="IVA / Impostos" value={formatCurrency(fbaResults.taxAmount)} />
+                            <DataRow label={t('sim.iva')} value={formatCurrency(fbaResults.taxAmount)} />
                         </div>
                     </div>
 
@@ -675,22 +675,22 @@ export const ProfitCalculator: React.FC = () => {
                     <div className={`p-5 mt-auto border-t transition-colors ${getMarginBg(fbaResults.netMargin)}`}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm border border-white/50 dark:border-dark-700/50">
-                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Custo Total</span>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{t('sim.total_cost')}</span>
                                 <span className="font-black text-gray-900 dark:text-white text-sm">{formatCurrency(fbaResults.totalExpenses)}</span>
                             </div>
                             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/50 dark:bg-dark-800/50 backdrop-blur-sm border border-white/50 dark:border-dark-700/50">
-                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Lucro por Lote</span>
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">{t('sim.profit_batch')}</span>
                                 <span className="font-black text-gray-900 dark:text-white text-sm">{formatCurrency(fbaResults.netProfit * batchSize)}</span>
                             </div>
                             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-dark-800 shadow-sm border border-white dark:border-dark-700">
-                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 leading-none">Lucro Líquido</span>
+                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 leading-none">{t('sim.net_profit')}</span>
                                 <span className={`font-black text-xl leading-none ${getMarginColor(fbaResults.netMargin)}`}>{formatCurrency(fbaResults.netProfit)}</span>
                             </div>
                             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-white dark:bg-dark-800 shadow-sm border border-white dark:border-dark-700">
-                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 leading-none">Margem / ROI</span>
+                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 leading-none">{t('sim.net_margin')} / ROI</span>
                                 <div className="flex flex-col items-center">
                                     <span className={`font-black text-xl leading-none ${getMarginColor(fbaResults.netMargin)}`}>{fbaResults.netMargin.toFixed(1)}%</span>
-                                    <span className="text-[10px] font-bold opacity-60 dark:text-gray-400">ROI: {fbaResults.roi.toFixed(0)}%</span>
+                                    <span className="text-[10px] font-bold opacity-60 dark:text-gray-400">{t('sim.roi')}: {fbaResults.roi.toFixed(0)}%</span>
                                 </div>
                             </div>
                         </div>
@@ -702,7 +702,7 @@ export const ProfitCalculator: React.FC = () => {
                     <div className="px-4 py-2 border-b border-[#d5dbdb] dark:border-dark-700 flex justify-between items-center bg-[#f0f2f2] dark:bg-dark-900/60">
                         <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-300 flex items-center gap-2">
                             <Package className="w-4 h-4 text-[#007185]" />
-                            Logística do Vendedor (FBM)
+                            {t('sim.fbm_title')}
                         </h4>
                         <X className="w-4 h-4 text-gray-400 dark:text-gray-600 cursor-pointer" />
                     </div>
@@ -736,7 +736,7 @@ export const ProfitCalculator: React.FC = () => {
 
                         <div className="border-t border-gray-100 pt-3">
                             <InputRow label={t('sim.fulfilment_cost')} value={fbmFulfilment} onChange={setFbmFulfilment} prefix={product?.currency === 'BRL' ? 'R$' : '€'} />
-                            <button className="text-[#007185] text-[10px] hover:underline flex items-center gap-1 mb-2">Editar discriminação dos custos <ChevronDown className="w-2.5 h-2.5" /></button>
+                            <button className="text-[#007185] text-[10px] hover:underline flex items-center gap-1 mb-2">{t('sim.edit_costs')} <ChevronDown className="w-2.5 h-2.5" /></button>
                         </div>
 
                         <div className="border-t border-gray-100 pt-3">
@@ -748,7 +748,7 @@ export const ProfitCalculator: React.FC = () => {
                             </button>
                             {fbmStorageExpanded && (
                                 <div className="space-y-2 animate-in slide-in-from-top-1">
-                                    <p className="text-[11px] text-[#c45500] font-bold">Insira os seus custos de armazenamento</p>
+                                    <p className="text-[11px] text-[#c45500] font-bold">{t('sim.fbm_storage_hint')}</p>
                                     <InputRow label={t('sim.storage_per_unit')} value={fbmMonthlyStoragePrice} onChange={setFbmMonthlyStoragePrice} />
                                     <InputRow label={t('sim.avg_inventory')} value={fbmAvgInventory} onChange={setFbmAvgInventory} />
                                     <DataRow label={t('sim.storage_per_sold')} value={formatCurrency(fbmUnitStorage)} isBold />
@@ -772,13 +772,13 @@ export const ProfitCalculator: React.FC = () => {
 
                                     <div className="bg-white dark:bg-dark-800 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
                                         <DataRow label={t('sim.break_even')} value={formatCurrency(fbmResults.breakEven)} isBold colorClass="text-emerald-700" />
-                                        <p className="text-[10px] text-emerald-600/70 mt-1 italic">Considerando seus custos de logística própria e frete de envio.</p>
+                                        <p className="text-[10px] text-emerald-600/70 mt-1 italic">{t('sim.fbm_break_even_desc')}</p>
                                     </div>
 
                                     <div className="bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
                                         <div className="flex items-center gap-1.5 mb-2 text-blue-700 dark:text-blue-400">
                                             <Sparkles className="w-3.5 h-3.5" />
-                                            <span className="text-[11px] font-bold uppercase tracking-wider">Estratégia FBM</span>
+                                            <span className="text-[11px] font-bold uppercase tracking-wider">{t('sim.strategy_fbm_title')}</span>
                                         </div>
                                         <ul className="space-y-1">
                                             {fbmRecommendations.slice(0, 2).map((rec, i) => (
@@ -797,7 +797,7 @@ export const ProfitCalculator: React.FC = () => {
 
                         <div className="border-t border-[#d5dbdb] dashed pt-4">
                             <InputRow label={t('sim.misc_cost')} value={fbmMiscCost} onChange={setFbmMiscCost} />
-                            <DataRow label="IVA / Impostos" value={formatCurrency(fbmResults.taxAmount)} />
+                            <DataRow label={t('sim.iva')} value={formatCurrency(fbmResults.taxAmount)} />
                         </div>
                     </div>
 

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { MessageCircle, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { SupportModal } from './SupportModal';
+import { useLanguage } from '../../services/languageService';
 
 export const SupportWidget: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { user } = useAuth();
+    const { t } = useLanguage();
 
     // Determine if user has premium support (PRO or PREMIUM plans)
     const normalizedPlan = user?.plan_name?.toUpperCase() || 'FREE';
@@ -20,7 +22,7 @@ export const SupportWidget: React.FC = () => {
                     backgroundColor: hasPremiumSupport ? '#25D366' : '#2563eb', // WhatsApp green vs Brand blue
                     color: 'white'
                 }}
-                title="Central de Suporte"
+                title={t('support.widget_title')}
             >
                 {/* Glow effect behind button */}
                 <div

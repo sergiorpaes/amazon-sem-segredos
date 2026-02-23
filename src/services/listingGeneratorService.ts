@@ -11,14 +11,14 @@ interface ListingInput {
     usage: string;
 }
 
-export const generateListing = async (data: ListingInput): Promise<ListingGeneratorResult> => {
+export const generateListing = async (data: ListingInput, language: string = 'pt'): Promise<ListingGeneratorResult> => {
     try {
         const response = await fetch('/.netlify/functions/listing-generator', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify({ ...data, language }),
         });
 
         if (!response.ok) {
