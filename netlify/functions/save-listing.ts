@@ -23,6 +23,8 @@ export const handler = async (event: any) => {
         const body = JSON.parse(event.body || '{}');
         const { productName, listingData, generatedImages } = body;
 
+        console.log(`[SaveListing] Attempting to save for user ${userId}, product: ${productName}, images count: ${generatedImages?.length || 0}`);
+
         if (!productName || !listingData) {
             return {
                 statusCode: 400,
@@ -30,29 +32,40 @@ export const handler = async (event: any) => {
             };
         }
 
-        const [newListing] = await db.insert(listings).values({
-            user_id: userId,
-            product_name: productName,
-            listing_data: listingData,
-            generated_images: generatedImages || [] // Now saving images as requested
-        }).returning();
+        try {
+            const [newListing] = await db.insert(listings).values({
+                user_id: userId,
+                product_name: productName,
+                listing_data: listingData,
+                generated_images: generatedImages || []
+            }).returning();
 
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify(newListing)
-        };
+            return {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify(newListing)
+            };
+        } catch (dbError: any) {
+            console.error('Database Insertion Error:', dbError);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    error: 'Database Error',
+                    message: dbError.message,
+                    detail: dbError.detail || 'Failed to insert into database'
+                })
+            };
+        }
     } catch (error: any) {
-        console.error('Save Listing Error FULL:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        console.error('General Save Listing Error:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({
                 error: 'Internal Server Error',
-                message: error.message,
-                details: error.toString()
+                message: error.message
             })
         };
     }

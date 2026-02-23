@@ -427,43 +427,26 @@ export const ListingOptimizer: React.FC = () => {
                 </div>
               )}
 
-              {/* Primary Language Column */}
+              {/* Spanish Column (Left) */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
                   <Sparkles className="w-5 h-5 text-brand-600" />
                   <h3 className="font-bold text-gray-800 dark:text-gray-200">
-                    {language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'}
+                    Espanhol
                   </h3>
                 </div>
-                {renderListingFields(listingResult.target || listingResult.es || listingResult.pt, 'target')}
+                {renderListingFields(listingResult.es || listingResult.target, 'es')}
               </div>
 
-              {/* Secondary Language Column */}
+              {/* Portuguese Column (Right) */}
               <div className="space-y-6">
-                {(listingResult.target && (listingResult.es || listingResult.pt)) ? (
-                  <>
-                    <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
-                      <Bot className="w-5 h-5 text-brand-600" />
-                      <h3 className="font-bold text-gray-800 dark:text-gray-200">
-                        {listingResult.es ? 'Espanhol' : 'Português'}
-                      </h3>
-                    </div>
-                    {renderListingFields(listingResult.es || listingResult.pt, 'secondary')}
-                  </>
-                ) : (
-                  <div className="bg-brand-50/50 dark:bg-dark-900/50 p-6 rounded-xl border border-brand-100 dark:border-brand-900/30 h-full">
-                    <h4 className="font-bold text-brand-900 dark:text-brand-400 mb-4 flex items-center gap-2">
-                      <Check className="w-5 h-5" /> {t('lo.ui.benefits_summary') || 'Resumo de Benefícios'}
-                    </h4>
-                    <ul className="space-y-3">
-                      {inputs.benefits.split(',').map((b, i) => (
-                        <li key={i} className="text-sm text-brand-800 dark:text-brand-300 flex gap-2">
-                          <span className="font-bold">•</span> {b.trim()}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 mb-2 border-b dark:border-dark-700 pb-2">
+                  <Bot className="w-5 h-5 text-brand-600" />
+                  <h3 className="font-bold text-gray-800 dark:text-gray-200">
+                    Português
+                  </h3>
+                </div>
+                {renderListingFields(listingResult.pt || listingResult.target, 'pt')}
               </div>
             </div>
           </div>

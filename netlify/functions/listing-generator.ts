@@ -111,54 +111,31 @@ export const handler = async (event: any) => {
         const model = genAI.getGenerativeModel({ model: aiModel });
 
         // --- SINGLE OPTIMIZED PROMPT ---
-        const targetLangName = language === 'pt' ? 'Português (Portugal)' : language === 'es' ? 'Espanhol' : 'Inglês';
-
         const prompt = `
-        Você é um especialista em SEO para Amazon, copywriting de alta conversão e marketplaces globais.
-        Seu foco é criar anúncios otimizados para a Amazon, respeitando as boas práticas da plataforma e os limites de caracteres.
+        Você é um especialista em SEO para Amazon e copywriting de alta conversão.
+        Sua tarefa é criar um anúncio para Amazon em DOIS idiomas simultâneos: **Espanhol** e **Português (Portugal)**.
 
-        Crie um anúncio COMPLETO e OTIMIZADO para Amazon no idioma: **${targetLangName}**.
+        ESTRUTURA DO ANÚNCIO PARA CADA IDIOMA:
+        1. TÍTULO DO PRODUTO (máx. 200 caracteres)
+        2. BULLET POINTS / CARACTERÍSTICAS (${bulletCount} bullets)
+           ${isPro ? "- Como o usuário é PRO/Premium, gere 10 bullets extremamente detalhados." : "- Gere 5 bullets focados em benefícios."}
+        3. DESCRIÇÃO LONGA (Estrutura escaneável)
+        4. PALAVRAS-CHAVE BACKEND (SEARCH TERMS - Lista separada por espaço)
 
-        ESTRUTURA DO ANÚNCIO:
-
-        1️⃣ TÍTULO DO PRODUTO (máx. 200 caracteres)
-        - No idioma ${targetLangName}
-        - Com as principais palavras-chave no início
-        - Otimizado para SEO da Amazon
-
-        2️⃣ BULLET POINTS / CARACTERÍSTICAS (${bulletCount} bullets)
-        - No idioma ${targetLangName}
-        - ${isPro ? `Como você é um usuário ELITE (PRO/Premium), gere ${bulletCount} bullet points extremamente detalhados.` : `Gere ${bulletCount} bullet points focados em benefícios.`}
-        - Focados em benefícios + diferenciais
-        - Linguagem clara, objetiva e persuasiva
-
-        3️⃣ DESCRIÇÃO LONGA
-        - No idioma ${targetLangName}
-        - Estrutura escaneável
-        - Foco em solução de problema, benefícios e uso prático
-
-        4️⃣ PALAVRAS-CHAVE BACKEND (SEARCH TERMS)
-        - Lista separada por espaço
-        - Otimizada para o marketplace alvo
-        
         📌 INFORMAÇÕES DO PRODUTO:
-        - Nome do produto: ${productName}
+        - Nome: ${productName}
         - Categoria: ${category}
         - Material: ${material}
-        - Principais benefícios: ${benefits}
+        - Benefícios: ${benefits}
         - Diferenciais: ${differentiators}
         - Público-alvo: ${audience}
         - Problema: ${problem}
         - Uso: ${usage}
         
-        Retorne APENAS o JSON com a estrutura estrita abaixo (sem markdown, sem code blocks):
+        Retorne APENAS um JSON com esta estrutura (sem markdown):
         {
-            "target": { 
-                "title": "...", 
-                "bullets": ["...", ...], 
-                "description": "...",
-                "keywords": "..." 
-            },
+            "es": { "title": "...", "bullets": ["...", ...], "description": "...", "keywords": "..." },
+            "pt": { "title": "...", "bullets": ["...", ...], "description": "...", "keywords": "..." },
             "imagePromptContext": "Short visual description for image generation (in English)"
         }
         `;
