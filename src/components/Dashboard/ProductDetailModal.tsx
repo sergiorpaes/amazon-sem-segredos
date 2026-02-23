@@ -25,6 +25,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
     const [analysisResult, setAnalysisResult] = useState<any>(null);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+    // Reset state when product changes
+    React.useEffect(() => {
+        if (product?.id) {
+            setAnalysisResult(null);
+            setAnalysisError(null);
+            setIsAnalyzing(false);
+            setActiveTab('details');
+        }
+    }, [product?.id]);
+
     const MARKETPLACE_DOMAINS: Record<string, string> = {
         'ATVPDKIKX0DER': 'amazon.com',
         'A2EUQ1WTGCTBG2': 'amazon.ca',
@@ -238,10 +248,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ isOpen, 
                                         {t('analyze.modal_title')}
                                     </h3>
                                     {!analysisResult && !isAnalyzing && (
-                                        <button onClick={handleAnalyzeCompetition} className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
-                                            <BarChart3 className="w-4 h-4" />
-                                            {t('analyze.button')}
-                                        </button>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <button onClick={handleAnalyzeCompetition} className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                                                <BarChart3 className="w-4 h-4" />
+                                                {t('analyze.button')}
+                                            </button>
+                                            <span className="text-[10px] text-gray-400 font-medium">
+                                                {t('analyze.credits_info')}
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
 

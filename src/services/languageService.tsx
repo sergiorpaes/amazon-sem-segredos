@@ -98,7 +98,7 @@ export const translations = {
         'plans.select': 'Escolher Plano',
         'plans.free': 'Grátis',
 
-        // Modal
+        'modal.details': 'Detalhes',
         'modal.est_sales': 'Vendas Est.',
         'modal.est_revenue': 'Receita Est.',
         'modal.price': 'Preço',
@@ -144,7 +144,7 @@ export const translations = {
         'analyze.improvements': 'Oportunidades de Melhoria',
         'analyze.processing': 'Extraindo reviews e analisando com IA...',
         'analyze.error': 'Erro ao analisar concorrência.',
-        'analyze.credits_info': 'Consome 5 créditos premium',
+        'analyze.credits_info': 'Consome 1 crédito premium',
         'analyze.recent_reviews': 'Últimos Reviews',
         'summary.feb_2026': 'Fev 2026',
         'lock.title': 'Limite de Créditos Atingido',
@@ -268,7 +268,7 @@ export const translations = {
         'module.settings': 'Configuración',
         'module.logout': 'Cerrar Sesión',
 
-        // Modal
+        'modal.details': 'Detalles',
         'modal.est_sales': 'Ventas Est.',
         'modal.est_revenue': 'Ingresos Est.',
         'modal.price': 'Precio',
@@ -314,7 +314,7 @@ export const translations = {
         'analyze.improvements': 'Oportunidades de Mejora',
         'analyze.processing': 'Extrayendo reseñas y analizando con IA...',
         'analyze.error': 'Error al analizar la competencia.',
-        'analyze.credits_info': 'Consume 5 créditos premium',
+        'analyze.credits_info': 'Consume 1 crédito premium',
         'analyze.recent_reviews': 'Últimas Reseñas',
         'summary.feb_2026': 'Feb 2026',
 
@@ -450,7 +450,7 @@ export const translations = {
         'module.settings': 'Settings',
         'module.logout': 'Logout',
 
-        // Modal
+        'modal.details': 'Details',
         'modal.est_sales': 'Est. Sales',
         'modal.est_revenue': 'Est. Revenue',
         'modal.price': 'Price',
@@ -496,7 +496,7 @@ export const translations = {
         'analyze.improvements': 'Improvement Opportunities',
         'analyze.processing': 'Scraping reviews and analyzing with AI...',
         'analyze.error': 'Error analyzing competition.',
-        'analyze.credits_info': 'Consumes 5 premium credits',
+        'analyze.credits_info': 'Consumes 1 premium credit',
         'analyze.recent_reviews': 'Latest Reviews',
         'summary.feb_2026': 'Feb 2026',
 

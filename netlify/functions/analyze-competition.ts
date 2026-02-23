@@ -59,7 +59,7 @@ export const handler: Handler = async (event, context) => {
             if (alreadyConsumed) {
                 console.log(`[AI Analysis] Duplicate analysis detected for UserID: ${userId}, ASIN: ${asin}. Skipping deduction.`);
             } else {
-                await consumeCredits(userId, 5, 'ANALYZE_COMPETITION', { asin });
+                await consumeCredits(userId, 1, 'ANALYZE_COMPETITION', { asin });
                 console.log(`[AI Analysis] Credits consumed for UserID: ${userId}`);
             }
         } catch (e: any) {
