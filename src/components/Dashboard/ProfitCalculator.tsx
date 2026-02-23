@@ -239,6 +239,179 @@ export const ProfitCalculator: React.FC = () => {
         } finally { setIsSearching(false); }
     };
 
+    // --- PDF Generation ---
+    const handleGeneratePDF = () => {
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const margin = 15;
+        const col1X = margin;
+        const col2X = pageW / 2 + 4;
+        let y = 20;
+
+        const curr = product?.currency || (marketplace === 'A2Q3Y263D00KWC' ? 'BRL' : 'EUR');
+        const fmt = (n: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: curr }).format(n);
+        const pct = (n: number) => `${n.toFixed(1)}%`;
+
+        // ---- Header ----
+        doc.setFillColor(0, 113, 133);
+        doc.rect(0, 0, pageW, 28, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Relatório Estratégico AI', margin, 13);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, margin, 21);
+        doc.text('Amazon Sem Segredos IA Suite', pageW - margin, 21, { align: 'right' });
+
+        // ---- Product Info ----
+        y = 36;
+        doc.setTextColor(50, 50, 50);
+        if (product) {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(0, 113, 133);
+            doc.text('Produto Analisado', margin, y);
+            y += 6;
+            doc.setTextColor(50, 50, 50);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            const titleLines = doc.splitTextToSize(product.title, pageW - margin * 2);
+            doc.text(titleLines, margin, y);
+            y += titleLines.length * 5 + 2;
+
+            const meta: [string, string][] = [
+                [`ASIN: ${product.id}`, `Marca: ${product.brand || '-'}`],
+                [`Categoria: ${product.category || '-'}`, `BSR: ${product.bsr ? '#' + product.bsr.toLocaleString() : '-'}`],
+                [`Preço de Venda: ${fmt(product.price || 0)}`, `Marketplace: ${SUPPORTED_MARKETPLACES.find(m => m.id === marketplace)?.name || marketplace}`],
+            ];
+            meta.forEach(([a, b]) => {
+                doc.setFont('helvetica', 'bold');
+                doc.text(a, margin, y);
+                doc.text(b, pageW / 2, y);
+                y += 5;
+            });
+            y += 4;
+        } else {
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(150, 150, 150);
+            doc.text('Nenhum produto pesquisado. Análise baseada nos valores manuais inseridos.', margin, y);
+            y += 8;
+        }
+
+        // ---- Divider ----
+        doc.setDrawColor(0, 113, 133);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, pageW - margin, y);
+        y += 6;
+
+        // ---- Side-by-side FBA / FBM ----
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 113, 133);
+        doc.text('FBA — Logística da Amazon', col1X, y);
+        doc.text('FBM — Logística do Vendedor', col2X, y);
+        y += 5;
+
+        doc.setFontSize(9);
+        const addRow = (label: string, fbaVal: string, fbmVal: string, bold = false) => {
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.setTextColor(70, 70, 70);
+            doc.text(label, col1X, y);
+            doc.text(fbaVal, col1X + 50, y, { align: 'right' });
+            doc.text(label, col2X, y);
+            doc.text(fbmVal, col2X + 50, y, { align: 'right' });
+            y += 5;
+        };
+
+        addRow('Preço de Venda', fmt(fbaPrice), fmt(fbmPrice));
+        addRow('Taxas Amazon', fmt(fbaTotalAmazonFees), fmt(fbmTotalAmazonFees));
+        addRow('Fulfillment', fmt(fbaFulfilment), fmt(fbmFulfilment));
+        addRow('Armazenamento/un.', fmt(fbaUnitStorage), fmt(fbmUnitStorage));
+        addRow('COGS', fmt(cogs), fmt(cogs));
+        addRow('Prep Service', fmt(prepTotal), fmt(prepTotal));
+        addRow('Publicidade', fmt(fbaAdsCost), fmt(fbmAdsCost));
+        addRow('IVA / Impostos', fmt(fbaResults.taxAmount), fmt(fbmResults.taxAmount));
+        addRow('Outros Custos', fmt(fbaMiscCost), fmt(fbmMiscCost));
+
+        // Separator line
+        y += 2;
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(col1X, y, col1X + 76, y);
+        doc.line(col2X, y, col2X + 76, y);
+        y += 4;
+
+        const setResultColor = (margin: number) => {
+            if (margin >= 20) doc.setTextColor(16, 148, 101);
+            else if (margin >= 10) doc.setTextColor(217, 119, 6);
+            else doc.setTextColor(220, 38, 38);
+        };
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        setResultColor(fbaResults.netMargin);
+        doc.text('Lucro Líquido:', col1X, y);
+        doc.text(fmt(fbaResults.netProfit), col1X + 50, y, { align: 'right' });
+        setResultColor(fbmResults.netMargin);
+        doc.text('Lucro Líquido:', col2X, y);
+        doc.text(fmt(fbmResults.netProfit), col2X + 50, y, { align: 'right' });
+        y += 6;
+
+        setResultColor(fbaResults.netMargin);
+        doc.text(`Margem: ${pct(fbaResults.netMargin)}`, col1X, y);
+        doc.text(`ROI: ${fbaResults.roi.toFixed(0)}%`, col1X + 50, y, { align: 'right' });
+        setResultColor(fbmResults.netMargin);
+        doc.text(`Margem: ${pct(fbmResults.netMargin)}`, col2X, y);
+        doc.text(`ROI: ${fbmResults.roi.toFixed(0)}%`, col2X + 50, y, { align: 'right' });
+        y += 6;
+
+        doc.setTextColor(50, 50, 50);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`Break-even: ${fmt(fbaResults.breakEven)}`, col1X, y);
+        doc.text(`Break-even: ${fmt(fbmResults.breakEven)}`, col2X, y);
+        y += 5;
+        doc.text(`Lucro p/ Lote (${batchSize} un.): ${fmt(fbaResults.netProfit * batchSize)}`, col1X, y);
+        doc.text(`Lucro p/ Lote (${batchSize} un.): ${fmt(fbmResults.netProfit * batchSize)}`, col2X, y);
+        y += 10;
+
+        // ---- Strategic Recommendations ----
+        doc.setDrawColor(0, 113, 133);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, pageW - margin, y);
+        y += 6;
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 113, 133);
+        doc.text('Recomendações Estratégicas (FBA)', margin, y);
+        y += 5;
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(50, 50, 50);
+        fbaRecommendations.forEach(rec => {
+            const lines = doc.splitTextToSize(`• ${rec}`, pageW - margin * 2);
+            doc.text(lines, margin, y);
+            y += lines.length * 5 + 1;
+        });
+
+        // ---- Footer ----
+        const footerY = doc.internal.pageSize.getHeight() - 10;
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text(
+            `Relatório gerado pela Amazon Sem Segredos IA Suite | IVA: ${taxRate}% | Os valores são estimativas e podem variar.`,
+            pageW / 2, footerY, { align: 'center' }
+        );
+
+        const asin = product?.id || 'manual';
+        const dateStr = new Date().toISOString().split('T')[0];
+        doc.save(`relatorio-${asin}-${dateStr}.pdf`);
+    };
+
     // UI Helpers
     const DataRow = ({ label, value, isBold = false, indent = false, colorClass = "" }: { label: string, value: string | React.ReactNode, isBold?: boolean, indent?: boolean, colorClass?: string }) => (
         <div className={`flex justify-between items-center py-1.5 ${indent ? 'pl-4' : ''}`}>
@@ -658,7 +831,10 @@ export const ProfitCalculator: React.FC = () => {
 
             {/* Export Actions */}
             <div className="flex justify-center gap-6 mt-10">
-                <button className="flex items-center gap-3 bg-[#007185] hover:bg-[#005a6a] text-white dark:text-emerald-50 px-12 py-3.5 rounded-lg text-lg font-bold transition-all shadow-lg shadow-[#007185]/20 ring-4 ring-[#007185]/10">
+                <button
+                    onClick={handleGeneratePDF}
+                    className="flex items-center gap-3 bg-[#007185] hover:bg-[#005a6a] text-white dark:text-emerald-50 px-12 py-3.5 rounded-lg text-lg font-bold transition-all shadow-lg shadow-[#007185]/20 ring-4 ring-[#007185]/10 active:scale-95"
+                >
                     <Download className="w-5 h-5" />
                     Gerar Relatório Estratégico AI (PDF)
                 </button>
