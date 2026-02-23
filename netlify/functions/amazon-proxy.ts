@@ -97,9 +97,12 @@ export const handler: Handler = async (event, context) => {
             finalKeywords = undefined;
         }
 
+        // --- AMAZON SP-API CALL PREP ---
+        const targetMarketplace = marketplaceId || "A1RKKUPIHCS9HS";
+
         // --- CACHE CHECK (Only for Search/GetItem, not Pricing) ---
         if (intent !== 'get_offers' && intent !== 'get_batch_offers' && finalAsin && !finalKeywords) {
-            const cached = await getCachedProduct(finalAsin);
+            const cached = await getCachedProduct(finalAsin, targetMarketplace);
             if (cached) {
                 console.log(`[Proxy] Cache hit for ASIN: ${finalAsin}`);
 
@@ -182,7 +185,6 @@ export const handler: Handler = async (event, context) => {
 
         // --- AMAZON SP-API CALL ---
         const apiBaseUrl = REGION_ENDPOINTS[region] || REGION_ENDPOINTS['EU'];
-        const targetMarketplace = marketplaceId || "A1RKKUPIHCS9HS";
 
         let url = "";
         let method = "GET";

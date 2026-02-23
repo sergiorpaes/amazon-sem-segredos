@@ -5,7 +5,7 @@ import { eq, and, gt } from 'drizzle-orm';
 /**
  * Retrieves a cached product if it exists and is less than 24 hours old.
  */
-export async function getCachedProduct(asin: string) {
+export async function getCachedProduct(asin: string, marketplaceId: string) {
     try {
         const oneDayAgo = new Date();
         oneDayAgo.setHours(oneDayAgo.getHours() - 24);
@@ -16,6 +16,7 @@ export async function getCachedProduct(asin: string) {
             .where(
                 and(
                     eq(productsCache.asin, asin),
+                    eq(productsCache.marketplace_id, marketplaceId),
                     gt(productsCache.updated_at, oneDayAgo)
                 )
             )

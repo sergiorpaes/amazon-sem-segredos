@@ -7,7 +7,7 @@ import {
 import { useLanguage } from '../../services/languageService';
 import { jsPDF } from 'jspdf';
 import { getRecommendations } from '../../lib/strategicRecommendations';
-import { searchProducts, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
+import { searchProducts, getItemOffers, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { ProductMetadata } from '../../types';
@@ -183,6 +183,23 @@ export const ProfitCalculator: React.FC = () => {
                     setFbaReferral(estRef);
                     setFbmReferral(estRef);
                 }
+
+                // --- Background Pricing Fetch for accurate Real-time data ---
+                getItemOffers(item.asin, marketplace).then(offers => {
+                    if (offers && offers.price > 0) {
+                        setFbaPrice(offers.price);
+                        setFbmPrice(offers.price);
+                        const newRef = offers.price * 0.15;
+                        setFbaReferral(newRef);
+                        setFbmReferral(newRef);
+                        setProduct(prev => prev ? {
+                            ...prev,
+                            price: offers.price,
+                            currency: offers.currency,
+                            offers: offers.activeSellers
+                        } : null);
+                    }
+                }).catch(err => console.error("Pricing fetch failed:", err));
             }
         } catch (err: any) {
             console.error(err);
