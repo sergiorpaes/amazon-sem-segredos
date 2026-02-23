@@ -343,45 +343,45 @@ export const ProfitCalculator: React.FC = () => {
                     <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">{t('sim.cogs')}</span>
                     <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1">
                         <span className="text-xs text-emerald-600 dark:text-emerald-400">{product?.currency === 'USD' ? '$' : (product?.currency === 'BRL' ? 'R$' : '€')}</span>
-                        <input type="number" value={cogs} onChange={(e) => setCogs(Number(e.target.value))} className="w-16 bg-transparent outline-none text-sm font-bold text-center dark:text-white" />
+                        <input type="number" value={cogs} onChange={(e) => setCogs(Number(e.target.value))} className="w-16 bg-transparent outline-none text-sm font-bold text-center text-gray-900 dark:text-white" />
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">IVA (%)</span>
-                    <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-14 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-900/50 rounded px-2 py-1 text-sm font-bold text-center" />
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">IVA (%)</span>
+                    <input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-14 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1 text-sm font-bold text-center text-gray-900 dark:text-white" />
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Lote</span>
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Lote</span>
                     <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-emerald-200 dark:border-emerald-700/50 rounded px-2 py-1">
-                        <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="w-14 bg-transparent outline-none text-sm font-bold text-center" />
-                        <span className="text-[10px] text-gray-400 font-bold uppercase">Unid.</span>
+                        <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="w-14 bg-transparent outline-none text-sm font-bold text-center text-gray-900 dark:text-white" />
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase">Unid.</span>
                     </div>
                 </div>
 
                 {/* Prep Service Section */}
                 <div className="h-8 w-px bg-emerald-200 dark:bg-emerald-900/30 hidden md:block mx-2" />
                 <div className="flex flex-wrap gap-4 items-center">
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">Prep Service</span>
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Prep Service</span>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase">Labor</span>
-                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 rounded px-2 py-0.5">
-                                <span className="text-[10px] text-gray-400">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
-                                <input type="number" value={prepLabor} onChange={(e) => setPrepLabor(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center" />
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Labor</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded px-2 py-0.5">
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
+                                <input type="number" value={prepLabor} onChange={(e) => setPrepLabor(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center text-gray-900 dark:text-white" />
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase">Material</span>
-                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 rounded px-2 py-0.5">
-                                <span className="text-[10px] text-gray-400">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
-                                <input type="number" value={prepMaterial} onChange={(e) => setPrepMaterial(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center" />
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Material</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded px-2 py-0.5">
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
+                                <input type="number" value={prepMaterial} onChange={(e) => setPrepMaterial(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center text-gray-900 dark:text-white" />
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-gray-500 uppercase">Inbound</span>
-                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 rounded px-2 py-0.5">
-                                <span className="text-[10px] text-gray-400">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
-                                <input type="number" value={prepInbound} onChange={(e) => setPrepInbound(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center" />
+                            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Inbound</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded px-2 py-0.5">
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500">{product?.currency === 'BRL' ? 'R$' : '€'}</span>
+                                <input type="number" value={prepInbound} onChange={(e) => setPrepInbound(Number(e.target.value))} className="w-12 bg-transparent outline-none text-xs font-bold text-center text-gray-900 dark:text-white" />
                             </div>
                         </div>
                     </div>
@@ -392,13 +392,13 @@ export const ProfitCalculator: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* LOGÍSTICA DA AMAZON (FBA) */}
-                <div className="bg-white dark:bg-dark-800 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
-                    <div className="px-4 py-2 border-b border-[#d5dbdb] flex justify-between items-center bg-[#f0f2f2]">
-                        <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-200 flex items-center gap-2">
+                <div className="bg-white dark:bg-dark-800 rounded-sm border border-[#d5dbdb] dark:border-dark-700 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+                    <div className="px-4 py-2 border-b border-[#d5dbdb] dark:border-dark-700 flex justify-between items-center bg-[#f0f2f2] dark:bg-dark-900/60">
+                        <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-300 flex items-center gap-2">
                             <Box className="w-4 h-4 text-[#007185]" />
                             Logística da Amazon (FBA)
                         </h4>
-                        <X className="w-4 h-4 text-gray-400 cursor-pointer" />
+                        <X className="w-4 h-4 text-gray-400 dark:text-gray-600 cursor-pointer" />
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col space-y-4">
@@ -525,13 +525,13 @@ export const ProfitCalculator: React.FC = () => {
                 </div>
 
                 {/* O SEU TIPO DE LOGÍSTICA (FBM) */}
-                <div className="bg-white dark:bg-dark-800 rounded-sm border border-[#d5dbdb] shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
-                    <div className="px-4 py-2 border-b border-[#d5dbdb] flex justify-between items-center bg-[#f0f2f2]">
-                        <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-200 flex items-center gap-2">
+                <div className="bg-white dark:bg-dark-800 rounded-sm border border-[#d5dbdb] dark:border-dark-700 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+                    <div className="px-4 py-2 border-b border-[#d5dbdb] dark:border-dark-700 flex justify-between items-center bg-[#f0f2f2] dark:bg-dark-900/60">
+                        <h4 className="text-[15px] font-bold text-[#333] dark:text-gray-300 flex items-center gap-2">
                             <Package className="w-4 h-4 text-[#007185]" />
                             Logística do Vendedor (FBM)
                         </h4>
-                        <X className="w-4 h-4 text-gray-400 cursor-pointer" />
+                        <X className="w-4 h-4 text-gray-400 dark:text-gray-600 cursor-pointer" />
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col space-y-4">

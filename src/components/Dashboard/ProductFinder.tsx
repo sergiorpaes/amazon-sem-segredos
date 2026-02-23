@@ -827,14 +827,7 @@ export const ProductFinder: React.FC = () => {
             <div className="text-sm text-gray-600 font-medium">
               {t('rows.selected')}: <span className="text-gray-900 font-bold">{selectedProductIds.size}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowFilter(!showFilter)}
-                className={`text-brand-600 text-sm font-semibold hover:bg-brand-50 px-3 py-1.5 rounded-lg transition-colors ${showFilter ? 'bg-brand-50' : ''}`}
-              >
-                {t('filter.results')}
-              </button>
-            </div>
+
           </div>
 
           {/* Desktop Table View */}
