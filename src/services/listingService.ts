@@ -14,7 +14,16 @@ export const saveListing = async (productName: string, listingData: ListingGener
         throw new Error(errorData.details || errorData.message || 'Failed to save listing');
     }
 
-    return await res.json();
+    const item = await res.json();
+    return {
+        id: item.id.toString(),
+        productName: item.product_name,
+        es: item.listing_data?.es,
+        pt: item.listing_data?.pt,
+        imagePromptContext: item.listing_data?.imagePromptContext,
+        generatedImages: item.generated_images || [],
+        createdAt: item.created_at
+    };
 };
 
 export const getListings = async (): Promise<SavedListing[]> => {
