@@ -119,6 +119,7 @@ export const productsCache = pgTable('amz_products_cache', {
     referral_fee: integer('referral_fee'), // In cents
     fulfillment_fee: integer('fulfillment_fee'), // In cents
     net_profit: integer('net_profit'), // Price - FBA Fees (in cents)
+    estimated_monthly_profit: integer('estimated_monthly_profit'), // Total Monthly Profit in cents
     sales_percentile: text('sales_percentile'),
     is_list_price: boolean('is_list_price').default(false),
     raw_data: jsonb('raw_data'),

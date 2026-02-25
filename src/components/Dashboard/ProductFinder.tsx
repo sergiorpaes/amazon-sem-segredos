@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag, Sparkles, Camera, Upload, Filter, DollarSign } from 'lucide-react';
+import { Search, BarChart2, AlertCircle, Box, Activity, ChevronDown, ChevronUp, Check, Tag, Sparkles, Camera, Upload, Filter, DollarSign, Info } from 'lucide-react';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
 import { searchProducts, getItemOffers, getBatchOffers, SUPPORTED_MARKETPLACES } from '../../services/amazonAuthService';
@@ -26,6 +26,7 @@ interface ProductDisplay {
   salesGraph?: string;
   salesHistory?: number[]; // Added for Graph Data
   revenue: number | null;
+  estimatedMonthlyProfit?: number | null;
   bsr?: number;
   fbaFees?: number;
   fbaBreakdown?: {
@@ -174,6 +175,7 @@ const mockProducts: ProductDisplay[] = [
     fbaFees: 8.84,
     activeSellers: 1,
     reviews: 450,
+    estimatedMonthlyProfit: 15420.50,
     marketplace_id: 'ATVPDKIKX0DER'
   },
   {
@@ -190,6 +192,7 @@ const mockProducts: ProductDisplay[] = [
     fbaFees: 8.36,
     activeSellers: 1,
     reviews: 120,
+    estimatedMonthlyProfit: 4200.30,
     marketplace_id: 'ATVPDKIKX0DER'
   },
   {
@@ -206,6 +209,7 @@ const mockProducts: ProductDisplay[] = [
     fbaFees: 9.02,
     activeSellers: 1,
     reviews: 85,
+    estimatedMonthlyProfit: 1250.00,
     marketplace_id: 'ATVPDKIKX0DER'
   },
   {
@@ -222,6 +226,7 @@ const mockProducts: ProductDisplay[] = [
     fbaFees: 11.13,
     activeSellers: 2,
     reviews: 54201,
+    estimatedMonthlyProfit: 85400.00,
     marketplace_id: 'ATVPDKIKX0DER'
   },
 ];
@@ -443,7 +448,8 @@ export const ProductFinder: React.FC = () => {
         percentile: item.sales_percentile, // Using backend percentile (including NEW_RISING)
         categoryTotal: item.category_total, // For Enterprise tooltips
         salesHistory: generateHistoricalData(item.estimated_sales || 10), // Generate Graph Data
-        revenue: item.estimated_revenue || null, // Using backend automated revenue
+        revenue: item.estimated_revenue || null,
+        estimatedMonthlyProfit: item.estimated_monthly_profit || null,
         score: null,
         bsr: item.salesRanks?.[0]?.displayGroupRanks?.[0]?.rank || null,
         fbaFees: item.fba_fees || null,
@@ -514,6 +520,7 @@ export const ProductFinder: React.FC = () => {
                   const newPrice = offers.price > 0 ? offers.price : p.price;
                   const newFees = calculateFBAFeesFrontend(newPrice || 0, p.rawData);
                   const newRevenue = (p.sales && newPrice) ? newPrice * p.sales : (p.revenue || null);
+                  const newMonthlyProfit = (newRevenue && p.fbaFees !== null) ? (newRevenue - (p.sales! * p.fbaFees)) : p.estimatedMonthlyProfit;
 
                   // Trigger Cache Update in backend if price changed from initial search
                   if (offers.price > 0 && (p.price !== newPrice || !p.price)) {
@@ -558,7 +565,8 @@ export const ProductFinder: React.FC = () => {
                       fulfillment: newFees.fulfillment,
                       is_estimate: newFees.isEstimate
                     },
-                    revenue: newRevenue
+                    revenue: newRevenue,
+                    estimatedMonthlyProfit: newMonthlyProfit
                   };
                 }
                 return p;
@@ -986,8 +994,20 @@ export const ProductFinder: React.FC = () => {
 
                   <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('revenue')}>
                     <div className="flex items-center justify-end gap-1">
-                      {t('col.revenue')}
+                      <div className="flex items-center gap-1 group/rev">
+                        {t('col.revenue')}
+                        <Info size={12} className="text-gray-400 cursor-help" title={t('pf.revenue_tip') || "Volume de Vendas Bruto (Mensal)"} />
+                      </div>
                       {sortConfig?.key === 'revenue' && (
+                        sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
+                      )}
+                    </div>
+                  </th>
+
+                  <th className="px-5 py-4 border-b border-gray-100 text-right cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => handleSort('estimatedMonthlyProfit')}>
+                    <div className="flex items-center justify-end gap-1">
+                      {t('col.monthly_profit') || "Lucro Mensal"}
+                      {sortConfig?.key === 'estimatedMonthlyProfit' && (
                         sortConfig.direction === 'asc' ? <ChevronUp size={14} className="text-brand-600" /> : <ChevronDown size={14} className="text-brand-600" />
                       )}
                     </div>
@@ -1158,6 +1178,15 @@ export const ProductFinder: React.FC = () => {
                         }).format(product.revenue) : '-'}
                       </td>
 
+                      <td className="px-5 py-4 text-right font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        {product.estimatedMonthlyProfit ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'de-DE', {
+                          style: 'currency',
+                          currency: product.currency || 'USD',
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0
+                        }).format(product.estimatedMonthlyProfit) : '-'}
+                      </td>
+
                       <td className="px-5 py-4 text-right text-red-600 font-bold">
                         {product.fbaFees ? (
                           <div className="flex flex-col items-end gap-0.5">
@@ -1242,8 +1271,14 @@ export const ProductFinder: React.FC = () => {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('col.revenue')}</span>
-                      <span className="font-bold text-brand-600 dark:text-brand-400">
+                      <span className="font-bold text-gray-900 dark:text-white">
                         {product.revenue ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: product.currency || 'USD', maximumFractionDigits: 0 }).format(product.revenue) : '-'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-end text-right">
+                      <span className="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('col.monthly_profit')}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {product.estimatedMonthlyProfit ? new Intl.NumberFormat(product.currency === 'BRL' ? 'pt-BR' : 'en-US', { style: 'currency', currency: product.currency || 'USD', maximumFractionDigits: 0 }).format(product.estimatedMonthlyProfit) : '-'}
                       </span>
                     </div>
                     <div className="flex flex-col items-end text-right">

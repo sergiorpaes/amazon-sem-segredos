@@ -43,9 +43,11 @@ export async function cacheProduct(data: {
     bsr?: number;
     estimated_sales?: number;
     estimated_revenue?: number;
+    estimated_monthly_profit?: number;
     fba_fees?: number;
     referral_fee?: number;
     fulfillment_fee?: number;
+    active_sellers?: number;
     net_profit?: number;
     sales_percentile?: string;
     is_list_price?: boolean;
