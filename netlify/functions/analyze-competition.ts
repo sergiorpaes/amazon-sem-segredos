@@ -140,14 +140,14 @@ PRODUTO ANALISADO:
 - Preço: ${productPrice ? `${productPrice} ${currency}` : 'Desconhecido'}
 - BSR (Ranking de Vendas): ${productBsr ? `#${productBsr.toLocaleString()}` : 'Desconhecido'}
 - Vendas Estimadas/mês: ${productSales ? `${productSales} unidades` : 'Desconhecido'}
-- Avaliações: ${productReviews ? `${productReviews} reviews` : 'Desconhecido'}
+- Avaliações: ${productReviews ? `${productReviews} reviews` : 'Desconhecido (NÃO ASSUMA ZERO)'}
 - Vendedores Ativos: ${productActiveSellers || 'Desconhecido'}
 - Marketplace: ${domain}
 `.trim();
 
         const reviewContext = reviews.length > 0
             ? `\nREVIEWS REAIS DOS CLIENTES (${reviews.length} extraídas):\n${reviews.map((r, i) => `${i + 1}. "${r}"`).join('\n')}`
-            : `\nNota: Não foi possível extrair reviews em tempo real. Baseie a análise exclusivamente nos dados do produto acima.`;
+            : `\nNota: Não foi possível extrair a nota ou o número exato de reviews em tempo real devido a limitações técnicas. Baseie a análise nos outros dados técnicos.`;
 
         const prompt = `Você é um especialista em marketplace Amazon com profundo conhecimento em análise competitiva, copy de listings e psicologia do comprador online.
 
@@ -156,14 +156,15 @@ ${reviewContext}
 
 SUA TAREFA: Faz uma análise competitiva ESPECÍFICA e ACIONÁVEL para este produto exato. As respostas devem ser 100% personalizadas para este produto, sua categoria, faixa de preço e concorrência. NUNCA dê respostas genéricas.
 
-INSTRUCÇÕES:
+INSTRUCÇÕES CRÍTICAS:
+1. SE o número de avaliações for "Desconhecido", PROIBIDO usar "falta de reviews", "ausência de avaliações", "baixa prova social" ou sinônimos como fraqueza. O produto pode ter dezenas de milhares de reviews. Ignore as reviews na análise e foque no produto físico, categoria e preço.
 ${reviews.length > 0
-                ? `- Analise as reviews reais para identificar padrões de insatisfação recorrentes específicos deste produto/categoria.
-- Identifique os 3 pontos fracos mais mencionados pelos compradores.
-- Baseie as oportunidades de melhoria diretamente nos problemas identificados.`
-                : `- Com base no preço (${productPrice ? `${productPrice} ${currency}` : 'N/A'}), BSR #${productBsr || 'N/A'} e categoria "${productCategory || 'Geral'}", infira os pontos fracos típicos desta faixa de mercado.
-- Considera o perfil do comprador que compra nesta categoria e neste preço.
-- Gera oportunidades de melhoria estratégicas e específicas para superar concorrentes com este tipo de produto.`}
+                ? `2. Analise as reviews reais para identificar padrões de insatisfação recorrentes específicos deste produto/categoria.
+3. Identifique os 3 pontos fracos mais mencionados pelos compradores.
+4. Baseie as oportunidades de melhoria diretamente nos problemas identificados.`
+                : `2. Com base no preço (${productPrice ? `${productPrice} ${currency}` : 'N/A'}), BSR #${productBsr || 'N/A'} e categoria "${productCategory || 'Geral'}", infira os pontos fracos típicos desta faixa de mercado/produto físico.
+3. Considera o perfil do comprador que compra nesta categoria e neste preço.
+4. Gera oportunidades de melhoria estratégicas e específicas para superar concorrentes com este tipo de produto, ignorando a ausência de quantidade de reviews.`}
 
 FORMATO DE RESPOSTA (JSON):
 {
