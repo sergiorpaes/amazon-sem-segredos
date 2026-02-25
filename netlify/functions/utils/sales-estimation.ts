@@ -32,13 +32,11 @@ const bsrTable2025: Record<string, Record<string, number>> = {
 };
 
 /**
- * Estimates monthly sales based on BSR and Category for Spain 2025.
+ * Estimates monthly sales based on BSR, Category and Marketplace.
  */
-export function estimateSales(bsr: number, category: string): { estimatedSales: number; percentile: string | undefined; categoryTotal: number } {
-    // 1. Resolve normalized category name (mapping raw SP-API names to our census names)
+export function estimateSales(bsr: number, category: string, marketplaceId: string = 'ATVPDKIKX0DER'): { estimatedSales: number; percentile: string | undefined; categoryTotal: number } {
+    // 1. Resolve normalized category name
     let normalizedCategory = "Otros Productos";
-
-    // Best-effort mapping for common SP-API values
     const norm = category.toLowerCase();
 
     if (norm.includes("belleza") || norm.includes("beauty") || norm.includes("cosmetic")) normalizedCategory = "Belleza";
@@ -49,7 +47,7 @@ export function estimateSales(bsr: number, category: string): { estimatedSales: 
     else if (norm.includes("bebé") || norm.includes("baby")) normalizedCategory = "Bebé";
     else if (norm.includes("deportes") || norm.includes("sport") || norm.includes("outdoor")) normalizedCategory = "Deportes y aire libre";
     else if (norm.includes("moda") || norm.includes("clothing") || norm.includes("shoes") || norm.includes("jewelry") || norm.includes("apparel") || norm.includes("ropa") || norm.includes("calzado") || norm.includes("oxford") || norm.includes("sneaker") || norm.includes("boot") || norm.includes("sandal") || norm.includes("watch") || norm.includes("reloj") || norm.includes("bag") || norm.includes("bolso")) normalizedCategory = "Moda";
-    else if (norm.includes("bricolaje") || norm.includes("tools") || norm.includes("diy") || norm.includes("herramientas")) normalizedCategory = "Bricolaje y herramientas";
+    else if (norm.includes("bricolaje") || norm.includes("tools") || norm.includes("diy") || norm.includes("herramientas")) normalizedCategory = "Bricolaje y ferramentas";
     else if (norm.includes("informática") || norm.includes("pc") || norm.includes("computer")) normalizedCategory = "Informática";
     else if (norm.includes("mascotas") || norm.includes("pet") || norm.includes("animal")) normalizedCategory = "Productos para mascotas";
     else if (norm.includes("salud") || norm.includes("personal care") || norm.includes("health") || norm.includes("drugstore")) normalizedCategory = "Salud y cuidado personal";
@@ -62,37 +60,64 @@ export function estimateSales(bsr: number, category: string): { estimatedSales: 
 
     const census = bsrTable2025[normalizedCategory] || bsrTable2025["Otros Productos"];
 
-    // 2. Determine Percentile and Estimate Units
-    // Ranges based on user logic:
-    // Top 1%: 300 - 2500 (Standard)
-    // Major Appliances: Conservative curve (Top 1% capped at 800)
+    // 2. Marketplace Scaling Factor
+    // US is the baseline. Other markets (ES, BR, etc) are typically smaller in volume for the same BSR.
+    const marketplaceMultipliers: Record<string, number> = {
+        'ATVPDKIKX0DER': 1.0,  // US
+        'A2Q3Y263D00KWC': 0.3, // BR
+        'A1RKKUPIHCS9HS': 0.25, // ES
+        'A2EUQ1WTGCTBG2': 0.35, // CA
+        'A1F83G8C2ARO7P': 0.45, // UK
+        'A1PA6795UKMFR9': 0.4,  // DE
+    };
+    const marketScale = marketplaceMultipliers[marketplaceId] || 0.25;
+
+    // 3. Logarithmic Interpolation Logic
+    // Linear interpolation makes the curve too flat (overestimating mids).
+    // Logarithmic curve creates a steeper drop-off which is more realistic for Amazon.
+
     const top1Max = normalizedCategory === "Grandes electrodomésticos" ? 800 : 2500;
 
+    const logBSR = Math.log10(Math.max(1, bsr));
+
     if (bsr <= census.top1) {
-        // Top 1% - Interpolate between 300 and Max
-        const ratio = (census.top1 - bsr) / census.top1;
+        // Top 1% - Interpolate log values
+        const logMax = Math.log10(census.top1);
+        const ratio = (logMax - logBSR) / logMax;
         const estimated = Math.floor(300 + (ratio * (top1Max - 300)));
-        return { estimatedSales: estimated, percentile: "1%", categoryTotal: census.top10 };
+        return {
+            estimatedSales: Math.floor(estimated * marketScale),
+            percentile: "1%",
+            categoryTotal: census.top10
+        };
     }
 
     if (bsr <= census.top3) {
-        // Top 3% - Interpolate between 100 and 299
-        const range = census.top3 - census.top1;
-        const offset = bsr - census.top1;
-        const ratio = (range - offset) / range;
+        // Top 3%
+        const log1 = Math.log10(census.top1);
+        const log3 = Math.log10(census.top3);
+        const ratio = (log3 - logBSR) / (log3 - log1);
         const estimated = Math.floor(100 + (ratio * 199));
-        return { estimatedSales: estimated, percentile: "3%", categoryTotal: census.top10 };
+        return {
+            estimatedSales: Math.floor(estimated * marketScale),
+            percentile: "3%",
+            categoryTotal: census.top10
+        };
     }
 
     if (bsr <= census.top10) {
-        // Top 10% - Interpolate between 10 and 45
-        const range = census.top10 - census.top3;
-        const offset = bsr - census.top3;
-        const ratio = (range - offset) / range;
+        // Top 10%
+        const log3 = Math.log10(census.top3);
+        const log10 = Math.log10(census.top10);
+        const ratio = (log10 - logBSR) / (log10 - log3);
         const estimated = Math.floor(10 + (ratio * 35));
-        return { estimatedSales: estimated, percentile: "10%", categoryTotal: census.top10 };
+        return {
+            estimatedSales: Math.floor(estimated * marketScale),
+            percentile: "10%",
+            categoryTotal: census.top10
+        };
     }
 
     // Outside Top 10%
-    return { estimatedSales: 5, percentile: undefined, categoryTotal: census.top10 }; // Show as < 10 in UI
+    return { estimatedSales: Math.floor(5 * marketScale), percentile: undefined, categoryTotal: census.top10 };
 }

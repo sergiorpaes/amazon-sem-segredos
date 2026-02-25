@@ -521,14 +521,22 @@ export const handler: Handler = async (event, context) => {
                 let bestBsr = undefined;
 
                 if (allRanks.length > 0) {
-                    // Iterate through all available ranks and pick the best one (highest sales)
-                    let maxSales = -1;
+                    // Iterate through all available ranks and pick the best one
+                    // We prioritize the rank that matches the main category (root)
+                    let maxEstimate = -1;
+                    const rootCategory = item.summaries?.[0]?.websiteDisplayGroupName || '';
 
                     for (const rankObj of allRanks) {
-                        const estimate = estimateSales(rankObj.rank, rankObj.displayGroup || item.summaries?.[0]?.websiteDisplayGroupName || '');
-                        if (estimate.estimatedSales > maxSales) {
-                            maxSales = estimate.estimatedSales;
-                            estimated_sales = estimate.estimatedSales;
+                        const isRoot = rankObj.displayGroup === rootCategory;
+                        const estimate = estimateSales(rankObj.rank, rankObj.displayGroup || rootCategory, targetMarketplace);
+
+                        // If it's a sub-category rank, we apply a niche correction factor (0.5x) 
+                        // to avoid overestimating based on ranking #1 in a tiny niche.
+                        const adjustedSales = isRoot ? estimate.estimatedSales : Math.floor(estimate.estimatedSales * 0.5);
+
+                        if (adjustedSales > maxEstimate) {
+                            maxEstimate = adjustedSales;
+                            estimated_sales = adjustedSales;
                             sales_percentile = estimate.percentile;
                             category_total = estimate.categoryTotal;
                             bestBsr = rankObj.rank;

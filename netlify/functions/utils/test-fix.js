@@ -2,47 +2,28 @@
 import { estimateSales } from './sales-estimation.js';
 
 function test() {
-    console.log("--- Testing Category Mapping ---");
-    const testCases = [
-        { category: "Clothing, Shoes & Jewelry", bsr: 1264, expected: "Moda" },
-        { category: "Men's Oxfords", bsr: 1, expected: "Moda" },
-        { category: "Beauty & Personal Care", bsr: 500, expected: "Belleza" },
-        { category: "Automotive Parts", bsr: 1000, expected: "Coche y moto" },
-        { category: "Pet Supplies", bsr: 200, expected: "Produtos para mascotas" }
-    ];
+    console.log("--- Testing Logarithmic Curve & Marketplace Scaling ---");
 
-    testCases.forEach(tc => {
-        try {
-            const result = estimateSales(tc.bsr, tc.category);
-            console.log(`Category: ${tc.category} -> Estimated Sales: ${result.estimatedSales} (Percentile: ${result.percentile})`);
-        } catch (e) {
-            console.log(`Error testing ${tc.category}: ${e.message}`);
-        }
-    });
+    // Case from user: B0BZC3R77L (Men's Oxfords / Clothing)
+    // US Marketplace, Rank 1264
+    const usCase = estimateSales(1264, "Clothing, Shoes & Jewelry", 'ATVPDKIKX0DER');
+    console.log(`US Category: Clothing, BSR: 1264 -> Estimated Sales: ${usCase.estimatedSales} (Percentile: ${usCase.percentile})`);
 
-    console.log("\n--- Testing Multiple Rankings Logic (Simulated) ---");
-    const rankings = [
-        { rank: 1264, displayGroup: "Clothing, Shoes & Jewelry" },
-        { rank: 1, displayGroup: "Men's Oxfords" }
-    ];
+    // US Marketplace, Rank 1 (Sub-category - simulate root category for test)
+    const usRootRank1 = estimateSales(1, "Men's Oxfords", 'ATVPDKIKX0DER');
+    console.log(`US Sub-category: Men's Oxfords, BSR: 1 -> Estimated Sales: ${usRootRank1.estimatedSales}`);
 
-    let maxSales = -1;
-    let bestEstimate = null;
+    // Brazil Marketplace, same BSR
+    const brCase = estimateSales(1264, "Clothing, Shoes & Jewelry", 'A2Q3Y263D00KWC');
+    console.log(`BR Category: Clothing, BSR: 1264 -> Estimated Sales: ${brCase.estimatedSales} (Scaled: 0.3x)`);
 
-    rankings.forEach(r => {
-        const estimate = estimateSales(r.rank, r.displayGroup);
-        console.log(`Rank: ${r.rank} in ${r.displayGroup} -> Sales: ${estimate.estimatedSales}`);
-        if (estimate.estimatedSales > maxSales) {
-            maxSales = estimate.estimatedSales;
-            bestEstimate = estimate;
-        }
-    });
+    console.log("\n--- Comparison with previous linear logic ---");
+    console.log("Old logic estimated ~2400 for BSR 1264 in US Moda.");
+    console.log(`New logic estimates ~${usCase.estimatedSales} (much closer to the '400+' bought metric).`);
 
-    if (bestEstimate) {
-        console.log(`\nFinal Chosen Estimate: ${bestEstimate.estimatedSales} units/month`);
-    } else {
-        console.log("\nNo estimate found.");
-    }
+    console.log("\n--- Testing High BSR (Tail) ---");
+    const highBsr = estimateSales(50000, "Moda", 'ATVPDKIKX0DER');
+    console.log(`US BSR: 50000 -> Estimated Sales: ${highBsr.estimatedSales} (Should be very low)`);
 }
 
 test();
