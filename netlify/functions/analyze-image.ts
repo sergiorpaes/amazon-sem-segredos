@@ -166,12 +166,25 @@ export const handler = async (event: any) => {
             
             O idioma de saída para os textos descritivos e callouts dentro das imagens deve ser: **${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'}**.
 
-            Gere exatamente 4 prompts distintos de geração de imagem para DALL-E 3 / Imagen 3 baseados neste produto:
+            Generate ${isPro ? '6' : '3'} distinct image generation prompts for DALL-E 3 / Imagen 3 based on this product.
+            ${isPro ? `
+            Como o usuário é PRO/Premium, gere 6 prompts em 2 categorias:
             
-            1. "lifestyle": O produto sendo usado em um ambiente real (casa, escritório, ar livre).
-            2. "studio": Uma foto de estúdio super profissional, fundo limpo, iluminação perfeita, focando nos detalhes.
-            3. "scale": O produto próximo a mãos humanas ou objetos do cotidiano para mostrar a escala/tamanho real.
-            4. "benefit": Uma imagem focada na principal dor que o produto resolve ou no benefício final (ex: pessoa sorrindo, resultado visual, etc).
+            CATEGORIA 1: LIFESTYLE (3 imagens)
+            - lifestyle: In use, home/office setting.
+            - creative: Studio lighting, artistic background.
+            - application: Showing the benefit/result.
+
+            CATEGORIA 2: INFOGRÁFICOS TÉCNICOS (3 imagens)
+            - dimensions: White background, product only, with technical arrows and dimension labels in ${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'} (ex: "14cm de altura").
+            - features: Product detail with text overlays in ${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'} pointing to features (ex: "Lâmina de Aço Inoxidável", "Trava de Segurança").
+            - exploded: Parts separated clearly with labels in ${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'} for each component.
+            ` : `
+            Gere 3 prompts de estilo Lifestyle:
+            1. "lifestyle" shot (e.g., in use, home setting).
+            2. "creative" shot (e.g., studio lighting, artistic background).
+            3. "application" shot (e.g., showing the benefit/result).
+            `}
 
             IMPORTANT: All text that will be visually rendered in the image (labels, callouts, descriptions) MUST be in **${language === 'pt' ? 'Português' : language === 'es' ? 'Espanhol' : 'Inglês'}**.
 
@@ -185,9 +198,13 @@ export const handler = async (event: any) => {
               "description": "Brief literal description in Portuguese",
               "prompts": {
                     "lifestyle": "Full prompt for lifestyle shot...",
-                    "studio": "Full prompt for studio shot...",
-                    "scale": "Full prompt showing scale...",
-                    "benefit": "Full prompt showing the main benefit..."
+                    "creative": "Full prompt for studio/creative shot...",
+                    "application": "Full prompt showing application/benefit..."
+                    ${isPro ? `,
+                    "dimensions": "Full prompt for infographic with dimensions in ${language}...",
+                    "features": "Full prompt with feature callouts in ${language}...",
+                    "exploded": "Full prompt showing exploded view with labels in ${language}..."
+                    ` : ''}
               }
             }
             Do not use markdown formatting.

@@ -118,8 +118,9 @@ export const handler = async (event: any) => {
         ESTRUTURA DO ANÚNCIO PARA CADA IDIOMA:
         1. TÍTULO DO PRODUTO (máx. 200 caracteres)
         2. BULLET POINTS / CARACTERÍSTICAS (${bulletCount} bullets)
-           ${isPro ? "- Como o usuário é PRO/Premium, gere 10 bullets extremamente detalhados." : "- Gere 5 bullets focados em benefícios."}
+           ${isPro ? "- Como o usuário é PRO/Premium, gere EXATAMENTE 10 bullets longos, persuasivos e extremamente detalhados com palavras-chave incorporadas, cobrindo todos os casos de uso imagináveis." : "- Gere EXATAMENTE 5 bullets focados nos benefícios principais."}
         3. DESCRIÇÃO LONGA (Estrutura escaneável)
+           ${isPro ? "- Como o usuário é PRO/Premium, crie uma descrição LONGA e PROFUNDA (mínimo 4-5 parágrafos ou seções), incluindo storytelling da marca, cenário de uso, perguntas frequentes no meio do texto e máxima densidade de SEO." : "- Crie uma descrição padrão, clara e concisa (2-3 parágrafos)."}
         4. PALAVRAS-CHAVE BACKEND (SEARCH TERMS - Lista separada por espaço)
 
         📌 INFORMAÇÕES DO PRODUTO:
