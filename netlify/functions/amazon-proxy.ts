@@ -182,8 +182,7 @@ export const handler: Handler = async (event: any) => {
                     };
 
                     const monthlySls = freshEstimate.estimatedSales || 0;
-                    const monthlyRev = Math.round(monthlySls * priceValue * 100);
-                    const monthlyProfit = Math.round((monthlyRev - (monthlySls * fba_fees)) / 100) * 100;
+                    const monthlyRev = Math.round(monthlySls * (priceValue - (fba_fees / 100)) * 100);
 
                     return {
                         statusCode: 200,
@@ -204,10 +203,9 @@ export const handler: Handler = async (event: any) => {
                                 sales_percentile: freshEstimate.percentile,
                                 category_total: freshEstimate.categoryTotal,
                                 estimated_revenue: monthlyRev / 100,
-                                estimated_monthly_profit: monthlyProfit / 100,
                                 fba_fees: fba_fees / 100,
                                 fba_breakdown: fba_breakdown,
-                                active_sellers: cached.active_sellers,
+                                active_sellers: (cached as any).active_sellers,
                                 marketplace_id: cached.marketplace_id
                             }]
                         }),
@@ -273,7 +271,7 @@ export const handler: Handler = async (event: any) => {
         let pricingMap: Record<string, { price: number, currency: string, offerCount: number }> = {};
         if (intent !== 'get_offers' && catalogData.items?.length > 0) {
             const uniqueAsins = Array.from(new Set(catalogData.items.map((i: any) => i.asin as string)));
-            await Promise.all(uniqueAsins.map(async (asin: string) => {
+            await Promise.all((uniqueAsins as string[]).map(async (asin: string) => {
                 const pUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
                 const pRes = await fetch(pUrl, { headers: { "x-amz-access-token": access_token } });
                 if (pRes.ok) {
@@ -300,9 +298,8 @@ export const handler: Handler = async (event: any) => {
                 const currencyCode = pricingMap[item.asin]?.currency || summary?.price?.currencyCode || 'BRL';
 
                 const fbaRes = calculateFBAFees(priceValue, item.attributes?.item_dimensions?.[0], item.attributes?.item_weight?.[0], summary?.websiteDisplayGroupName || '');
-
-                const estimated_revenue = Math.round((salesEst.estimatedSales || 0) * priceValue * 100);
-                const monthlyProfitCents = Math.round((estimated_revenue - ((salesEst.estimatedSales || 0) * fbaRes.totalFees)));
+                const netProfitCents = Math.round((priceValue - (fbaRes.totalFees / 100)) * 100);
+                const estimated_revenue_cents = Math.round((salesEst.estimatedSales || 0) * (priceValue - (fbaRes.totalFees / 100)) * 100);
 
                 const mainImage = item.images?.[0]?.images?.find((img: any) => img.variant === 'MAIN')?.link;
                 const active_sellers = pricingMap[item.asin]?.offerCount || summary?.offerCount || 1;
@@ -318,10 +315,9 @@ export const handler: Handler = async (event: any) => {
                     currency: currencyCode,
                     bsr: salesEst.bestBsr,
                     estimated_sales: salesEst.estimatedSales || undefined,
-                    estimated_revenue: estimated_revenue,
-                    estimated_monthly_profit: monthlyProfitCents,
+                    estimated_revenue: estimated_revenue_cents,
                     fba_fees: fbaRes.totalFees,
-                    net_profit: Math.round((priceValue - (fbaRes.totalFees / 100)) * 100),
+                    net_profit: netProfitCents,
                     sales_percentile: salesEst.percentile,
                     active_sellers,
                     raw_data: item
@@ -331,11 +327,10 @@ export const handler: Handler = async (event: any) => {
                     ...item,
                     active_sellers,
                     estimated_sales: salesEst.estimatedSales,
-                    estimated_revenue: estimated_revenue / 100,
-                    estimated_monthly_profit: monthlyProfitCents / 100,
+                    estimated_revenue: estimated_revenue_cents / 100,
                     fba_fees: fbaRes.totalFees / 100,
                     fba_breakdown: { referral: fbaRes.referralFee / 100, fulfillment: fbaRes.fulfillmentFee / 100, is_estimate: fbaRes.isEstimate },
-                    net_profit: (priceValue - (fbaRes.totalFees / 100)),
+                    net_profit: netProfitCents / 100,
                     sales_percentile: salesEst.percentile,
                     category_total: salesEst.categoryTotal,
                     price: priceValue,

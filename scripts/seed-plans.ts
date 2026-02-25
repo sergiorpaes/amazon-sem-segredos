@@ -17,10 +17,10 @@ const PLANS_DATA = [
     {
         name: 'Starter',
         monthly_price_eur: 1900, // €19.00
-        credit_limit: 50,
+        credit_limit: 90,
         stripe_price_id: 'price_starter_placeholder', // Needs to be resolved from Product ID or updated manually
         stripe_product_id: 'prod_TwlXs6KmXub6lX',
-        features_json: JSON.stringify(['50 créditos/mês', 'Acesso a Mentor', 'Suporte por e-mail']),
+        features_json: JSON.stringify(['90 créditos/mês', 'Acesso a Mentor', 'Suporte por e-mail']),
     },
     {
         name: 'Pro',
