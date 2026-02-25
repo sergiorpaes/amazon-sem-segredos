@@ -39,23 +39,26 @@ export function estimateSales(bsr: number, category: string): { estimatedSales: 
     let normalizedCategory = "Otros Productos";
 
     // Best-effort mapping for common SP-API values
-    if (category.includes("Belleza") || category.includes("Beauty")) normalizedCategory = "Belleza";
-    else if (category.includes("Electrónica") || category.includes("Electronics")) normalizedCategory = "Electrónica";
-    else if (category.includes("Hogar") || category.includes("Kitchen") || category.includes("Home")) normalizedCategory = "Hogar y cocina";
-    else if (category.includes("Alimentación") || category.includes("Grocery")) normalizedCategory = "Alimentación y bebidas";
-    else if (category.includes("Juguetes") || category.includes("Toys")) normalizedCategory = "Juguetes y juegos";
-    else if (category.includes("Bebé") || category.includes("Baby")) normalizedCategory = "Bebé";
-    else if (category.includes("Deportes") || category.includes("Sport")) normalizedCategory = "Deportes y aire libre";
-    else if (category.includes("Ropa") || category.includes("Moda") || category.includes("Apparel")) normalizedCategory = "Moda";
-    else if (category.includes("Bricolaje") || category.includes("Tools") || category.includes("DIY")) normalizedCategory = "Bricolaje y herramientas";
-    else if (category.includes("Informática") || category.includes("PC")) normalizedCategory = "Informática";
-    else if (category.includes("Mascotas") || category.includes("Pet")) normalizedCategory = "Productos para mascotas";
-    else if (category.includes("Salud") || category.includes("Personal Care")) normalizedCategory = "Salud y cuidado personal";
-    else if (category.includes("Libros") || category.includes("Books")) normalizedCategory = "Libros";
-    else if (category.includes("Jardín") || category.includes("Garden")) normalizedCategory = "Jardín";
-    else if (category.includes("Iluminación") || category.includes("Lighting")) normalizedCategory = "Iluminación";
-    else if (category.includes("Oficina") || category.includes("Office")) normalizedCategory = "Oficina y papelería";
-    else if (category.includes("Grandes electrodomésticos") || category.includes("Major Appliances")) normalizedCategory = "Grandes electrodomésticos";
+    const norm = category.toLowerCase();
+
+    if (norm.includes("belleza") || norm.includes("beauty") || norm.includes("cosmetic")) normalizedCategory = "Belleza";
+    else if (norm.includes("electrónica") || norm.includes("electronics")) normalizedCategory = "Electrónica";
+    else if (norm.includes("hogar") || norm.includes("kitchen") || norm.includes("home") || norm.includes("cuisine")) normalizedCategory = "Hogar y cocina";
+    else if (norm.includes("alimentación") || norm.includes("grocery") || norm.includes("food") || norm.includes("drink")) normalizedCategory = "Alimentación y bebidas";
+    else if (norm.includes("juguetes") || norm.includes("toys") || norm.includes("juego")) normalizedCategory = "Juguetes y juegos";
+    else if (norm.includes("bebé") || norm.includes("baby")) normalizedCategory = "Bebé";
+    else if (norm.includes("deportes") || norm.includes("sport") || norm.includes("outdoor")) normalizedCategory = "Deportes y aire libre";
+    else if (norm.includes("moda") || norm.includes("clothing") || norm.includes("shoes") || norm.includes("jewelry") || norm.includes("apparel") || norm.includes("ropa") || norm.includes("calzado") || norm.includes("oxford") || norm.includes("sneaker") || norm.includes("boot") || norm.includes("sandal") || norm.includes("watch") || norm.includes("reloj") || norm.includes("bag") || norm.includes("bolso")) normalizedCategory = "Moda";
+    else if (norm.includes("bricolaje") || norm.includes("tools") || norm.includes("diy") || norm.includes("herramientas")) normalizedCategory = "Bricolaje y herramientas";
+    else if (norm.includes("informática") || norm.includes("pc") || norm.includes("computer")) normalizedCategory = "Informática";
+    else if (norm.includes("mascotas") || norm.includes("pet") || norm.includes("animal")) normalizedCategory = "Productos para mascotas";
+    else if (norm.includes("salud") || norm.includes("personal care") || norm.includes("health") || norm.includes("drugstore")) normalizedCategory = "Salud y cuidado personal";
+    else if (norm.includes("libros") || norm.includes("books")) normalizedCategory = "Libros";
+    else if (norm.includes("jardín") || norm.includes("garden") || norm.includes("patio")) normalizedCategory = "Jardín";
+    else if (norm.includes("iluminación") || norm.includes("lighting") || norm.includes("luces")) normalizedCategory = "Iluminación";
+    else if (norm.includes("oficina") || norm.includes("office") || norm.includes("stationary")) normalizedCategory = "Oficina y papelería";
+    else if (norm.includes("grandes electrodomésticos") || norm.includes("major appliances")) normalizedCategory = "Grandes electrodomésticos";
+    else if (norm.includes("coche") || norm.includes("automotive") || norm.includes("moto")) normalizedCategory = "Coche y moto";
 
     const census = bsrTable2025[normalizedCategory] || bsrTable2025["Otros Productos"];
 

@@ -513,19 +513,27 @@ export const handler: Handler = async (event, context) => {
         // --- PROCESS & INJECT SALES DATA ---
         if (intent !== 'get_offers' && catalogData.items && Array.isArray(catalogData.items)) {
             const processedItems = await Promise.all(catalogData.items.map(async (item: any) => {
-                // Get BSR
-                const salesRanks = item.salesRanks?.[0]?.displayGroupRanks || [];
-                const mainRank = salesRanks[0]; // Primary BSR
+                const allRanks = item.salesRanks?.[0]?.displayGroupRanks || [];
 
                 let estimated_sales = null;
                 let sales_percentile = undefined;
                 let category_total = 0;
+                let bestBsr = undefined;
 
-                if (mainRank) {
-                    const estimate = estimateSales(mainRank.rank, mainRank.displayGroup || item.summaries?.[0]?.websiteDisplayGroupName || '');
-                    estimated_sales = estimate.estimatedSales;
-                    sales_percentile = estimate.percentile;
-                    category_total = estimate.categoryTotal;
+                if (allRanks.length > 0) {
+                    // Iterate through all available ranks and pick the best one (highest sales)
+                    let maxSales = -1;
+
+                    for (const rankObj of allRanks) {
+                        const estimate = estimateSales(rankObj.rank, rankObj.displayGroup || item.summaries?.[0]?.websiteDisplayGroupName || '');
+                        if (estimate.estimatedSales > maxSales) {
+                            maxSales = estimate.estimatedSales;
+                            estimated_sales = estimate.estimatedSales;
+                            sales_percentile = estimate.percentile;
+                            category_total = estimate.categoryTotal;
+                            bestBsr = rankObj.rank;
+                        }
+                    }
                 } else {
                     // BSR Fallback: Marker for Frontend to use Search Volume logic
                     sales_percentile = "NEW_RISING";
@@ -590,7 +598,7 @@ export const handler: Handler = async (event, context) => {
                     brand: summary?.brandName || summary?.brand,
                     price: Math.round(priceValue * 100),
                     currency: currencyCode,
-                    bsr: mainRank?.rank,
+                    bsr: bestBsr,
                     estimated_sales: estimated_sales || undefined,
                     estimated_revenue: estimated_revenue || undefined,
                     fba_fees: fbaResult.totalFees,
