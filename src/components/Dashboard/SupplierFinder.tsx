@@ -34,7 +34,7 @@ export const SupplierFinder: React.FC = () => {
         fetchSuppliers();
     }, []);
 
-    const categories: { id: SupplierCategory | 'Todas', label: string }[] = [
+    const baseCategories: { id: SupplierCategory | 'Todas' | string, label: string }[] = [
         { id: 'Todas', label: t('cat.all') },
         { id: 'Geral', label: t('cat.general') },
         { id: 'Casa & Cozinha', label: t('cat.home_kitchen') },
@@ -47,6 +47,29 @@ export const SupplierFinder: React.FC = () => {
         { id: 'Bebê', label: t('cat.baby') },
         { id: 'Decoração', label: t('cat.decor') }
     ];
+
+    const categories = useMemo(() => {
+        const uniqueCats = new Set<string>();
+        suppliersList.forEach(s => {
+            if (s.categories && Array.isArray(s.categories)) {
+                s.categories.forEach((cat: string) => {
+                    if (cat !== undefined && cat !== null && cat !== '') {
+                        uniqueCats.add(cat.trim());
+                    }
+                });
+            }
+        });
+
+        const predefinedIds = baseCategories.map(c => c.id as string);
+        const dynamicCats = Array.from(uniqueCats)
+            .filter(c => !predefinedIds.includes(c))
+            .map(c => ({
+                id: c,
+                label: c // We use the raw category name since we don't have dynamic translations
+            }));
+
+        return [...baseCategories, ...dynamicCats];
+    }, [suppliersList, t]);
 
     const getCategoryLabel = (cat: string) => {
         const found = categories.find(c => c.id === cat);
