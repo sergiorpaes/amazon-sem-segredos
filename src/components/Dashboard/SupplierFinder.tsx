@@ -61,11 +61,21 @@ export const SupplierFinder: React.FC = () => {
         });
 
         const predefinedIds = baseCategories.map(c => c.id as string);
+
+        const getDynamicTrans = (catName: string) => {
+            // "Retailer / B2B" -> "retailer_b2b"
+            const keyPart = catName.toLowerCase().replace(/ \/ /g, '_').replace(/ /g, '_').replace(/\//g, '').replace(/_+/g, '_');
+            const transKey = `cat.dynamic.${keyPart}`;
+            const translation = t(transKey);
+            // i18next or simple translation functions typically return the key if not found
+            return translation !== transKey && translation ? translation : catName;
+        };
+
         const dynamicCats = Array.from(uniqueCats)
             .filter(c => !predefinedIds.includes(c))
             .map(c => ({
                 id: c,
-                label: c // We use the raw category name since we don't have dynamic translations
+                label: getDynamicTrans(c as string)
             }));
 
         return [...baseCategories, ...dynamicCats];
