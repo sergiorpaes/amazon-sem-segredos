@@ -1,7 +1,7 @@
 
 import Stripe from 'stripe';
 import { db } from '../../src/db';
-import { users, userSubscriptions, plans, systemConfig } from '../../src/db/schema';
+import { users, userSubscriptions, plans, systemConfig, creditsLedger } from '../../src/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { addCredits } from '../../src/lib/credits';
 
@@ -103,8 +103,17 @@ export const handler = async (event: any) => {
                     console.log(`[Webhook] Invoice Payment Succeeded for Subscription: ${subscriptionId}`);
                     // ALWAYS fetch subscription from Stripe to ensure we have the absolute latest metadata (handles upgrades)
                     const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
-                    const userId = parseInt(subscription.metadata.userId || '0');
-                    const planId = parseInt(subscription.metadata.planId || '0');
+                    let userId = parseInt(subscription.metadata.userId || invoice.metadata?.userId || '0');
+                    let planId = parseInt(subscription.metadata.planId || invoice.metadata?.planId || '0');
+
+                    // If metadata still missing, fallback to our database
+                    if (!userId || !planId) {
+                        const [subDb] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.stripe_subscription_id, subscriptionId)).limit(1);
+                        if (subDb) {
+                            userId = userId || subDb.user_id;
+                            planId = planId || subDb.plan_id;
+                        }
+                    }
 
                     console.log(`[Webhook] Subscription Metadata: User=${userId}, Plan=${planId}`);
 
@@ -130,8 +139,20 @@ export const handler = async (event: any) => {
                         // 2. Grant Plan Credits
                         const [plan] = await db.select().from(plans).where(eq(plans.id, planId)).limit(1);
                         if (plan && plan.credit_limit > 0) {
-                            await addCredits(userId, plan.credit_limit, 'monthly', `Plano ${plan.name}`);
-                            console.log(`✅ Success: Added monthly credits (${plan.credit_limit}) for user ${userId} (Plan: ${plan.name})`);
+                            const [existingLedger] = await db.select().from(creditsLedger).where(
+                                and(
+                                    eq(creditsLedger.user_id, userId),
+                                    eq(creditsLedger.type, 'monthly'),
+                                    eq(creditsLedger.description, `Plano ${plan.name} (${invoice.id})`)
+                                )
+                            ).limit(1);
+
+                            if (!existingLedger) {
+                                await addCredits(userId, plan.credit_limit, 'monthly', `Plano ${plan.name} (${invoice.id})`);
+                                console.log(`✅ Success: Added monthly credits (${plan.credit_limit}) for user ${userId} (Plan: ${plan.name})`);
+                            } else {
+                                console.log(`⏩ Skipped: Credits already granted for invoice ${invoice.id}`);
+                            }
                         }
                     } else {
                         console.warn(`⚠️ Warning: Missing metadata on subscription ${subscriptionId}. No credits granted.`);

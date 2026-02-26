@@ -72,6 +72,7 @@ export const handler = async (event: any) => {
 
         // Preparation for parameters
         let priceId: string | undefined;
+        let planId: any;
         let sessionParams: any = {
             payment_method_types: ['card'],
             success_url: SUCCESS_URL,
@@ -108,7 +109,7 @@ export const handler = async (event: any) => {
         } else {
             // Subscription
             priceId = body.priceId || query.priceId;
-            let planId = body.planId || query.planId;
+            planId = body.planId || query.planId;
 
             if (priceId && !planId) {
                 const [plan] = await db.select().from(plans).where(eq(plans.stripe_price_id, priceId)).limit(1);
@@ -238,7 +239,16 @@ export const handler = async (event: any) => {
                 }
 
                 // Fallback 2: Ultimate fallback - Search by Name
-                const planToFix = plan || (await db.select().from(plans).where(eq(plans.name, 'Pro')).limit(1))[0];
+                const fallbackPlanId = plan?.id || (planId ? parseInt(planId.toString()) : null);
+                let planToFix = plan;
+                if (!planToFix && fallbackPlanId) {
+                    const results = await db.select().from(plans).where(eq(plans.id, fallbackPlanId)).limit(1);
+                    planToFix = results[0];
+                }
+                if (!planToFix) {
+                    const results = await db.select().from(plans).where(eq(plans.name, 'Pro')).limit(1);
+                    planToFix = results[0];
+                }
                 if (planToFix) {
                     const resolvedPriceId = await resolvePriceByPlanName(planToFix.name, planToFix.id);
                     if (resolvedPriceId) {
