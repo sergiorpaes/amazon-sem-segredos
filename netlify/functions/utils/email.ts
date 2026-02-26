@@ -63,6 +63,19 @@ export const sendAdminTicketEmail = async (adminEmail: string, replyToEmail: str
     }
 };
 
+export const sendNewUserNotification = async (adminEmail: string, userEmail: string) => {
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #10b981; border-bottom: 2px solid #eee; padding-bottom: 10px;">🎉 Novo Usuário Cadastrado!</h2>
+            <p>Um novo usuário acabou de criar uma conta no Amazon Sem Segredos IA Suite.</p>
+            <p><strong>E-mail do novo usuário:</strong> ${userEmail}</p>
+            <br>
+            <p style="font-size: 12px; color: #999;">Este é um e-mail automático do sistema.</p>
+        </div>
+    `;
+    return sendGenericEmail(adminEmail, '🎉 Novo Usuário Cadastrado!', html);
+};
+
 export const sendWelcomeEmail = async (email: string, activationUrl: string) => {
     const html = `
         to: email,

@@ -41,7 +41,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        phone: '',
         company_name: '',
         address_street: '',
         address_city: '',
@@ -62,8 +61,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         try {
             // Final validation before signup
-            if (!formData.email || !formData.password || !formData.phone || !formData.address_street) {
-                throw new Error('Por favor, preencha todos os campos obrigatórios (Email, Senha, Telefone e Morada).');
+            if (!formData.email || !formData.password || !formData.address_street) {
+                throw new Error('Por favor, preencha todos os campos obrigatórios (Email, Senha e Morada).');
             }
 
             // First, create the user
@@ -107,8 +106,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
     const validateStep = (currentStep: number) => {
         if (currentStep === 1) {
-            if (!formData.email || !formData.password || !formData.phone) {
-                setError('Por favor, preencha o Email, Senha e Telefone.');
+            if (!formData.email || !formData.password) {
+                setError('Por favor, preencha o Email e a Senha.');
                 return false;
             }
         } else if (currentStep === 2) {
@@ -325,18 +324,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
                                                 />
                                             </div>
-                                            <div className="relative">
-                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                                <input
-                                                    type="tel"
-                                                    name="phone"
-                                                    placeholder="Telefone / WhatsApp"
-                                                    required
-                                                    value={formData.phone}
-                                                    onChange={handleChange}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-dark-600 bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:border-brand-500 focus:ring-2 focus:ring-brand-200 outline-none transition-all"
-                                                />
-                                            </div>
+
                                         </div>
                                     )}
 

@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookie from 'cookie';
 import crypto from 'node:crypto';
-import { sendWelcomeEmail } from './utils/email';
+import { sendWelcomeEmail, sendNewUserNotification } from './utils/email';
 import { addCredits } from '../../src/lib/credits';
 
 export const handler = async (event: any) => {
@@ -19,7 +19,6 @@ export const handler = async (event: any) => {
         const {
             email,
             password,
-            phone,
             company_name,
             address_street,
             address_city,
@@ -29,8 +28,8 @@ export const handler = async (event: any) => {
             planId
         } = body;
 
-        if (!email || !password || !phone || !address_street) {
-            return { statusCode: 400, body: JSON.stringify({ error: 'Faltam campos obrigatórios (Email, Password, Telefone, Morada)' }) };
+        if (!email || !password || !address_street) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'Faltam campos obrigatórios (Email, Password, Morada)' }) };
         }
 
         const normalizedEmail = email.toLowerCase().trim();
@@ -118,6 +117,11 @@ export const handler = async (event: any) => {
 
         try {
             await sendWelcomeEmail(normalizedEmail, activationUrl);
+
+            // Send Admin Notification asynchronously
+            sendNewUserNotification('sergiorobertopaes@gmail.com', normalizedEmail).catch(err => {
+                console.error('Failed to send admin notification:', err);
+            });
         } catch (mailError: any) {
             console.error('Failed to send activation email:', mailError);
             return {
