@@ -102,7 +102,18 @@ export const SupplierFinder: React.FC = () => {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-dark-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-700">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{t('sup.title')}</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{t('sup.title')}</h2>
+                        {!isLoading && suppliersList.length > 0 && (
+                            <div className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm font-semibold rounded-full border border-emerald-200 dark:border-emerald-800/50 flex items-center shadow-sm transition-all duration-300 hover:scale-105 cursor-default" title="Total de fornecedores na ferramenta">
+                                <span className="relative flex h-2 w-2 mr-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                {suppliersList.length} disponíveis
+                            </div>
+                        )}
+                    </div>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">{t('sup.subtitle')}</p>
                 </div>
 
