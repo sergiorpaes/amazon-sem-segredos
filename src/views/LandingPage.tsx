@@ -291,6 +291,10 @@ const LandingPage = () => {
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   {t('pricing.starter.f3')}
                 </li>
+                <li className="flex items-center gap-3 text-gray-400 text-sm font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  {t('pricing.starter.f4')}
+                </li>
               </ul>
               <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold transition-all border border-white/10 hover:border-white/20">
                 {t('pricing.starter.cta')}
@@ -326,6 +330,12 @@ const LandingPage = () => {
                   </div>
                   {t('pricing.pro.f3')}
                 </li>
+                <li className="flex items-center gap-3 text-white text-sm font-medium">
+                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-white" />
+                  </div>
+                  {t('pricing.pro.f4')}
+                </li>
               </ul>
               <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-4 bg-white text-brand-600 rounded-2xl font-bold transition-all hover:bg-gray-100 active:scale-95 shadow-xl">
                 {t('pricing.pro.cta')}
@@ -351,6 +361,16 @@ const LandingPage = () => {
                 <li className="flex items-center gap-3 text-gray-400 text-sm font-medium">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   {t('pricing.premium.f3')}
+                </li>
+                <li className="flex items-center gap-3 text-gray-400 text-sm font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  {t('pricing.premium.f4')}
+                </li>
+                <li className="flex items-center gap-3 text-gray-400 text-sm font-medium transition-all">
+                  <div className="flex bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 rounded-full w-5 h-5 items-center justify-center shadow-[0_0_10px_rgba(250,204,21,0.5)]">
+                    <Zap className="w-3 h-3 fill-current" />
+                  </div>
+                  <span className="text-amber-300 font-bold">{t('pricing.premium.f5')}</span>
                 </li>
               </ul>
               <button onClick={() => setIsAuthModalOpen(true)} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold transition-all border border-white/10 hover:border-white/20">
