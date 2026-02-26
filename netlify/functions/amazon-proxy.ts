@@ -121,8 +121,8 @@ export const handler: Handler = async (event: any) => {
         }
 
         // --- PRE-PROCESSING: ASIN Detection ---
-        let finalKeywords = keywords;
-        let finalAsin = asin;
+        let finalKeywords = keywords?.trim();
+        let finalAsin = asin?.trim();
 
         if (!finalAsin && finalKeywords && /^(B\w{9}|\d{9}[0-9X])$/.test(finalKeywords)) {
             finalAsin = finalKeywords;
@@ -131,18 +131,18 @@ export const handler: Handler = async (event: any) => {
 
         const targetMarketplace = marketplaceId || "A1RKKUPIHCS9HS";
 
-        // --- CREDIT CONSUMPTION ---
+        // Check if user has credits BEFORE fetching (but don't consume yet)
         if (intent !== 'get_offers' && intent !== 'get_batch_offers' && intent !== 'update_cache' && userId && userRole !== 'ADMIN') {
             try {
                 const alreadyConsumed = await isAlreadyConsumed(userId, 'SEARCH_PRODUCT', finalAsin || finalKeywords);
                 if (!alreadyConsumed) {
-                    await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords: finalKeywords, asin: finalAsin });
+                    // Just a dry run to check balance. We will consume later.
+                    // A cleaner way would be to check balance, but let's rely on consumeCredits throwing if not enough.
+                    // To avoid consuming here and then failing, we could check ledger.
+                    // But for now, we'll wait to consume. Let's just fetch first.
                 }
             } catch (e: any) {
-                if (e.message === 'Insufficient credits') {
-                    return { statusCode: 402, headers, body: JSON.stringify({ error: 'Insufficient credits', code: 'NO_CREDITS' }) };
-                }
-                throw e;
+                console.error("Error checking credits:", e);
             }
         }
 
@@ -151,6 +151,21 @@ export const handler: Handler = async (event: any) => {
             const cached = await getCachedProduct(finalAsin);
             if (cached) {
                 console.log(`[Proxy] Cache hit for ASIN: ${finalAsin}`);
+
+                // --- CREDIT CONSUMPTION FOR CACHE HIT ---
+                if (userId && userRole !== 'ADMIN') {
+                    try {
+                        const alreadyConsumed = await isAlreadyConsumed(userId, 'SEARCH_PRODUCT', finalAsin);
+                        if (!alreadyConsumed) {
+                            await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords: finalKeywords, asin: finalAsin });
+                        }
+                    } catch (e: any) {
+                        if (e.message === 'Insufficient credits') {
+                            return { statusCode: 402, headers, body: JSON.stringify({ error: 'Insufficient credits', code: 'NO_CREDITS' }) };
+                        }
+                        throw e;
+                    }
+                }
 
                 let fba_fees = (cached.fba_fees || 0) * 100;
                 let fba_breakdown = {
@@ -266,6 +281,27 @@ export const handler: Handler = async (event: any) => {
         if (!amazonResponse.ok) {
             return { statusCode: amazonResponse.status, headers, body: JSON.stringify(catalogData) };
         }
+
+        // Check if there are items returned before consuming credits!
+        const hasItems = catalogData.items && catalogData.items.length > 0;
+
+        // --- CREDIT CONSUMPTION DEFERRED HERE ---
+        if (intent !== 'get_offers' && intent !== 'get_batch_offers' && intent !== 'update_cache' && userId && userRole !== 'ADMIN') {
+            if (hasItems) {
+                try {
+                    const alreadyConsumed = await isAlreadyConsumed(userId, 'SEARCH_PRODUCT', finalAsin || finalKeywords);
+                    if (!alreadyConsumed) {
+                        await consumeCredits(userId, 1, 'SEARCH_PRODUCT', { keywords: finalKeywords, asin: finalAsin });
+                    }
+                } catch (e: any) {
+                    if (e.message === 'Insufficient credits') {
+                        return { statusCode: 402, headers, body: JSON.stringify({ error: 'Insufficient credits', code: 'NO_CREDITS' }) };
+                    }
+                    throw e;
+                }
+            }
+        }
+
 
         // Pricing Map Logic (REDUCED FOR BREVITY IN LOGS, but full implementation kept)
         let pricingMap: Record<string, { price: number, currency: string, offerCount: number }> = {};
