@@ -13,7 +13,9 @@ export const SupplierFinder: React.FC = () => {
     useEffect(() => {
         const fetchSuppliers = async () => {
             try {
-                const res = await fetch('/api/suppliers');
+                // Em Netlify, as funções ficam em /.netlify/functions/
+                // Dependendo de redircionamentos (netlify.toml), `/api/` pode retornar o index.html gerando erro SyntaxError: Unexpected token '<'
+                const res = await fetch('/.netlify/functions/suppliers');
                 if (res.ok) {
                     const data = await res.json();
                     // Garante parse correto do JSON caso o banco devolva string (embora jsonb do neon costume devolver array)
