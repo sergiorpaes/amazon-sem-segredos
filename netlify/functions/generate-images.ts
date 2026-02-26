@@ -82,8 +82,8 @@ export const handler = async (event: any) => {
             });
         }
 
-        // Consume Credits for IMAGE_GENERATION (5 credits)
-        await consumeCredits(userId, 5, 'IMAGE_GENERATION');
+        // Removing individual credit consumption for IMAGE_GENERATION
+        // The listing generation as a whole charges 5 credits, images should be included.
 
         // Using Imagen 4.0 Fast via REST API (Standard for Billed Accounts)
         const modelName = "imagen-4.0-fast-generate-001";
