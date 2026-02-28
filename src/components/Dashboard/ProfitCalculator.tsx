@@ -20,8 +20,8 @@ export const ProfitCalculator: React.FC = () => {
     // Filter marketplaces based on settings
     const availableMarketplaces = SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id));
 
-    // Default to Brazil if available, otherwise first available
-    const defaultMarketplace = availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+    // Default to US if available, then Brazil, otherwise first available
+    const defaultMarketplace = availableMarketplaces.find(m => m.id === 'ATVPDKIKX0DER')?.id || availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'ATVPDKIKX0DER';
 
     // UI State
     const [searchQuery, setSearchQuery] = useState('');
@@ -33,7 +33,7 @@ export const ProfitCalculator: React.FC = () => {
     // Effect to ensure selected marketplace is valid when settings change
     React.useEffect(() => {
         if (!enabledMarketplaces.includes(marketplace)) {
-            const fallback = availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+            const fallback = availableMarketplaces.find(m => m.id === 'ATVPDKIKX0DER')?.id || availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'ATVPDKIKX0DER';
             setMarketplace(fallback);
         }
     }, [enabledMarketplaces, marketplace, availableMarketplaces]);

@@ -234,8 +234,8 @@ export const ProductFinder: React.FC = () => {
   // Filter marketplaces based on settings
   const availableMarketplaces = SUPPORTED_MARKETPLACES.filter(m => enabledMarketplaces.includes(m.id));
 
-  // Default to Brazil if available, otherwise first available, otherwise fallback to BR ID (shouldn't happen if logic prevents empty)
-  const defaultMarketplace = availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+  // Default to US if available, then Brazil, otherwise first available, otherwise fallback to BR ID (shouldn't happen if logic prevents empty)
+  const defaultMarketplace = availableMarketplaces.find(m => m.id === 'ATVPDKIKX0DER')?.id || availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'ATVPDKIKX0DER';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>(defaultMarketplace);
@@ -243,7 +243,7 @@ export const ProductFinder: React.FC = () => {
   // Effect to ensure selected marketplace is valid when settings change
   useEffect(() => {
     if (!enabledMarketplaces.includes(selectedMarketplace)) {
-      const fallback = availableMarketplaces[0]?.id || 'A2Q3Y263D00KWC';
+      const fallback = availableMarketplaces.find(m => m.id === 'ATVPDKIKX0DER')?.id || availableMarketplaces.find(m => m.id === 'A2Q3Y263D00KWC')?.id || availableMarketplaces[0]?.id || 'ATVPDKIKX0DER';
       setSelectedMarketplace(fallback);
     }
   }, [enabledMarketplaces, selectedMarketplace, availableMarketplaces]);
