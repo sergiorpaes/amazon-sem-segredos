@@ -343,7 +343,8 @@ export const ProductFinder: React.FC = () => {
       const matchBrand = !brandFilter || p.brand.toLowerCase().includes(brandFilter.toLowerCase());
       const matchMin = minPrice === null || (p.price || 0) >= minPrice;
       const matchMax = maxPrice === null || (p.price || 0) <= maxPrice;
-      return matchBrand && matchMin && matchMax;
+      const hasValidPrice = p.price && p.price > 0;
+      return matchBrand && matchMin && matchMax && hasValidPrice;
     });
   }, [products, brandFilter, minPrice, maxPrice]);
 
