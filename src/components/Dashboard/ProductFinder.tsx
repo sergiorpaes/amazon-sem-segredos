@@ -337,13 +337,13 @@ export const ProductFinder: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  // 1. First, apply filters (Brand, Price)
   const filteredProducts = React.useMemo(() => {
     return products.filter(p => {
       const matchBrand = !brandFilter || p.brand.toLowerCase().includes(brandFilter.toLowerCase());
       const matchMin = minPrice === null || (p.price || 0) >= minPrice;
       const matchMax = maxPrice === null || (p.price || 0) <= maxPrice;
-      const hasValidPrice = p.price && p.price > 0;
+      // Allow products to show even if they don't have a price (e.g. parent ASINs or if getBatchOffers hasn't resolved yet)
+      const hasValidPrice = p.price !== undefined;
       return matchBrand && matchMin && matchMax && hasValidPrice;
     });
   }, [products, brandFilter, minPrice, maxPrice]);
