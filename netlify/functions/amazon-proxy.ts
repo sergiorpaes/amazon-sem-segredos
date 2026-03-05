@@ -280,8 +280,19 @@ export const handler: Handler = async (event: any) => {
             if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
         }
 
-        const amazonResponse = await fetch(url, { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } });
-        const catalogData = await amazonResponse.json();
+        let amazonResponse = await fetch(url, { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } });
+        let catalogData = await amazonResponse.json();
+
+        // FALLBACK LOGIC for get_top_brands
+        if (!amazonResponse.ok && intent === 'get_top_brands') {
+            console.warn(`[Proxy] Amazon API error (${amazonResponse.status}) for top brands. Trying fallback...`);
+            const fallbackKeywords = ["iphone", "kitchen", "home decor", "toys"];
+            const fallbackKeyword = fallbackKeywords[Math.floor(Math.random() * fallbackKeywords.length)];
+            const fallbackUrl = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(fallbackKeyword)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
+
+            amazonResponse = await fetch(fallbackUrl, { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } });
+            catalogData = await amazonResponse.json();
+        }
 
         if (!amazonResponse.ok) {
             return { statusCode: amazonResponse.status, headers, body: JSON.stringify(catalogData) };
@@ -335,6 +346,18 @@ export const handler: Handler = async (event: any) => {
             const processedItems = await Promise.all(catalogData.items.map(async (item: any) => {
                 const salesEst = getBestSalesEstimate(item, targetMarketplace);
                 const summary = item.summaries?.[0];
+                if (!summary) {
+                    // Skip items without basic summary data or return minimal info
+                    return {
+                        ...item,
+                        active_sellers: 1,
+                        estimated_sales: 0,
+                        estimated_revenue: 0,
+                        fba_fees: 0,
+                        price: 0,
+                        currency: 'BRL'
+                    };
+                }
                 const priceValue = pricingMap[item.asin]?.price || summary?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0;
                 const currencyCode = pricingMap[item.asin]?.currency || summary?.price?.currencyCode || 'BRL';
 
