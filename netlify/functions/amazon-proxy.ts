@@ -259,10 +259,39 @@ export const handler: Handler = async (event: any) => {
         const apiBaseUrl = REGION_ENDPOINTS[region] || REGION_ENDPOINTS['EU'];
         let url = "";
 
+        // Helper for fetching with retry
+        async function fetchWithRetry(url: string, options: any, maxRetries = 2): Promise<Response> {
+            let lastResponse: Response | null = null;
+            for (let i = 0; i <= maxRetries; i++) {
+                if (i > 0) {
+                    console.log(`[Proxy] Retry attempt ${i} for URL: ${url}`);
+                    await new Promise(res => setTimeout(res, 1000 * i));
+                }
+
+                try {
+                    const response = await fetch(url, options);
+                    lastResponse = response;
+
+                    if (response.ok) return response;
+
+                    // Only retry on specific status codes
+                    if (response.status !== 500 && response.status !== 503 && response.status !== 429) {
+                        return response;
+                    }
+                } catch (netErr) {
+                    console.error(`[Proxy] Network error on attempt ${i}:`, netErr);
+                    if (i === maxRetries) throw netErr;
+                }
+            }
+            return lastResponse!;
+        }
+
+        const fetchOptions = { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } };
+
         if (intent === 'get_batch_offers' && body.asins) {
             const fetchPromises = (body.asins as string[]).map(async (asin) => {
                 const itemUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
-                const itemRes = await fetch(itemUrl, { headers: { "x-amz-access-token": access_token } });
+                const itemRes = await fetchWithRetry(itemUrl, fetchOptions);
                 return { status: { statusCode: itemRes.status }, body: await itemRes.json(), request: { uri: `/products/pricing/v0/items/${asin}/offers` } };
             });
             return { statusCode: 200, headers, body: JSON.stringify({ responses: await Promise.all(fetchPromises) }) };
@@ -280,7 +309,7 @@ export const handler: Handler = async (event: any) => {
             if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
         }
 
-        let amazonResponse = await fetch(url, { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } });
+        let amazonResponse = await fetchWithRetry(url, fetchOptions);
         let catalogData = await amazonResponse.json();
 
         // RETRY / FALLBACK LOGIC
