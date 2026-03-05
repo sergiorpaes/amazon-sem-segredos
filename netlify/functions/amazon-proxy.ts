@@ -76,8 +76,8 @@ export const handler: Handler = async (event: any) => {
         const body = JSON.parse(event.body || "{}");
         const { access_token, asin, keywords, marketplaceId, region, pageToken, intent } = body;
 
-        // Validation: Must have token AND (asin OR keywords OR asins)
-        if (!access_token || (!asin && !keywords && !body.asins)) {
+        // Validation: Must have token AND (asin OR keywords OR asins), unless intent is get_top_brands
+        if (!access_token || (!asin && !keywords && !body.asins && intent !== 'get_top_brands')) {
             return {
                 statusCode: 400,
                 headers,
