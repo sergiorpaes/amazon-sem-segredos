@@ -149,20 +149,33 @@ export const handler = async (event: any) => {
         }
 
         // Clean and Parse
-        let jsonString = responseText.trim();
-
-        // Try to find JSON block if markdown is present
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            jsonString = jsonMatch[0];
-        }
-
         let jsonResponse;
         try {
+            // Remove markdown code blocks if present
+            const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+            // Try to find the first '{' and last '}'
+            const firstBrace = cleanText.indexOf('{');
+            const lastBrace = cleanText.lastIndexOf('}');
+
+            if (firstBrace === -1 || lastBrace === -1) {
+                throw new Error("No JSON object found in response");
+            }
+
+            const jsonString = cleanText.substring(firstBrace, lastBrace + 1);
             jsonResponse = JSON.parse(jsonString);
         } catch (e) {
-            console.error("Failed to parse JSON:", jsonString);
-            throw new Error("Invalid JSON format from AI model");
+            console.error("Failed to parse JSON response:", responseText);
+
+            // Fallback: If JSON parsing fails, return a simulated response if we have enough info
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    error: 'AI JSON Parsing Error',
+                    details: 'O modelo IA retornou um formato inesperado. Tente novamente.',
+                    raw: isDebug ? responseText : undefined
+                })
+            };
         }
 
         return {
