@@ -7,6 +7,9 @@ export interface AppFeatures {
     LISTING_OPTIMIZER: boolean;
     MENTOR: boolean;
     ADS_MANAGER: boolean;
+    SUBCATEGORIES: boolean;
+    SELLER_ANALYZER: boolean;
+    TRAFFIC_MAP: boolean;
 }
 
 interface SettingsContextType {
@@ -25,7 +28,10 @@ const defaultFeatures: AppFeatures = {
     PROFIT_CALCULATOR: true,
     LISTING_OPTIMIZER: true,
     MENTOR: true,
-    ADS_MANAGER: true, // Keeping it true by default as per existing behavior, but adjustable
+    ADS_MANAGER: true,
+    SUBCATEGORIES: true,
+    SELLER_ANALYZER: true,
+    TRAFFIC_MAP: true,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

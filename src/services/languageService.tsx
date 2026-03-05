@@ -420,6 +420,23 @@ export const translations = {
         'brands.out_of_stock': 'Sem Estoque',
         'brands.yes': 'Sim',
         'brands.no': 'Não',
+
+        // Subcategories
+        'subcategories.title': 'Explorador de Subcategorias',
+        'subcategories.niche': 'Nicho / Categoria',
+        'subcategories.saturation': 'Saturação',
+        'subcategories.opportunity': 'Oportunidade',
+
+        // Sellers
+        'sellers.title': 'Analisador de Sellers',
+        'sellers.seller_id': 'ID do Vendedor',
+        'sellers.brands_count': 'Marcas Distribuídas',
+        'sellers.top_brand': 'Marca Principal',
+
+        // Traffic
+        'traffic.title': 'Mapa de Tráfego',
+        'traffic.relationship': 'Relação de Compra',
+        'traffic.bundle_tip': 'Produtos frequentemente comprados juntos.',
     },
     es: {
         // General
@@ -820,6 +837,23 @@ export const translations = {
         'brands.out_of_stock': 'Sin Stock',
         'brands.yes': 'Sí',
         'brands.no': 'No',
+
+        // Subcategories
+        'subcategories.title': 'Explorador de Subcategorías',
+        'subcategories.niche': 'Nicho / Categoría',
+        'subcategories.saturation': 'Saturación',
+        'subcategories.opportunity': 'Oportunidad',
+
+        // Sellers
+        'sellers.title': 'Analizador de Vendedores',
+        'sellers.seller_id': 'ID del Vendedor',
+        'sellers.brands_count': 'Marcas Distribuidas',
+        'sellers.top_brand': 'Marca Principal',
+
+        // Traffic
+        'traffic.title': 'Mapa de Tráfico',
+        'traffic.relationship': 'Relación de Compra',
+        'traffic.bundle_tip': 'Productos comprados juntos habitualmente.',
     },
     en: {
         // General
@@ -1220,6 +1254,23 @@ export const translations = {
         'brands.out_of_stock': 'Out of Stock',
         'brands.yes': 'Yes',
         'brands.no': 'No',
+
+        // Subcategories
+        'subcategories.title': 'Subcategories Explorer',
+        'subcategories.niche': 'Niche / Category',
+        'subcategories.saturation': 'Saturation',
+        'subcategories.opportunity': 'Opportunity',
+
+        // Sellers
+        'sellers.title': 'Seller Analyzer',
+        'sellers.seller_id': 'Seller ID',
+        'sellers.brands_count': 'Brands Distributed',
+        'sellers.top_brand': 'Primary Brand',
+
+        // Traffic
+        'traffic.title': 'Traffic Map',
+        'traffic.relationship': 'Buying Relationship',
+        'traffic.bundle_tip': 'Products frequently bought together.',
     }
 };
 

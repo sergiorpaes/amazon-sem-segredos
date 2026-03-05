@@ -10,6 +10,9 @@ import { SupplierFinder } from '../components/Dashboard/SupplierFinder';
 import { Settings } from '../components/Dashboard/Settings';
 import { AccountDashboard } from '../components/Dashboard/AccountDashboard';
 import { ProfitCalculator } from '../components/Dashboard/ProfitCalculator';
+import { SubcategoryFinder } from '../components/Dashboard/SubcategoryFinder';
+import { SellerAnalyzer } from '../components/Dashboard/SellerAnalyzer';
+import { TrafficMap } from '../components/Dashboard/TrafficMap';
 import { DashboardModule } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../services/languageService';
@@ -45,6 +48,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     else if (path.includes('/dashboard/listing-optimizer')) setCurrentModule(DashboardModule.LISTING_OPTIMIZER);
     else if (path.includes('/dashboard/suppliers')) setCurrentModule(DashboardModule.SUPPLIER_FINDER);
     else if (path.includes('/dashboard/profit-calculator')) setCurrentModule(DashboardModule.PROFIT_CALCULATOR);
+    else if (path.includes('/dashboard/subcategories')) setCurrentModule(DashboardModule.SUBCATEGORIES);
+    else if (path.includes('/dashboard/seller-analyzer')) setCurrentModule(DashboardModule.SELLER_ANALYZER);
+    else if (path.includes('/dashboard/traffic-map')) setCurrentModule(DashboardModule.TRAFFIC_MAP);
     else if (path.includes('/dashboard/ads-manager')) setCurrentModule(DashboardModule.ADS_MANAGER);
     else if (path.includes('/dashboard/settings')) setCurrentModule(DashboardModule.SETTINGS);
     else if (path.includes('/dashboard/account')) setCurrentModule(DashboardModule.ACCOUNT);
@@ -60,6 +66,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       [DashboardModule.LISTING_OPTIMIZER]: '/dashboard/listing-optimizer',
       [DashboardModule.SUPPLIER_FINDER]: '/dashboard/suppliers',
       [DashboardModule.PROFIT_CALCULATOR]: '/dashboard/profit-calculator',
+      [DashboardModule.SUBCATEGORIES]: '/dashboard/subcategories',
+      [DashboardModule.SELLER_ANALYZER]: '/dashboard/seller-analyzer',
+      [DashboardModule.TRAFFIC_MAP]: '/dashboard/traffic-map',
       [DashboardModule.ADS_MANAGER]: '/dashboard/ads-manager',
       [DashboardModule.SETTINGS]: '/dashboard/settings',
       [DashboardModule.ACCOUNT]: '/dashboard/account',
@@ -103,10 +112,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <ProfitAnalytics />
           </div>
         );
-      case DashboardModule.PROFIT_CALCULATOR:
         return (
           <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
             <ProfitCalculator />
+          </CreditGuard>
+        );
+      case DashboardModule.SUBCATEGORIES:
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <SubcategoryFinder />
+          </CreditGuard>
+        );
+      case DashboardModule.SELLER_ANALYZER:
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <SellerAnalyzer />
+          </CreditGuard>
+        );
+      case DashboardModule.TRAFFIC_MAP:
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <TrafficMap />
           </CreditGuard>
         );
       case DashboardModule.SETTINGS:
@@ -168,6 +194,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.SUPPLIER_FINDER: return t('module.supplier_finder');
       case DashboardModule.PROFIT_ANALYTICS: return t('module.dashboard');
       case DashboardModule.PROFIT_CALCULATOR: return t('module.profit_calculator');
+      case DashboardModule.SUBCATEGORIES: return t('subcategories.title');
+      case DashboardModule.SELLER_ANALYZER: return t('sellers.title');
+      case DashboardModule.TRAFFIC_MAP: return t('traffic.title');
       case DashboardModule.ADS_MANAGER: return t('module.ads_manager');
       case DashboardModule.SETTINGS: return t('module.settings');
       case DashboardModule.ACCOUNT: return t('module.account');
