@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Sparkles, Send, Bot, Image as ImageIcon, Copy, Check, Download, RefreshCw, Upload, Save, History, Trash2, X } from 'lucide-react';
 import { generateListing } from '../../services/listingGeneratorService';
 import { generateListingImages } from '../../services/imageGenerationService';
-import { getListings, saveListing as apiSaveListing, deleteListing as apiDeleteListing } from '../../services/listingService';
+import { getListings, getListingDetail, saveListing as apiSaveListing, deleteListing as apiDeleteListing } from '../../services/listingService';
 import { ListingGeneratorResult, SavedListing } from '../../types';
 import { useLanguage } from '../../services/languageService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -61,6 +61,7 @@ export const ListingOptimizer: React.FC = () => {
   // History State
   const [savedListings, setSavedListings] = useState<SavedListing[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Initialize Chat Language
   useEffect(() => {
@@ -262,11 +263,20 @@ export const ListingOptimizer: React.FC = () => {
     }
   };
 
-  const handleLoadListing = (item: SavedListing) => {
-    setListingResult(item);
-    setGeneratedImages(item.generatedImages || []);
-    setInputs(prev => ({ ...prev, productName: item.productName }));
-    setShowHistory(false);
+  const handleLoadListing = async (item: SavedListing) => {
+    setLoadingDetail(true);
+    try {
+      const fullItem = await getListingDetail(item.id);
+      setListingResult(fullItem);
+      setGeneratedImages(fullItem.generatedImages || []);
+      setInputs(prev => ({ ...prev, productName: fullItem.productName }));
+      setShowHistory(false);
+    } catch (error) {
+      console.error("Failed to load listing details", error);
+      alert(t('lo.ui.load_error') || 'Erro ao carregar detalhes do anúncio.');
+    } finally {
+      setLoadingDetail(false);
+    }
   };
 
   return (
@@ -302,6 +312,11 @@ export const ListingOptimizer: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleDateString()} - {new Date(item.createdAt).toLocaleTimeString()}</p>
+                {loadingDetail && listingResult?.id === item.id && (
+                  <div className="mt-2 flex items-center gap-2 text-[10px] text-brand-600 font-medium animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Carregando...
+                  </div>
+                )}
               </div>
             ))}
           </div>

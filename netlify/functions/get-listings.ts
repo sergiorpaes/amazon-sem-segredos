@@ -21,10 +21,17 @@ export const handler = async (event: any) => {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret-dev-key');
         const userId = decoded.userId;
 
-        const userListings = await db.select()
+        const userListings = await db.select({
+            id: listings.id,
+            user_id: listings.user_id,
+            product_name: listings.product_name,
+            listing_data: listings.listing_data,
+            created_at: listings.created_at
+        })
             .from(listings)
             .where(eq(listings.user_id, userId))
-            .orderBy(desc(listings.created_at));
+            .orderBy(desc(listings.created_at))
+            .limit(50);
 
         return {
             statusCode: 200,

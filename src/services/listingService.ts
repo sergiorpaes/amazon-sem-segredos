@@ -52,6 +52,25 @@ export const getListings = async (): Promise<SavedListing[]> => {
     });
 };
 
+export const getListingDetail = async (id: string): Promise<SavedListing> => {
+    const res = await fetch(`/.netlify/functions/get-listing-detail?id=${id}`);
+
+    if (!res.ok) {
+        throw new Error('Failed to fetch listing details');
+    }
+
+    const item = await res.json();
+    return {
+        id: item.id.toString(),
+        productName: item.product_name,
+        es: item.listing_data?.es,
+        pt: item.listing_data?.pt,
+        imagePromptContext: item.listing_data?.imagePromptContext,
+        generatedImages: item.generated_images || [],
+        createdAt: item.created_at
+    };
+};
+
 export const deleteListing = async (id: string): Promise<void> => {
     const res = await fetch('/.netlify/functions/delete-listing', {
         method: 'POST',

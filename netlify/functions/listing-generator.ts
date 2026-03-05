@@ -141,7 +141,25 @@ export const handler = async (event: any) => {
         }
         `;
 
-        const result = await model.generateContent(prompt);
+        if (isDebug) {
+            console.log('[DEBUG] Calling Gemini with prompt length:', prompt.length);
+        }
+
+        let result;
+        try {
+            result = await model.generateContent(prompt);
+        } catch (genError: any) {
+            console.error("[ERROR] Gemini generateContent failed:", genError);
+
+            // Fallback to a safe model if the configured one fails
+            if (aiModel !== "gemini-1.5-flash") {
+                console.log("[INFO] Attempting fallback to gemini-1.5-flash...");
+                const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                result = await fallbackModel.generateContent(prompt);
+            } else {
+                throw genError;
+            }
+        }
         const responseText = result.response.text();
 
         if (isDebug) {
