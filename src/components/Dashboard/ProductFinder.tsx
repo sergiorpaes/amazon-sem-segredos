@@ -434,8 +434,8 @@ export const ProductFinder: React.FC = () => {
         image: mainImage,
         category: categoryKey !== 'category.Unknown' ? categoryKey : (rawCategory || 'category.Unknown'), // Store key or raw if no match
         brand: summary?.brand || summary?.brandName || '-',
-        price: summary?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0,
-        currency: summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency || 'USD',
+        price: item.price || summary?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0,
+        currency: item.currency || summary?.price?.currencyCode || item.attributes?.list_price?.[0]?.currency || 'USD',
         isListPrice: item.is_list_price,
 
         sales: item.estimated_sales || null, // Using backend estimated sales
