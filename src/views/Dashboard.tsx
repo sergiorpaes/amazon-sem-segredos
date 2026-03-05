@@ -5,6 +5,7 @@ import { Mentor } from '../components/Dashboard/Mentor';
 import { ListingOptimizer } from '../components/Dashboard/ListingOptimizer';
 import { ProfitAnalytics } from '../components/Dashboard/ProfitAnalytics';
 import { ProductFinder } from '../components/Dashboard/ProductFinder';
+import { BrandFinder } from '../components/Dashboard/BrandFinder';
 import { SupplierFinder } from '../components/Dashboard/SupplierFinder';
 import { Settings } from '../components/Dashboard/Settings';
 import { AccountDashboard } from '../components/Dashboard/AccountDashboard';
@@ -40,6 +41,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     const path = window.location.pathname;
     if (path.includes('/dashboard/mentor')) setCurrentModule(DashboardModule.MENTOR);
     else if (path.includes('/dashboard/product-finder')) setCurrentModule(DashboardModule.PRODUCT_FINDER);
+    else if (path.includes('/dashboard/brands')) setCurrentModule(DashboardModule.BRAND_FINDER);
     else if (path.includes('/dashboard/listing-optimizer')) setCurrentModule(DashboardModule.LISTING_OPTIMIZER);
     else if (path.includes('/dashboard/suppliers')) setCurrentModule(DashboardModule.SUPPLIER_FINDER);
     else if (path.includes('/dashboard/profit-calculator')) setCurrentModule(DashboardModule.PROFIT_CALCULATOR);
@@ -54,6 +56,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     const routeMap: Record<string, string> = {
       [DashboardModule.MENTOR]: '/dashboard/mentor',
       [DashboardModule.PRODUCT_FINDER]: '/dashboard/product-finder',
+      [DashboardModule.BRAND_FINDER]: '/dashboard/brands',
       [DashboardModule.LISTING_OPTIMIZER]: '/dashboard/listing-optimizer',
       [DashboardModule.SUPPLIER_FINDER]: '/dashboard/suppliers',
       [DashboardModule.PROFIT_CALCULATOR]: '/dashboard/profit-calculator',
@@ -84,6 +87,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         return (
           <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
             <ProductFinder />
+          </CreditGuard>
+        );
+      case DashboardModule.BRAND_FINDER:
+        return (
+          <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
+            <BrandFinder />
           </CreditGuard>
         );
       case DashboardModule.SUPPLIER_FINDER:
@@ -155,6 +164,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       case DashboardModule.MENTOR: return t('module.mentor');
       case DashboardModule.LISTING_OPTIMIZER: return t('module.listing_optimizer');
       case DashboardModule.PRODUCT_FINDER: return t('module.product_finder');
+      case DashboardModule.BRAND_FINDER: return t('module.brand_finder');
       case DashboardModule.SUPPLIER_FINDER: return t('module.supplier_finder');
       case DashboardModule.PROFIT_ANALYTICS: return t('module.dashboard');
       case DashboardModule.PROFIT_CALCULATOR: return t('module.profit_calculator');

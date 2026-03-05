@@ -11,7 +11,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Check
+  Check,
+  Award
 } from 'lucide-react';
 import { DashboardModule } from '../../types';
 import { useLanguage } from '../../services/languageService';
@@ -43,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     { id: DashboardModule.PRODUCT_FINDER, label: t('module.product_finder'), icon: Search, disabled: !features.PRODUCT_FINDER },
+    { id: DashboardModule.BRAND_FINDER, label: t('module.brand_finder'), icon: Award, disabled: !features.PRODUCT_FINDER },
     { id: DashboardModule.PROFIT_CALCULATOR, label: t('module.profit_calculator'), icon: LayoutDashboard, disabled: !features.PROFIT_CALCULATOR },
     { id: DashboardModule.LISTING_OPTIMIZER, label: t('module.listing_optimizer'), icon: Sparkles, disabled: !features.LISTING_OPTIMIZER },
     { id: DashboardModule.MENTOR, label: t('module.mentor'), icon: Bot, disabled: !features.MENTOR },

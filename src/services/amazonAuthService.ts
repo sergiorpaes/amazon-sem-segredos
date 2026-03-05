@@ -237,6 +237,42 @@ export const searchProducts = async (query: string, marketplaceId?: string, page
     return data;
 };
 
+export const getTopBrands = async (marketplaceId?: string, keywords?: string, pageToken?: string): Promise<AmazonProductResult | null> => {
+    const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
+    const region = getRegionFromMarketplaceId(targetMarketplace);
+    const token = await getValidAccessToken(region);
+
+    if (!token) return null;
+
+    const payload: any = {
+        access_token: token,
+        marketplaceId: targetMarketplace,
+        region: region,
+        intent: 'get_top_brands'
+    };
+
+    if (keywords) payload.keywords = keywords;
+    if (pageToken) payload.pageToken = pageToken;
+
+    const response = await fetch('/.netlify/functions/amazon-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        let errorMsg = data.error || data.message || "Erro ao buscar top marcas na Amazon.";
+        if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+            errorMsg = `Amazon SP-API Error (${response.status}): ${data.errors[0].code} - ${data.errors[0].message}`;
+        }
+        throw new Error(errorMsg);
+    }
+
+    return data;
+};
+
 export const getBatchOffers = async (asins: string[], marketplaceId?: string): Promise<Record<string, { price: number, activeSellers: number, currency: string, fallbackUsed?: boolean } | null>> => {
     const targetMarketplace = marketplaceId || 'A1RKKUPIHCS9HS'; // Default ES
     const region = getRegionFromMarketplaceId(targetMarketplace);

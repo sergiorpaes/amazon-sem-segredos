@@ -268,6 +268,11 @@ export const handler: Handler = async (event: any) => {
             return { statusCode: 200, headers, body: JSON.stringify({ responses: await Promise.all(fetchPromises) }) };
         } else if (intent === 'get_offers' && finalAsin) {
             url = `${apiBaseUrl}/products/pricing/v0/items/${finalAsin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+        } else if (intent === 'get_top_brands') {
+            const defaultKeywords = ["best sellers", "top rated", "electronics", "home", "kitchen", "beauty"];
+            const searchKeyword = finalKeywords || defaultKeywords[Math.floor(Math.random() * defaultKeywords.length)];
+            url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(searchKeyword)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
+            if (pageToken) url += `&pageToken=${encodeURIComponent(pageToken)}`;
         } else if (finalAsin) {
             url = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&identifiers=${finalAsin}&identifiersType=ASIN&includedData=salesRanks,summaries,images,attributes`;
         } else if (finalKeywords) {
