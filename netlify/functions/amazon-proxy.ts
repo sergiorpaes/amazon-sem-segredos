@@ -283,18 +283,26 @@ export const handler: Handler = async (event: any) => {
         let amazonResponse = await fetch(url, { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } });
         let catalogData = await amazonResponse.json();
 
-        // FALLBACK LOGIC for get_top_brands
+        // RETRY / FALLBACK LOGIC
         if (!amazonResponse.ok && intent === 'get_top_brands') {
-            console.warn(`[Proxy] Amazon API error (${amazonResponse.status}) for top brands. Trying fallback...`);
-            const fallbackKeywords = ["iphone", "kitchen", "home decor", "toys"];
+            const fallbackKeywords = ["electronics", "toys", "kitchen", "home"];
             const fallbackKeyword = fallbackKeywords[Math.floor(Math.random() * fallbackKeywords.length)];
             const fallbackUrl = `${apiBaseUrl}/catalog/2022-04-01/items?marketplaceIds=${targetMarketplace}&keywords=${encodeURIComponent(fallbackKeyword)}&includedData=salesRanks,summaries,images,attributes&pageSize=20`;
 
+            console.log(`[Proxy] Retry with fallback: ${fallbackKeyword}`);
             amazonResponse = await fetch(fallbackUrl, { headers: { "x-amz-access-token": access_token, "Content-Type": "application/json" } });
             catalogData = await amazonResponse.json();
         }
 
         if (!amazonResponse.ok) {
+            // Even if it's a 500, if it was the brand finder, don't crash the UI, return empty successfully
+            if (intent === 'get_top_brands') {
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({ items: [], pagination: {}, warning: "Amazon API is currently unstable. Please try another search." })
+                };
+            }
             return { statusCode: amazonResponse.status, headers, body: JSON.stringify(catalogData) };
         }
 
@@ -319,26 +327,36 @@ export const handler: Handler = async (event: any) => {
         }
 
 
-        // Pricing Map Logic (REDUCED FOR BREVITY IN LOGS, but full implementation kept)
-        let pricingMap: Record<string, { price: number, currency: string, offerCount: number }> = {};
+        // Pricing Map Logic - Sequential to be safe with rate limits
+        let pricingMap: Record<string, { price: number, currency: string, offerCount: number, sellerName?: string }> = {};
         if (intent !== 'get_offers' && catalogData.items?.length > 0) {
             const uniqueAsins = Array.from(new Set(catalogData.items.map((i: any) => i.asin as string)));
-            await Promise.all((uniqueAsins as string[]).map(async (asin: string) => {
-                const pUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
-                const pRes = await fetch(pUrl, { headers: { "x-amz-access-token": access_token } });
-                if (pRes.ok) {
-                    const pData = await pRes.json();
-                    const payload = pData.payload;
-                    if (payload) {
-                        const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
-                        const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new')?.LandedPrice?.Amount || 0;
-                        const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
-                        let offerCount = 0;
-                        payload.Summary.NumberOfOffers?.forEach((o: any) => { if (o.condition?.toLowerCase() === 'new') offerCount += (o.OfferCount || 0); });
-                        pricingMap[asin] = { price, currency, offerCount };
+
+            for (const asin of (uniqueAsins as string[])) {
+                try {
+                    const pUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+                    const pRes = await fetch(pUrl, { headers: { "x-amz-access-token": access_token } });
+                    if (pRes.ok) {
+                        const pData = await pRes.json();
+                        const payload = pData.payload;
+                        if (payload) {
+                            const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
+                            const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new')?.LandedPrice?.Amount || 0;
+                            const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
+                            let offerCount = 0;
+                            payload.Summary.NumberOfOffers?.forEach((o: any) => { if (o.condition?.toLowerCase() === 'new') offerCount += (o.OfferCount || 0); });
+
+                            // Get Seller Name for dominant seller analysis
+                            const winner = payload.Offers?.find((o: any) => o.IsBuyBoxWinner === true);
+                            const sellerName = winner?.SellerId || 'Amazon';
+
+                            pricingMap[asin] = { price, currency, offerCount, sellerName };
+                        }
                     }
+                } catch (e) {
+                    console.error(`Error fetching price for ${asin}`, e);
                 }
-            }));
+            }
         }
 
         // Final Processing
@@ -347,7 +365,6 @@ export const handler: Handler = async (event: any) => {
                 const salesEst = getBestSalesEstimate(item, targetMarketplace);
                 const summary = item.summaries?.[0];
                 if (!summary) {
-                    // Skip items without basic summary data or return minimal info
                     return {
                         ...item,
                         active_sellers: 1,
@@ -367,6 +384,7 @@ export const handler: Handler = async (event: any) => {
 
                 const mainImage = item.images?.[0]?.images?.find((img: any) => img.variant === 'MAIN')?.link;
                 const active_sellers = pricingMap[item.asin]?.offerCount || summary?.offerCount || 1;
+                const seller_name = pricingMap[item.asin]?.sellerName;
 
                 cacheProduct({
                     asin: item.asin,
@@ -390,6 +408,7 @@ export const handler: Handler = async (event: any) => {
                 return {
                     ...item,
                     active_sellers,
+                    seller_name,
                     estimated_sales: salesEst.estimatedSales,
                     estimated_revenue: estimated_revenue_cents / 100,
                     fba_fees: fbaRes.totalFees / 100,
