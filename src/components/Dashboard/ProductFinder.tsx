@@ -342,8 +342,7 @@ export const ProductFinder: React.FC = () => {
       const matchBrand = !brandFilter || p.brand.toLowerCase().includes(brandFilter.toLowerCase());
       const matchMin = minPrice === null || (p.price || 0) >= minPrice;
       const matchMax = maxPrice === null || (p.price || 0) <= maxPrice;
-      // Allow products to show even if they don't have a price (e.g. parent ASINs or if getBatchOffers hasn't resolved yet)
-      const hasValidPrice = p.price !== undefined;
+      const hasValidPrice = p.price && p.price > 0;
       return matchBrand && matchMin && matchMax && hasValidPrice;
     });
   }, [products, brandFilter, minPrice, maxPrice]);
@@ -464,45 +463,53 @@ export const ProductFinder: React.FC = () => {
     setError(null);
 
     try {
-      // Use nextToken if loading more, otherwise undefined for new search
-      const tokenToUse = isLoadMore ? nextToken : undefined;
+      let currentNextToken = isLoadMore ? nextToken : undefined;
+      let accumulatedProducts: ProductDisplay[] = [];
+      const TARGET_COUNT = 20;
+      let attempts = 0;
+      const MAX_ATTEMPTS = 5; // Safety cap to prevent infinite loops if results are scarce
 
-      const result = await searchProducts(query, selectedMarketplace, tokenToUse);
-      // console.log("Amazon Search Result:", result);
+      while (accumulatedProducts.length < TARGET_COUNT && (attempts === 0 || currentNextToken)) {
+        attempts++;
+        if (attempts > MAX_ATTEMPTS) break;
 
-      // Refresh credit balance since searching consumes credits
-      refreshUser();
+        const result = await searchProducts(query, selectedMarketplace, currentNextToken);
+        refreshUser();
 
-      if (result && result.items && result.items.length > 0) {
-        // Map items but DO NOT filter by price > 0 immediately. 
-        // The detailed Batch Pricing call will fill the price next.
-        const mappedProducts = mapItemsToDisplay(result.items); // removed .filter(p => p.price && p.price > 0)
+        if (result && result.items && result.items.length > 0) {
+          const mappedBatch = mapItemsToDisplay(result.items);
+          // Filter out items without price immediately
+          const pricedItems = mappedBatch.filter(p => p.price && p.price > 0);
 
+          accumulatedProducts = [...accumulatedProducts, ...pricedItems];
+          currentNextToken = result.pagination?.nextToken;
+
+          // If we have enough or no more results to fetch, stop loop
+          if (accumulatedProducts.length >= TARGET_COUNT || !currentNextToken) {
+            break;
+          }
+        } else {
+          break; // No more items found
+        }
+      }
+
+      if (accumulatedProducts.length > 0) {
         if (isLoadMore) {
-          setProducts(prev => [...prev, ...mappedProducts]);
+          setProducts(prev => [...prev, ...accumulatedProducts]);
         } else {
-          setProducts(mappedProducts);
+          setProducts(accumulatedProducts);
         }
 
-        if (mappedProducts.length === 0 && !isLoadMore) {
-          setError(t('error.no_products'));
-        }
-
-        // Handle Pagination
-        if (result.pagination && result.pagination.nextToken) {
-          setNextToken(result.pagination.nextToken);
-          setShowLoadMore(true);
-        } else {
-          setNextToken(undefined);
-          setShowLoadMore(false);
-        }
+        // Update pagination for the NEXT "load more" click
+        setNextToken(currentNextToken);
+        setShowLoadMore(!!currentNextToken);
 
         // --- Background Batch Fetch for Pricing and Offers ---
+        // This remains for refreshing/verifying the latest data for the newly added batch
         const fetchPricing = async () => {
-          const asins = mappedProducts.map(p => p.id);
+          const asins = accumulatedProducts.map(p => p.id);
           if (asins.length === 0) return;
 
-          // console.log(`Starting Batch Pricing Fetch for ${asins.length} ASINs`);
           const batchResults = await getBatchOffers(asins, selectedMarketplace);
 
           if (Object.keys(batchResults).length > 0) {
@@ -510,12 +517,10 @@ export const ProductFinder: React.FC = () => {
               return currentProducts.map(p => {
                 const offers = batchResults[p.id];
                 if (offers) {
-                  // Re-calculate fees and revenue if price changed (especially if it was 0)
                   const newPrice = offers.price > 0 ? offers.price : p.price;
                   const newFees = calculateFBAFeesFrontend(newPrice || 0, p.rawData);
                   const newRevenue = (p.sales && newPrice && p.fbaFees !== null) ? (p.sales * (newPrice - p.fbaFees)) : (p.revenue || null);
 
-                  // Trigger Cache Update in backend if price changed from initial search
                   if (offers.price > 0 && (p.price !== newPrice || !p.price)) {
                     fetch('/.netlify/functions/amazon-proxy', {
                       method: 'POST',
@@ -567,16 +572,13 @@ export const ProductFinder: React.FC = () => {
           }
         };
         fetchPricing();
-        // -----------------------------------------------
-
       } else {
         if (!isLoadMore) {
-          setProducts([]); // Clear if new search has no results
+          setProducts([]);
           setError(t('error.no_products'));
         }
         setShowLoadMore(false);
       }
-
     } catch (err: any) {
       console.error(err);
       let errorMessage = err.message || 'Error';
