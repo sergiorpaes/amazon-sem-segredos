@@ -14,6 +14,11 @@ interface BrandDisplay {
     avgActiveSellers: number;
     totalFbaFees: number;
     topCategory: string;
+    dominantSeller: string;
+    buyboxShare: number;
+    amazonPresence: boolean;
+    avgRating: number;
+    totalReviews: number;
 }
 
 export const BrandFinder: React.FC = () => {
@@ -62,7 +67,6 @@ export const BrandFinder: React.FC = () => {
             let brandName = summary?.brand || summary?.brandName || 'Unknown';
             if (!brandName || brandName === 'Unknown') return; // Skip items without brand
 
-            // Ensure case consistency
             brandName = brandName.trim();
 
             const pricing = batchPricing[item.asin] || {};
@@ -72,6 +76,13 @@ export const BrandFinder: React.FC = () => {
             const activeSellers = pricing.activeSellers || item.active_sellers || 1;
             const category = summary?.websiteDisplayGroupName || 'General';
 
+            // Extract ratings/reviews
+            const rating = item.attributes?.average_rating?.[0]?.value || summary?.averageRating || 0;
+            const reviews = item.attributes?.total_review_count?.[0]?.value || summary?.totalReviews || 0;
+
+            // Extract dominant seller (buybox)
+            const seller = pricing.sellerName || item.seller_name || 'Amazon'; // Default to Amazon if not found
+
             if (!brandMap.has(brandName)) {
                 brandMap.set(brandName, []);
             }
@@ -80,7 +91,10 @@ export const BrandFinder: React.FC = () => {
                 estSales,
                 fbaFees,
                 activeSellers,
-                category
+                category,
+                rating,
+                reviews,
+                seller
             });
         });
 
@@ -91,9 +105,12 @@ export const BrandFinder: React.FC = () => {
             let totalPrice = 0;
             let totalActiveSellers = 0;
             let totalFbaFees = 0;
+            let totalRating = 0;
+            let totalReviews = 0;
+            let amazonInBuyBox = false;
 
-            // Calculate top category by occurrences
             const catCount: Record<string, number> = {};
+            const sellerCount: Record<string, number> = {};
 
             productList.forEach(p => {
                 totalSales += p.estSales;
@@ -102,11 +119,20 @@ export const BrandFinder: React.FC = () => {
                 totalPrice += p.price;
                 totalActiveSellers += p.activeSellers;
                 totalFbaFees += (p.fbaFees * p.estSales);
+                totalRating += p.rating;
+                totalReviews += p.reviews;
+
+                if (p.seller?.toLowerCase().includes('amazon')) {
+                    amazonInBuyBox = true;
+                }
 
                 catCount[p.category] = (catCount[p.category] || 0) + 1;
+                sellerCount[p.seller] = (sellerCount[p.seller] || 0) + 1;
             });
 
             const productCount = productList.length;
+
+            // Top Category
             let topCategory = 'General';
             let maxCat = 0;
             for (const cat in catCount) {
@@ -116,6 +142,17 @@ export const BrandFinder: React.FC = () => {
                 }
             }
 
+            // Dominant Seller
+            let dominantSeller = 'N/A';
+            let maxSellerCount = 0;
+            for (const seller in sellerCount) {
+                if (sellerCount[seller] > maxSellerCount) {
+                    maxSellerCount = sellerCount[seller];
+                    dominantSeller = seller;
+                }
+            }
+            const buyboxShare = productCount > 0 ? (maxSellerCount / productCount) * 100 : 0;
+
             processedBrands.push({
                 brand: brandName,
                 productCount,
@@ -124,7 +161,12 @@ export const BrandFinder: React.FC = () => {
                 avgPrice: productCount > 0 ? (totalPrice / productCount) : 0,
                 avgActiveSellers: productCount > 0 ? (totalActiveSellers / productCount) : 0,
                 totalFbaFees,
-                topCategory
+                topCategory,
+                dominantSeller,
+                buyboxShare,
+                amazonPresence: amazonInBuyBox,
+                avgRating: productCount > 0 ? (totalRating / productCount) : 0,
+                totalReviews
             });
         });
 
@@ -291,46 +333,46 @@ export const BrandFinder: React.FC = () => {
                             <tr className="bg-gray-50 dark:bg-dark-700/50 border-b border-gray-100 dark:border-dark-700 text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                 <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('brand')}>
                                     <div className="flex items-center gap-2">
-                                        {t('pf.brand')}
+                                        {t('brands.brand_name')}
                                         {sortConfig?.key === 'brand' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
                                 <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('topCategory')}>
-                                    <div className="flex items-center gap-2">Categoria Principal</div>
+                                    <div className="flex items-center gap-2">Categoria</div>
                                 </th>
                                 <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('estRevenue')}>
                                     <div className="flex items-center gap-2">
-                                        {t('modal.est_revenue')}
+                                        {t('brands.est_revenue')}
                                         {sortConfig?.key === 'estRevenue' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
-                                <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('estSales')}>
+                                <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('dominantSeller')}>
                                     <div className="flex items-center gap-2">
-                                        {t('modal.est_sales')}
-                                        {sortConfig?.key === 'estSales' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
+                                        {t('brands.dominant_seller')}
+                                        {sortConfig?.key === 'dominantSeller' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
-                                <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('avgPrice')}>
+                                <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('amazonPresence')}>
                                     <div className="flex items-center gap-2">
-                                        Preço Médio
-                                        {sortConfig?.key === 'avgPrice' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
+                                        {t('brands.amazon_presence')}
+                                        {sortConfig?.key === 'amazonPresence' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
                                 <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('productCount')}>
                                     <div className="flex items-center gap-2">
-                                        {t('common.product')}s
+                                        {t('brands.product_count')}
                                         {sortConfig?.key === 'productCount' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
-                                <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('totalFbaFees')}>
+                                <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('avgRating')}>
                                     <div className="flex items-center gap-2">
-                                        Total FBA
-                                        {sortConfig?.key === 'totalFbaFees' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
+                                        Nota/Reviews
+                                        {sortConfig?.key === 'avgRating' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
                                 <th className="p-4 font-semibold whitespace-nowrap cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors" onClick={() => handleSort('avgActiveSellers')}>
                                     <div className="flex items-center gap-2">
-                                        Média Sellers
+                                        Sellers
                                         {sortConfig?.key === 'avgActiveSellers' && (sortConfig.direction === 'asc' ? <ChevronDown size={14} className="rotate-180" /> : <ChevronDown size={14} />)}
                                     </div>
                                 </th>
@@ -354,13 +396,17 @@ export const BrandFinder: React.FC = () => {
                                         {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(brand.estRevenue)}
                                     </td>
                                     <td className="p-4">
-                                        <div className="flex items-center gap-1.5 text-brand-600 dark:text-brand-400 font-semibold text-sm">
-                                            <TrendingUp size={14} />
-                                            {brand.estSales.toLocaleString()}
+                                        <div className="flex flex-col gap-1">
+                                            <div className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-[150px]">{brand.dominantSeller}</div>
+                                            <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-fit ${brand.buyboxShare > 70 ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                                                {brand.buyboxShare.toFixed(0)}% Share
+                                            </div>
                                         </div>
                                     </td>
-                                    <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
-                                        {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(brand.avgPrice)}
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${brand.amazonPresence ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                            {brand.amazonPresence ? t('brands.yes') : t('brands.no')}
+                                        </span>
                                     </td>
                                     <td className="p-4">
                                         <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 text-sm font-medium">
@@ -368,8 +414,13 @@ export const BrandFinder: React.FC = () => {
                                             {brand.productCount}
                                         </div>
                                     </td>
-                                    <td className="p-4 text-sm text-red-500 dark:text-red-400 font-medium">
-                                        {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(brand.totalFbaFees)}
+                                    <td className="p-4">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-1 text-yellow-500 font-bold text-sm">
+                                                ★ {brand.avgRating.toFixed(1)}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400">{brand.totalReviews.toLocaleString()} reviews</div>
+                                        </div>
                                     </td>
                                     <td className="p-4 text-sm text-gray-600 dark:text-gray-300">
                                         {brand.avgActiveSellers.toFixed(1)}

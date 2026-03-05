@@ -402,6 +402,24 @@ export const translations = {
         'pf.max_price': 'Preço Máx',
         'pf.clear_filters': 'Limpar Filtros',
         'pf.selected_analysis': 'Análise de Itens Selecionados',
+
+        // Brands Finder
+        'brands.title': 'Buscador de Marcas',
+        'brands.brand_name': 'Nome da Marca',
+        'brands.brand_score': 'Score da Marca',
+        'brands.est_revenue': 'Receita Mensal Est.',
+        'brands.avg_price': 'Preço Médio',
+        'brands.avg_fba_sellers': 'Média Vendedores FBA',
+        'brands.product_count': 'Qtd. Produtos',
+        'brands.dominant_seller': 'Vendedor Dominante',
+        'brands.buybox_share': '% Share BuyBox',
+        'brands.amazon_presence': 'Presença Amazon',
+        'brands.total_reviews': 'Total Avaliações',
+        'brands.avg_rating': 'Rating Médio',
+        'brands.in_stock': 'Em Estoque',
+        'brands.out_of_stock': 'Sem Estoque',
+        'brands.yes': 'Sim',
+        'brands.no': 'Não',
     },
     es: {
         // General
@@ -784,6 +802,24 @@ export const translations = {
         'pf.max_price': 'Precio Máx',
         'pf.clear_filters': 'Limpar Filtros',
         'pf.selected_analysis': 'Análisis de Ítems Seleccionados',
+
+        // Brands Finder
+        'brands.title': 'Buscador de Marcas',
+        'brands.brand_name': 'Nombre de la Marca',
+        'brands.brand_score': 'Puntuación de Marca',
+        'brands.est_revenue': 'Ingresos Mensuales Est.',
+        'brands.avg_price': 'Precio Promedio',
+        'brands.avg_fba_sellers': 'Promedio Vendedores FBA',
+        'brands.product_count': 'Cant. Productos',
+        'brands.dominant_seller': 'Vendedor Dominante',
+        'brands.buybox_share': '% Cuota de BuyBox',
+        'brands.amazon_presence': 'Presencia de Amazon',
+        'brands.total_reviews': 'Total de Reseñas',
+        'brands.avg_rating': 'Calificación Promedio',
+        'brands.in_stock': 'En Stock',
+        'brands.out_of_stock': 'Sin Stock',
+        'brands.yes': 'Sí',
+        'brands.no': 'No',
     },
     en: {
         // General
@@ -1166,6 +1202,24 @@ export const translations = {
         'pf.max_price': 'Max Price',
         'pf.clear_filters': 'Clear Filters',
         'pf.selected_analysis': 'Selected Items Analysis',
+
+        // Brands Finder
+        'brands.title': 'Brands Finder',
+        'brands.brand_name': 'Brand Name',
+        'brands.brand_score': 'Brand Score',
+        'brands.est_revenue': 'Est. Monthly Revenue',
+        'brands.avg_price': 'Avg. Price',
+        'brands.avg_fba_sellers': 'Avg. FBA Sellers',
+        'brands.product_count': 'Product Count',
+        'brands.dominant_seller': 'Dominant Seller',
+        'brands.buybox_share': '% BuyBox Share',
+        'brands.amazon_presence': 'Amazon Presence',
+        'brands.total_reviews': 'Total Reviews',
+        'brands.avg_rating': 'Avg. Rating',
+        'brands.in_stock': 'In Stock',
+        'brands.out_of_stock': 'Out of Stock',
+        'brands.yes': 'Yes',
+        'brands.no': 'No',
     }
 };
 
