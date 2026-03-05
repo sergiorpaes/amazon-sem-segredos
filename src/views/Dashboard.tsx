@@ -112,6 +112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             <ProfitAnalytics />
           </div>
         );
+      case DashboardModule.PROFIT_CALCULATOR:
         return (
           <CreditGuard onBuyCredits={() => setIsBuyCreditsOpen(true)}>
             <ProfitCalculator />
