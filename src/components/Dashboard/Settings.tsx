@@ -350,6 +350,9 @@ export const Settings: React.FC = () => {
                                 { id: 'LISTING_OPTIMIZER', label: 'Criador de Listing', desc: 'Otimização de títulos e descrições com IA' },
                                 { id: 'MENTOR', label: 'Mentor Virtual', desc: 'Assistente AI para estratégias de venda' },
                                 { id: 'ADS_MANAGER', label: 'Gerenciador de Ads', desc: 'Gestão de campanhas publicitárias (Premium)' },
+                                { id: 'SUBCATEGORIES', label: 'Explorador de Subcategorias', desc: 'Descubra nichos de baixa concorrência e alta demanda' },
+                                { id: 'SELLER_ANALYZER', label: 'Analisador de Sellers', desc: 'Análise detalhada do portfólio e performance de concorrentes' },
+                                { id: 'TRAFFIC_MAP', label: 'Mapa de Tráfego', desc: 'Visualize o ecossistema de produtos e fluxo de tráfego' },
                             ].map((feature) => (
                                 <div key={feature.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-900 rounded-lg border border-gray-200 dark:border-dark-700">
                                     <div>
