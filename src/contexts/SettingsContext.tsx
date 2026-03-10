@@ -10,6 +10,8 @@ export interface AppFeatures {
     SUBCATEGORIES: boolean;
     SELLER_ANALYZER: boolean;
     TRAFFIC_MAP: boolean;
+    BRAND_FINDER: boolean;
+    SUPPLIER_FINDER: boolean;
 }
 
 interface SettingsContextType {
@@ -32,6 +34,8 @@ const defaultFeatures: AppFeatures = {
     SUBCATEGORIES: true,
     SELLER_ANALYZER: true,
     TRAFFIC_MAP: true,
+    BRAND_FINDER: true,
+    SUPPLIER_FINDER: true,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

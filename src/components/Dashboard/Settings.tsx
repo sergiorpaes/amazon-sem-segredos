@@ -346,9 +346,11 @@ export const Settings: React.FC = () => {
                         <div className="space-y-4">
                             {[
                                 { id: 'PRODUCT_FINDER', label: 'Buscador de Produtos', desc: 'Pesquisa avançada de produtos na Amazon' },
+                                { id: 'BRAND_FINDER', label: 'Buscador de Marcas', desc: 'Análise de performance por marca' },
                                 { id: 'PROFIT_CALCULATOR', label: 'Calculadora de Lucro Real', desc: 'Cálculo detalhado de margens e ROI' },
                                 { id: 'LISTING_OPTIMIZER', label: 'Criador de Listing', desc: 'Otimização de títulos e descrições com IA' },
                                 { id: 'MENTOR', label: 'Mentor Virtual', desc: 'Assistente AI para estratégias de venda' },
+                                { id: 'SUPPLIER_FINDER', label: 'Fornecedores', desc: 'Busca de fornecedores e parceiros logísticos' },
                                 { id: 'ADS_MANAGER', label: 'Gerenciador de Ads', desc: 'Gestão de campanhas publicitárias (Premium)' },
                                 { id: 'SUBCATEGORIES', label: 'Explorador de Subcategorias', desc: 'Descubra nichos de baixa concorrência e alta demanda' },
                                 { id: 'SELLER_ANALYZER', label: 'Analisador de Sellers', desc: 'Análise detalhada do portfólio e performance de concorrentes' },
