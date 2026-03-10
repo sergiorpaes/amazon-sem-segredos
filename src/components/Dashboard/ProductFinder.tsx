@@ -478,107 +478,43 @@ export const ProductFinder: React.FC = () => {
 
         if (result && result.items && result.items.length > 0) {
           const mappedBatch = mapItemsToDisplay(result.items);
-          // Filter out items without price immediately
           const pricedItems = mappedBatch.filter(p => p.price && p.price > 0);
 
           accumulatedProducts = [...accumulatedProducts, ...pricedItems];
           currentNextToken = result.pagination?.nextToken;
 
-          // If we have enough or no more results to fetch, stop loop
-          if (accumulatedProducts.length >= TARGET_COUNT || !currentNextToken) {
+          // If we have enough items, stop searching for now
+          if (accumulatedProducts.length >= TARGET_COUNT) {
+            break;
+          }
+
+          // If no next token, we've reached the absolute end
+          if (!currentNextToken) {
             break;
           }
         } else {
-          break; // No more items found
+          // No items in this batch at all
+          currentNextToken = result?.pagination?.nextToken;
+          if (!currentNextToken) break;
         }
       }
 
-      if (accumulatedProducts.length > 0) {
+      const hasResults = accumulatedProducts.length > 0;
+
+      if (hasResults) {
         if (isLoadMore) {
           setProducts(prev => [...prev, ...accumulatedProducts]);
         } else {
           setProducts(accumulatedProducts);
         }
-
-        // Update pagination for the NEXT "load more" click
-        setNextToken(currentNextToken);
-        setShowLoadMore(!!currentNextToken);
-
-        // --- Background Batch Fetch for Pricing and Offers ---
-        // This remains for refreshing/verifying the latest data for the newly added batch
-        const fetchPricing = async () => {
-          const asins = accumulatedProducts.map(p => p.id);
-          if (asins.length === 0) return;
-
-          const batchResults = await getBatchOffers(asins, selectedMarketplace);
-
-          if (Object.keys(batchResults).length > 0) {
-            setProducts(currentProducts => {
-              return currentProducts.map(p => {
-                const offers = batchResults[p.id];
-                if (offers) {
-                  const newPrice = offers.price > 0 ? offers.price : p.price;
-                  const newFees = calculateFBAFeesFrontend(newPrice || 0, p.rawData);
-                  const newRevenue = (p.sales && newPrice && p.fbaFees !== null) ? (p.sales * (newPrice - p.fbaFees)) : (p.revenue || null);
-
-                  if (offers.price > 0 && (p.price !== newPrice || !p.price)) {
-                    fetch('/.netlify/functions/amazon-proxy', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        intent: 'update_cache',
-                        asin: p.id,
-                        price: Math.round(newPrice * 100),
-                        currency: offers.currency,
-                        title: p.title,
-                        image: p.image,
-                        category: p.category,
-                        brand: p.brand,
-                        bsr: p.bsr,
-                        estimated_sales: p.sales,
-                        estimated_revenue: newRevenue ? Math.round(newRevenue * 100) : 0,
-                        fba_fees: Math.round(newFees.total * 100),
-                        referral_fee: Math.round(newFees.referral * 100),
-                        fulfillment_fee: Math.round(newFees.fulfillment * 100),
-                        net_profit: Math.round((newPrice - newFees.total) * 100),
-                        sales_percentile: p.percentile,
-                        is_list_price: false,
-                        raw_data: p.rawData,
-                        access_token: 'internal',
-                        marketplaceId: selectedMarketplace
-                      })
-                    }).catch(err => console.error("Cache sync failed:", err));
-                  }
-
-                  return {
-                    ...p,
-                    price: newPrice,
-                    activeSellers: offers.activeSellers,
-                    currency: offers.currency,
-                    fallbackUsed: offers.fallbackUsed,
-                    isListPrice: offers.price > 0 ? false : p.isListPrice,
-                    fbaFees: newFees.total,
-                    fbaBreakdown: {
-                      referral: newFees.referral,
-                      fulfillment: newFees.fulfillment,
-                      is_estimate: newFees.isEstimate
-                    },
-                    revenue: newRevenue
-                  };
-                }
-                return p;
-              });
-            });
-          }
-        };
-        fetchPricing();
-      } else {
-        if (!isLoadMore) {
-          setProducts([]);
-          setError(t('error.no_products'));
-        }
-        setShowLoadMore(false);
+      } else if (!isLoadMore) {
+        setProducts([]);
+        setError(t('error.no_products'));
       }
+
+      // Update pagination state based on the LAST reliable nextToken we got
+      setNextToken(currentNextToken);
+      setShowLoadMore(!!currentNextToken);
     } catch (err: any) {
       console.error(err);
       let errorMessage = err.message || 'Error';

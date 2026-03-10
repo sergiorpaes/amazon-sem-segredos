@@ -356,15 +356,22 @@ export const handler: Handler = async (event: any) => {
         }
 
 
-        // Pricing Map Logic - Sequential to be safe with rate limits
+        // Pricing Map Logic - Parallelized for performance with safety guards
         let pricingMap: Record<string, { price: number, currency: string, offerCount: number, sellerName?: string }> = {};
         if (intent !== 'get_offers' && catalogData.items?.length > 0) {
-            const uniqueAsins = Array.from(new Set(catalogData.items.map((i: any) => i.asin as string)));
+            const uniqueAsins = Array.from(new Set(catalogData.items.map((i: any) => i.asin as string))) as string[];
 
-            for (const asin of (uniqueAsins as string[])) {
+            // Fetch pricing data in parallel
+            const pricingPromises = uniqueAsins.map(async (asin) => {
                 try {
                     const pUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
-                    const pRes = await fetch(pUrl, { headers: { "x-amz-access-token": access_token } });
+                    // Use a shorter timeout for individual price calls if possible, or just rely on Promise.all
+                    const pRes = await fetch(pUrl, {
+                        headers: { "x-amz-access-token": access_token },
+                        // Short timeout to prevent one slow call from blocking everything
+                        signal: AbortSignal.timeout(5000)
+                    });
+
                     if (pRes.ok) {
                         const pData = await pRes.json();
                         const payload = pData.payload;
@@ -375,17 +382,24 @@ export const handler: Handler = async (event: any) => {
                             let offerCount = 0;
                             payload.Summary.NumberOfOffers?.forEach((o: any) => { if (o.condition?.toLowerCase() === 'new') offerCount += (o.OfferCount || 0); });
 
-                            // Get Seller Name for dominant seller analysis
                             const winner = payload.Offers?.find((o: any) => o.IsBuyBoxWinner === true);
                             const sellerName = winner?.SellerId || 'Amazon';
 
-                            pricingMap[asin] = { price, currency, offerCount, sellerName };
+                            return { asin, data: { price, currency, offerCount, sellerName } };
                         }
+                    } else if (pRes.status === 429) {
+                        console.warn(`[Proxy] Throttled pricing fetch for ${asin}`);
                     }
-                } catch (e) {
-                    console.error(`Error fetching price for ${asin}`, e);
+                } catch (e: any) {
+                    console.error(`[Proxy] Error fetching price for ${asin}: ${e.message}`);
                 }
-            }
+                return { asin, data: null };
+            });
+
+            const pricingResults = await Promise.all(pricingPromises);
+            pricingResults.forEach(res => {
+                if (res.data) pricingMap[res.asin] = res.data;
+            });
         }
 
         // Final Processing
