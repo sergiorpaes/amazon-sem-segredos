@@ -109,7 +109,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={item.id}
                 onClick={() => {
-                  if (isDisabled) return;
                   onModuleChange(item.id);
                   if (window.innerWidth < 1024) onClose();
                 }}
