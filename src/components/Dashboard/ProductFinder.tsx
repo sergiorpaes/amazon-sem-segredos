@@ -467,17 +467,18 @@ export const ProductFinder: React.FC = () => {
       let accumulatedProducts: ProductDisplay[] = [];
       const TARGET_COUNT = 20;
       let attempts = 0;
-      const MAX_ATTEMPTS = 5; // Safety cap to prevent infinite loops if results are scarce
+      const MAX_ATTEMPTS = 10; // Safety cap to prevent infinite loops if results are scarce
 
       while (accumulatedProducts.length < TARGET_COUNT && (attempts === 0 || currentNextToken)) {
         attempts++;
-        if (attempts > MAX_ATTEMPTS) break;
+        if (attempts > 10) break; // Increased safety cap for broad searches like "sapato"
 
         const result = await searchProducts(query, selectedMarketplace, currentNextToken);
         refreshUser();
 
         if (result && result.items && result.items.length > 0) {
           const mappedBatch = mapItemsToDisplay(result.items);
+          // Only keep items that definitely have a price
           const pricedItems = mappedBatch.filter(p => p.price && p.price > 0);
 
           accumulatedProducts = [...accumulatedProducts, ...pricedItems];

@@ -356,50 +356,58 @@ export const handler: Handler = async (event: any) => {
         }
 
 
-        // Pricing Map Logic - Parallelized for performance with safety guards
+        // Pricing Map Logic - Chunked parallel fetch with retry logic
         let pricingMap: Record<string, { price: number, currency: string, offerCount: number, sellerName?: string }> = {};
         if (intent !== 'get_offers' && catalogData.items?.length > 0) {
             const uniqueAsins = Array.from(new Set(catalogData.items.map((i: any) => i.asin as string))) as string[];
 
-            // Fetch pricing data in parallel
-            const pricingPromises = uniqueAsins.map(async (asin) => {
-                try {
-                    const pUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
-                    // Use a shorter timeout for individual price calls if possible, or just rely on Promise.all
-                    const pRes = await fetch(pUrl, {
-                        headers: { "x-amz-access-token": access_token },
-                        // Short timeout to prevent one slow call from blocking everything
-                        signal: AbortSignal.timeout(5000)
-                    });
+            // Helper for individual pricing fetch with retry
+            const fetchPriceWithRetry = async (asin: string, retryCount = 1): Promise<{ asin: string, data: any }> => {
+                const pUrl = `${apiBaseUrl}/products/pricing/v0/items/${asin}/offers?MarketplaceId=${targetMarketplace}&ItemCondition=New`;
+                for (let i = 0; i <= retryCount; i++) {
+                    try {
+                        const pRes = await fetch(pUrl, {
+                            headers: { "x-amz-access-token": access_token },
+                            signal: AbortSignal.timeout(6000)
+                        });
 
-                    if (pRes.ok) {
-                        const pData = await pRes.json();
-                        const payload = pData.payload;
-                        if (payload) {
-                            const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
-                            const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new')?.LandedPrice?.Amount || 0;
-                            const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
-                            let offerCount = 0;
-                            payload.Summary.NumberOfOffers?.forEach((o: any) => { if (o.condition?.toLowerCase() === 'new') offerCount += (o.OfferCount || 0); });
-
-                            const winner = payload.Offers?.find((o: any) => o.IsBuyBoxWinner === true);
-                            const sellerName = winner?.SellerId || 'Amazon';
-
-                            return { asin, data: { price, currency, offerCount, sellerName } };
+                        if (pRes.ok) {
+                            const pData = await pRes.json();
+                            const payload = pData.payload;
+                            if (payload) {
+                                const buyBox = payload.Summary?.BuyBoxPrices?.find((bb: any) => bb.condition?.toLowerCase() === 'new');
+                                const price = buyBox?.LandedPrice?.Amount || payload.Summary?.LowestPrices?.find((lp: any) => lp.condition?.toLowerCase() === 'new')?.LandedPrice?.Amount || 0;
+                                if (price > 0) {
+                                    const currency = buyBox?.LandedPrice?.CurrencyCode || payload.Summary?.LowestPrices?.[0]?.LandedPrice?.CurrencyCode || 'BRL';
+                                    let offerCount = 0;
+                                    payload.Summary.NumberOfOffers?.forEach((o: any) => { if (o.condition?.toLowerCase() === 'new') offerCount += (o.OfferCount || 0); });
+                                    const winner = payload.Offers?.find((o: any) => o.IsBuyBoxWinner === true);
+                                    const sellerName = winner?.SellerId || 'Amazon';
+                                    return { asin, data: { price, currency, offerCount, sellerName } };
+                                }
+                            }
+                        } else if (pRes.status === 429 && i < retryCount) {
+                            await new Promise(r => setTimeout(r, 500)); // Wait before retry on throttling
                         }
-                    } else if (pRes.status === 429) {
-                        console.warn(`[Proxy] Throttled pricing fetch for ${asin}`);
+                    } catch (e: any) {
+                        if (i === retryCount) console.error(`[Proxy] Error fetching price for ${asin}: ${e.message}`);
                     }
-                } catch (e: any) {
-                    console.error(`[Proxy] Error fetching price for ${asin}: ${e.message}`);
                 }
                 return { asin, data: null };
-            });
+            };
 
-            const pricingResults = await Promise.all(pricingPromises);
-            pricingResults.forEach(res => {
-                if (res.data) pricingMap[res.asin] = res.data;
-            });
+            // Process ASINs in chunks of 5
+            const CHUNK_SIZE = 5;
+            for (let i = 0; i < uniqueAsins.length; i += CHUNK_SIZE) {
+                const chunk = uniqueAsins.slice(i, i + CHUNK_SIZE);
+                const results = await Promise.all(chunk.map(asin => fetchPriceWithRetry(asin)));
+                results.forEach(res => {
+                    if (res.data) pricingMap[res.asin] = res.data;
+                });
+                if (i + CHUNK_SIZE < uniqueAsins.length) {
+                    await new Promise(r => setTimeout(r, 250)); // Small delay between chunks
+                }
+            }
         }
 
         // Final Processing
