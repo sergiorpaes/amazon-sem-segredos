@@ -185,6 +185,7 @@ export const handler: Handler = async (event: any) => {
                     const weightObj = rawData.attributes?.item_weight?.[0];
                     const fbaResult = calculateFBAFees(
                         priceValue,
+                        targetMarketplace,
                         dimObj ? { height: dimObj.height?.value, width: dimObj.width?.value, length: dimObj.length?.value, unit: dimObj.height?.unit } : undefined,
                         weightObj ? { value: weightObj.value, unit: weightObj.unit } : undefined,
                         cached.category || undefined
@@ -429,7 +430,7 @@ export const handler: Handler = async (event: any) => {
                 const priceValue = pricingMap[item.asin]?.price || summary?.price?.amount || item.attributes?.list_price?.[0]?.value_with_tax || 0;
                 const currencyCode = pricingMap[item.asin]?.currency || summary?.price?.currencyCode || 'BRL';
 
-                const fbaRes = calculateFBAFees(priceValue, item.attributes?.item_dimensions?.[0], item.attributes?.item_weight?.[0], summary?.websiteDisplayGroupName || '');
+                const fbaRes = calculateFBAFees(priceValue, targetMarketplace, item.attributes?.item_dimensions?.[0], item.attributes?.item_weight?.[0], summary?.websiteDisplayGroupName || '');
                 const netProfitCents = Math.round((priceValue - (fbaRes.totalFees / 100)) * 100);
                 const estimated_revenue_cents = Math.round((salesEst.estimatedSales || 0) * (priceValue - (fbaRes.totalFees / 100)) * 100);
 

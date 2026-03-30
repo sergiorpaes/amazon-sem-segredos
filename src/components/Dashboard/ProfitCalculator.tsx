@@ -44,12 +44,20 @@ export const ProfitCalculator: React.FC = () => {
     const [fbaStrategyExpanded, setFbaStrategyExpanded] = useState(true);
     const [fbmStrategyExpanded, setFbmStrategyExpanded] = useState(true);
 
+    // Dynamic defaults when marketplace changes manually
+    React.useEffect(() => {
+        if (!product) {
+            setFbaFulfilment(getDefaultFulfillment(marketplace));
+            setTaxRate(marketplace === 'A2Q3Y263D00KWC' ? 0 : 21);
+        }
+    }, [marketplace, product]);
+
     // Seasonal State
     const [season, setSeason] = useState<'jan-sep' | 'oct-dec'>('jan-sep');
 
     // --- Common Inputs (Synced between FBA/FBM) ---
     const [cogs, setCogs] = useState<number>(0);
-    const [taxRate, setTaxRate] = useState<number>(21); // Default ES VAT (Amazon fixed)
+    const [taxRate, setTaxRate] = useState<number>(marketplace === 'A2Q3Y263D00KWC' ? 0 : 21); // Default: 0 for BR, 21 for ES
     const [batchSize, setBatchSize] = useState<number>(1);
 
     // Prep Service (Synced)
@@ -64,7 +72,15 @@ export const ProfitCalculator: React.FC = () => {
     const [fbaFixedClosing, setFbaFixedClosing] = useState<number>(0);
     const [fbaVariableClosing, setFbaVariableClosing] = useState<number>(0);
     const [fbaDigitalServices, setFbaDigitalServices] = useState<number>(0.30); // Amazon fee (kept)
-    const [fbaFulfilment, setFbaFulfilment] = useState<number>(5.50);  // Amazon fee (kept)
+    
+    // Dynamic FBA Fulfillment default based on marketplace
+    const getDefaultFulfillment = (mId: string) => {
+        if (mId === 'A2Q3Y263D00KWC') return 13.90; // BR R$
+        if (mId === 'ATVPDKIKX0DER') return 4.50;  // US $
+        return 3.60; // ES/EU €
+    };
+    
+    const [fbaFulfilment, setFbaFulfilment] = useState<number>(getDefaultFulfillment(defaultMarketplace));
 
     // FBA Storage Detailed
     const [fbaMonthlyStoragePrice, setFbaMonthlyStoragePrice] = useState<number>(0.80); // Amazon rate (kept)
@@ -218,17 +234,18 @@ export const ProfitCalculator: React.FC = () => {
                     setFbaPrice(price);
                     setFbmPrice(price);
 
-                    // Use Real Data from SP-API if available (Referral and Fulfillment)
-                    const realFees = (item as any).spapi_fees;
+                    // Use Real Data from Proxy if available (Referral and Fulfillment)
+                    const realFees = (item as any).fba_breakdown;
                     if (realFees) {
                         setFbaReferral(realFees.referral);
                         setFbmReferral(realFees.referral);
                         setFbaFulfilment(realFees.fulfillment);
-                        console.log(`[Calculator] Using REAL SP-API Fees: ${realFees.referral} (Ref) / ${realFees.fulfillment} (FBA Full)`);
+                        console.log(`[Calculator] Using REAL calculated fees: ${realFees.referral} (Ref) / ${realFees.fulfillment} (FBA Full)`);
                     } else {
                         const estRef = price * 0.15;
                         setFbaReferral(estRef);
                         setFbmReferral(estRef);
+                        setFbaFulfilment(getDefaultFulfillment(marketplace));
                     }
                 }
 
